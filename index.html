@@ -2034,55 +2034,55 @@
             <h3 class="pane-title">SPOC / College Details</h3>
             <p class="pane-desc">The Single Point of Contact from your college who will manage all team nominations.</p>
             <div class="form-grid">
-              <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" placeholder="Dr. Ravi Menon" /></div>
-              <div class="field"><label>Designation <span class="req">*</span></label><input type="text" placeholder="Professor, Dept. of CSE" /></div>
-              <div class="field"><label>Official Email <span class="req">*</span></label><input type="email" placeholder="spoc@college.edu.in" /></div>
-              <div class="field"><label>Mobile Number <span class="req">*</span></label><input type="tel" placeholder="+91 98765 43210" /></div>
-              <div class="field"><label>College / Institute Name <span class="req">*</span></label><input type="text" placeholder="Vellore Institute of Technology" /></div>
-              <div class="field"><label>City / State <span class="req">*</span></label><input type="text" placeholder="Vellore, Tamil Nadu" /></div>
-              <div class="field" style="grid-column:1/-1"><label>College Address <span class="req">*</span></label><input type="text" placeholder="Street, City, State, PIN" /></div>
-            </div>
+  <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" id="regSpocName" placeholder="Dr. Abhi Yadav" /></div>
+  <div class="field"><label>Designation <span class="req">*</span></label><input type="text" id="regSpocDesignation" placeholder="Professor, Dept. of CSE" /></div>
+  <div class="field"><label>Official Email <span class="req">*</span></label><input type="email" id="regSpocEmail" placeholder="spoc@college.edu.in" /></div>
+  <div class="field"><label>Mobile Number <span class="req">*</span></label><input type="tel" id="regSpocMobile" placeholder="+91 98765 43210" /></div>
+  <div class="field"><label>College / Institute Name <span class="req">*</span></label><input type="text" id="regCollegeName" placeholder="Vellore Institute of Technology" /></div>
+  <div class="field"><label>City / State <span class="req">*</span></label><input type="text" id="regCollegeCity" placeholder="Vellore, Tamil Nadu" /></div>
+  <div class="field" style="grid-column:1/-1"><label>College Address <span class="req">*</span></label><input type="text" id="regCollegeAddress" placeholder="Street, City, State, PIN" /></div>
+</div>
           </div>
 
           <div class="reg-pane" data-pane="2">
             <h3 class="pane-title">Team & Theme Selection</h3>
             <p class="pane-desc">Choose a team name and select the theme & problem statement.</p>
             <div class="form-grid">
-              <div class="field"><label>Team Name <span class="req">*</span></label><input type="text" placeholder="Team Nova" /></div>
-              <div class="field"><label>Team Size <span class="req">*</span></label>
-                <select>
-                  <option>1 member (solo)</option>
-                  <option>2 members</option>
-                  <option>3 members</option>
-                  <option>4 members</option>
-                  <option>5 members</option>
-                  <option selected>6 members</option>
-                </select>
-              </div>
-              <div class="field"><label>Preferred Theme <span class="req">*</span></label>
-                <select>
-                  <option>Select a theme</option><option>Smart Automation & AI</option><option>Agriculture & FoodTech</option>
-                  <option>MedTech & Health</option><option>Blockchain & Cybersecurity</option>
-                  <option>Robotics, Drones & Space Tech</option><option>Clean & Renewable Energy</option>
-                  <option>Smart Cities & Mobility</option><option>EdTech & Skill Development</option>
-                </select>
-              </div>
-              <div class="field"><label>Category <span class="req">*</span></label>
-                <select><option>Software</option><option>Hardware</option><option>Student Innovation</option></select>
-              </div>
-              <div class="field" style="grid-column:1/-1"><label>Problem Statement <span class="req">*</span></label>
-                <select>
-                  <option>PS-2026-001 · AI-powered crop disease detection</option>
-                  <option>PS-2026-014 · Low-cost portable ventilator</option>
-                  <option>PS-2026-027 · Blockchain-based land records</option>
-                  <option>PS-2026-041 · Smart railway track monitoring</option>
-                  <option>PS-2026-058 · Assistive tech for disabled</option>
-                </select>
-              </div>
-              <div class="field" style="grid-column:1/-1"><label>Brief Idea Summary (max 200 chars) <span class="req">*</span></label>
-                <textarea placeholder="Our solution uses edge AI cameras to detect crop diseases..."></textarea>
-              </div>
-            </div>
+  <div class="field"><label>Team Name <span class="req">*</span></label><input type="text" id="regTeamName" placeholder="Team Nova" /></div>
+  <div class="field"><label>Team Size <span class="req">*</span></label>
+    <select id="regTeamSize">
+      <option value="1">1 member (solo)</option>
+      <option value="2">2 members</option>
+      <option value="3">3 members</option>
+      <option value="4">4 members</option>
+      <option value="5">5 members</option>
+      <option value="6" selected>6 members</option>
+    </select>
+  </div>
+  <div class="field"><label>Preferred Theme <span class="req">*</span></label>
+    <select id="regTheme">
+      <option>Select a theme</option><option>Smart Automation & AI</option><option>Agriculture & FoodTech</option>
+      <option>MedTech & Health</option><option>Blockchain & Cybersecurity</option>
+      <option>Robotics, Drones & Space Tech</option><option>Clean & Renewable Energy</option>
+      <option>Smart Cities & Mobility</option><option>EdTech & Skill Development</option>
+    </select>
+  </div>
+  <div class="field"><label>Category <span class="req">*</span></label>
+    <select id="regCategory"><option>Software</option><option>Hardware</option><option>Student Innovation</option></select>
+  </div>
+  <div class="field" style="grid-column:1/-1"><label>Problem Statement <span class="req">*</span></label>
+    <select id="regProblemStatement">
+      <option>PS-2026-001 · AI-powered crop disease detection</option>
+      <option>PS-2026-014 · Low-cost portable ventilator</option>
+      <option>PS-2026-027 · Blockchain-based land records</option>
+      <option>PS-2026-041 · Smart railway track monitoring</option>
+      <option>PS-2026-058 · Assistive tech for disabled</option>
+    </select>
+  </div>
+  <div class="field" style="grid-column:1/-1"><label>Brief Idea Summary (max 200 chars) <span class="req">*</span></label>
+    <textarea id="regIdeaSummary" placeholder="Our solution uses edge AI cameras to detect crop diseases..."></textarea>
+  </div>
+</div>
             <div class="hint"><span>💡</span><div><strong>Tip:</strong> Choose a problem statement that matches your team's actual tech stack.</div></div>
           </div>
 
@@ -3711,6 +3711,79 @@ async function getAIResponse(msg){
 
   supabase.auth.onAuthStateChange(() => { updateAuthUI(); });
   setTimeout(updateAuthUI, 500);
+async function submitTeamRegistration(){
+  const user = await getCurrentUser();
+  if (!user){ showToast('Please log in first', 'warn', '🔒'); return; }
+
+  const spoc = {
+    spoc_name: ($('#regSpocName')?.value || '').trim(),
+    spoc_designation: ($('#regSpocDesignation')?.value || '').trim(),
+    spoc_email: ($('#regSpocEmail')?.value || '').trim(),
+    spoc_mobile: ($('#regSpocMobile')?.value || '').trim(),
+    college_name: ($('#regCollegeName')?.value || '').trim(),
+    college_city: ($('#regCollegeCity')?.value || '').trim(),
+    college_address: ($('#regCollegeAddress')?.value || '').trim(),
+  };
+
+  const team = {
+    team_name: ($('#regTeamName')?.value || '').trim(),
+    team_size: parseInt($('#regTeamSize')?.value || '1', 10),
+    theme: ($('#regTheme')?.value || '').trim(),
+    category: ($('#regCategory')?.value || '').trim(),
+    problem_statement: ($('#regProblemStatement')?.value || '').trim(),
+    idea_summary: ($('#regIdeaSummary')?.value || '').trim(),
+  };
+
+  if (!spoc.spoc_name) return showToast('SPOC name required', 'warn', '⚠️');
+  if (!spoc.spoc_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(spoc.spoc_email))
+    return showToast('Valid SPOC email required', 'warn', '⚠️');
+  if (!spoc.college_name) return showToast('College name required', 'warn', '⚠️');
+  if (!team.team_name) return showToast('Team name required', 'warn', '⚠️');
+  if (!team.theme || team.theme === 'Select a theme')
+    return showToast('Please select a theme', 'warn', '⚠️');
+  if (!team.category) return showToast('Please select a category', 'warn', '⚠️');
+
+  const members = [];
+  document.querySelectorAll('.member-card').forEach(card => {
+    const inputs = card.querySelectorAll('input, select');
+    const name = inputs[0]?.value?.trim();
+    const role = inputs[1]?.value || '';
+    const gender = inputs[2]?.value || '';
+    if (name) members.push({ name, role, gender });
+  });
+
+  const submitBtn = document.getElementById('nextBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  try {
+    const { error } = await supabase.from('team_registrations').insert([{
+      user_id: user.id,
+      email: user.email,
+      ...spoc,
+      ...team,
+      members,
+      status: 'submitted'
+    }]);
+
+    if (error) throw error;
+
+    showToast('🎉 Registration submitted successfully!', 'success', '✓');
+
+    setTimeout(() => {
+      submitBtn.textContent = 'Next →';
+      submitBtn.style.background = '';
+      submitBtn.disabled = false;
+      setStep(1);
+    }, 2000);
+
+  } catch (err){
+    console.error('Registration error:', err);
+    showToast('Failed: ' + (err.message || 'Unknown error'), 'warn', '⚠️');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit Application ✓';
+  }
+}
 
   /* ============ REGISTRATION STEPPER ============ */
   let currentStep = 1;
@@ -3734,20 +3807,13 @@ async function getAIResponse(msg){
     nextBtn.textContent = currentStep === totalSteps ? 'Submit Application ✓' : 'Next →';
   }
   prevBtn.addEventListener('click', () => setStep(currentStep - 1));
-  nextBtn.addEventListener('click', () => {
-    if (currentStep === totalSteps){
-      nextBtn.textContent = 'Submitted ✓';
-      nextBtn.style.background = 'linear-gradient(135deg,#3ddc84,#22d3ee)';
-      showToast('Application submitted successfully!', 'success', '✓');
-      setTimeout(() => {
-        nextBtn.textContent = 'Next →';
-        nextBtn.style.background = '';
-        setStep(1);
-      }, 2000);
-      return;
-    }
-    setStep(currentStep + 1);
-  });
+ nextBtn.addEventListener('click', () => {
+  if (currentStep === totalSteps){
+    submitTeamRegistration();
+    return;
+  }
+  setStep(currentStep + 1);
+});
   stepEls.forEach(el => el.addEventListener('click', () => setStep(parseInt(el.dataset.step,10))));
 
   /* ============ TEAM MEMBERS ============ */
