@@ -3219,29 +3219,23 @@
   }
   aiFab.addEventListener('click', () => toggleAI(true));
   aiClose.addEventListener('click', () => toggleAI(false));
+let aiHistory = [];
 
-  const AI_RESPONSES = {
-    'theme':"For beginners, I'd recommend <strong>EdTech & Skill Development</strong> or <strong>Smart Cities & Mobility</strong> — lower entry barrier. Avoid Blockchain unless you have prior experience.",
-    'ps':"Framework to pick your PS:<br>1️⃣ Match to your team's strongest skill<br>2️⃣ Clear deliverable expectations<br>3️⃣ Check how many teams applied<br>4️⃣ Ensure MVP in 36 hours",
-    'judging':"Judges score on 5 criteria (equal weight): Innovation, Feasibility, Relevance to PS, Technical Proficiency, Presentation Skills. Prototype + live demo beats slides any day.",
-    'team':"Team rules: 1 to 6 members. You can even participate as a solo hacker! Team Leader is your primary contact.",
-    'register':"4-step process:<br>1️⃣ SPOC details<br>2️⃣ Team name + theme + PS<br>3️⃣ Team members (1–6)<br>4️⃣ Idea PPT + submit<br>All free!",
-    'winner':"Previous winners had 3 things in common: Working prototype, real-world validation, and confident 5-minute pitch.",
-    'prize':"Total prize pool is ₹1.2 Cr. First place per track gets ₹1.5 Lakh + certificate + trophy.",
-    'default':"Great question! Check the FAQ section or ask in our Discord community where 12,000+ hackers and mentors are active."
-  };
-
-  function getAIResponse(msg){
-    const m = msg.toLowerCase();
-    if (m.includes('theme') || m.includes('beginner')) return AI_RESPONSES.theme;
-    if (m.includes('pick') || m.includes('select') || m.includes('choose') || m.includes('ps ') || m.includes('problem statement')) return AI_RESPONSES.ps;
-    if (m.includes('judg') || m.includes('criteri') || m.includes('score') || m.includes('evaluat')) return AI_RESPONSES.judging;
-    if (m.includes('team') || m.includes('member') || m.includes('size')) return AI_RESPONSES.team;
-    if (m.includes('regist') || m.includes('sign up') || m.includes('apply')) return AI_RESPONSES.register;
-    if (m.includes('winner') || m.includes('won') || m.includes('past')) return AI_RESPONSES.winner;
-    if (m.includes('prize') || m.includes('money') || m.includes('reward')) return AI_RESPONSES.prize;
-    return AI_RESPONSES.default;
+async function getAIResponse(msg){
+  try {
+    const res = await fetch('/.netlify/functions/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, history: aiHistory })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed');
+    return data.reply;
+  } catch (e) {
+    console.warn('AI error:', e);
+    return "⚠️ AI se connect nahi ho paya. Internet check karo ya thodi der baad try karo.";
   }
+}
 
   function addAIMessage(text, isUser=false){
     const div = document.createElement('div');
@@ -3262,15 +3256,22 @@
   }
   function hideTyping(){ const t = $('#aiTyping'); if (t) t.remove(); }
 
-  function sendAI(){
-    const msg = aiInput.value.trim();
-    if (!msg) return;
-    addAIMessage(msg, true);
-    aiInput.value = '';
-    aiSuggestions.style.display = 'none';
-    showTyping();
-    setTimeout(() => { hideTyping(); addAIMessage(getAIResponse(msg)); }, 900 + Math.random() * 700);
-  }
+ async function sendAI(){
+  const msg = aiInput.value.trim();
+  if (!msg) return;
+  addAIMessage(msg, true);
+  aiInput.value = '';
+  aiSuggestions.style.display = 'none';
+  showTyping();
+
+  const reply = await getAIResponse(msg);
+  hideTyping();
+  addAIMessage(reply);
+
+  aiHistory.push({ role: 'user', text: msg });
+  aiHistory.push({ role: 'assistant', text: reply });
+  if (aiHistory.length > 12) aiHistory = aiHistory.slice(-12);
+}
   aiSend.addEventListener('click', sendAI);
   aiInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendAI(); }
