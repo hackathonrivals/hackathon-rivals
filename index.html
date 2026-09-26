@@ -7560,6 +7560,7 @@ async function loadAdminTeams(){
     adminTeamPage = 1;
     renderTeamStats(adminAllTeams);
     renderAdminTeams();
+    renderTeamAnalytics(adminAllTeams);
   } catch (e){
     console.error('Team load error:', e);
     teamTbody.innerHTML = `<tr><td colspan="7" class="admin-empty">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
