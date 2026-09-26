@@ -1343,6 +1343,53 @@
   .il-row .n.ok{color:var(--green);background:rgba(61,220,132,.12)}
   .il-row .n.bad{color:var(--red);background:rgba(255,107,107,.12)}
   .il-row .when{color:var(--muted);font-size:11.5px;white-space:nowrap}
+  /* ===== TEAM ANALYTICS ===== */
+.team-analytics{margin-top:24px}
+
+.status-chart{
+  display:flex;flex-direction:column;gap:14px;padding:8px 0;
+}
+.status-row{
+  display:flex;flex-direction:column;gap:8px;
+}
+.status-bar-wrap{
+  display:flex;align-items:center;gap:12px;
+}
+.status-bar{
+  flex:1;height:32px;border-radius:10px;
+  background:rgba(255,255,255,.04);overflow:hidden;
+  position:relative;
+}
+[data-theme="light"] .status-bar{background:rgba(15,17,25,.04)}
+.status-bar i{
+  display:block;height:100%;width:0;
+  border-radius:10px;
+  transition:width 1.2s cubic-bezier(.2,.8,.3,1);
+}
+.status-bar i.submitted{background:linear-gradient(90deg,#7c5cff,#9b7fff)}
+.status-bar i.approved{background:linear-gradient(90deg,#3ddc84,#22d3ee)}
+.status-bar i.rejected{background:linear-gradient(90deg,#ff6b6b,#ff4d9d)}
+.status-lbl{
+  display:flex;justify-content:space-between;
+  font-size:12px;font-weight:600;
+}
+.status-lbl .name{display:flex;align-items:center;gap:6px}
+.status-lbl .count{
+  font-family:'Space Grotesk';font-weight:700;
+  color:var(--text);
+}
+.status-lbl .pct{color:var(--muted);font-weight:500;font-size:11px}
+
+.theme-legend{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;
+}
+.legend-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--muted);
+}
+.legend-dot{
+  width:10px;height:10px;border-radius:3px;
+}
   /* ===== TEAM REGISTRATIONS ===== */
 .team-status-pill{
   display:inline-flex;align-items:center;gap:6px;
@@ -2612,6 +2659,27 @@
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
     <button class="btn btn-ghost" id="teamExportCSV" type="button">⬇ CSV</button>
    </div>
+   <!-- TEAM ANALYTICS -->
+<div class="team-analytics" id="teamAnalytics">
+  <div class="ana-grid">
+    <div class="ana-card">
+      <h4>📊 Status Breakdown <span class="tag">all teams</span></h4>
+      <div class="status-chart" id="statusChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>🎯 Theme-wise Teams <span class="tag">top 6</span></h4>
+      <div class="ana-topic" id="themeChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>🏫 Top Colleges <span class="tag">by team count</span></h4>
+      <div class="ana-topic" id="collegeChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>📅 Daily Registrations <span class="tag">last 7 days</span></h4>
+      <div class="ana-hist" id="dailyChart"></div>
+    </div>
+  </div>
+</div>
 
   <div class="admin-table-wrap">
     <table class="admin-table">
@@ -2627,6 +2695,7 @@
   </tr>
 </thead>
       <tbody id="teamTbody">
+
         <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
       </tbody>
       <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
@@ -7325,6 +7394,156 @@ function renderTeamStats(rows){
   set('teamStatPending', pending);
   set('teamStatApproved', approved);
   set('teamStatRejected', rejected);
+}
+/* --- Team Analytics --- */
+const THEME_COLORS = [
+  '#7c5cff', '#22d3ee', '#ff4d9d', '#3ddc84', 
+  '#ff9f43', '#ffd93d', '#a78bfa', '#f472b6'
+];
+
+function renderTeamAnalytics(teams){
+  if (!teams) teams = adminAllTeams;
+
+  // ---- 1. Status Breakdown ----
+  const total = teams.length;
+  const pending = teams.filter(t => (t.status || 'submitted') === 'submitted').length;
+  const approved = teams.filter(t => t.status === 'approved').length;
+  const rejected = teams.filter(t => t.status === 'rejected').length;
+
+  const statusEl = document.getElementById('statusChart');
+  if (statusEl){
+    const rows = [
+      { key: 'submitted', label: '🟣 Pending', count: pending },
+      { key: 'approved', label: '✅ Approved', count: approved },
+      { key: 'rejected', label: '❌ Rejected', count: rejected }
+    ];
+    statusEl.innerHTML = rows.map(r => {
+      const pct = total ? Math.round((r.count / total) * 100) : 0;
+      return `
+        <div class="status-row">
+          <div class="status-lbl">
+            <span class="name">${r.label}</span>
+            <span>
+              <span class="count">${r.count}</span>
+              <span class="pct"> · ${pct}%</span>
+            </span>
+          </div>
+          <div class="status-bar">
+            <i class="${r.key}" data-w="${pct}%"></i>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ---- 2. Theme-wise Teams ----
+  const byTheme = {};
+  teams.forEach(t => {
+    const th = (t.theme || 'Unknown').trim();
+    byTheme[th] = (byTheme[th] || 0) + 1;
+  });
+  const themes = Object.entries(byTheme)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+
+  const themeEl = document.getElementById('themeChart');
+  if (themeEl){
+    const peak = Math.max(1, ...themes.map(t => t[1]));
+    themeEl.innerHTML = themes.length
+      ? themes.map(([name, count], i) => {
+          const w = Math.round((count / peak) * 100);
+          const col = THEME_COLORS[i % THEME_COLORS.length];
+          return `
+            <div class="topic-row">
+              <div class="topic-lbl">
+                <span>${escapeHtml(name)}</span>
+                <span class="meta">${count} team${count > 1 ? 's' : ''}</span>
+              </div>
+              <div class="topic-bar">
+                <i data-w="${w}%" style="background:${col};width:0"></i>
+              </div>
+            </div>`;
+        }).join('')
+      : '<div class="ana-empty">No data yet.</div>';
+  }
+
+  // ---- 3. Top Colleges ----
+  const byCollege = {};
+  teams.forEach(t => {
+    const c = (t.college_name || 'Unknown').trim();
+    byCollege[c] = (byCollege[c] || 0) + 1;
+  });
+  const colleges = Object.entries(byCollege)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+
+  const collegeEl = document.getElementById('collegeChart');
+  if (collegeEl){
+    const peak = Math.max(1, ...colleges.map(c => c[1]));
+    collegeEl.innerHTML = colleges.length
+      ? colleges.map(([name, count]) => {
+          const w = Math.round((count / peak) * 100);
+          return `
+            <div class="topic-row">
+              <div class="topic-lbl">
+                <span>${escapeHtml(name.slice(0, 30))}</span>
+                <span class="meta">${count} team${count > 1 ? 's' : ''}</span>
+              </div>
+              <div class="topic-bar">
+                <i data-w="${w}%" style="background:linear-gradient(90deg,var(--violet),var(--cyan));width:0"></i>
+              </div>
+            </div>`;
+        }).join('')
+      : '<div class="ana-empty">No data yet.</div>';
+  }
+
+  // ---- 4. Daily Registrations (Last 7 Days) ----
+  const today = new Date();
+  const days = [];
+  for (let i = 6; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    d.setHours(0, 0, 0, 0);
+    days.push({
+      date: d,
+      label: d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+      count: 0
+    });
+  }
+  teams.forEach(t => {
+    const created = new Date(t.created_at);
+    created.setHours(0, 0, 0, 0);
+    const day = days.find(d => d.date.getTime() === created.getTime());
+    if (day) day.count++;
+  });
+
+  const dailyEl = document.getElementById('dailyChart');
+  if (dailyEl){
+    const peak = Math.max(1, ...days.map(d => d.count));
+    dailyEl.innerHTML = days.map(d => {
+      const h = Math.round((d.count / peak) * 100);
+      const col = d.count > 0 ? 'linear-gradient(180deg,#7c5cff,#22d3ee)' : 'rgba(255,255,255,.06)';
+      return `
+        <div class="hist-col">
+          <div class="bar" data-h="${h}%" style="background:${col};height:0">
+            <span>${d.count}</span>
+          </div>
+          <div class="lbl">${d.label}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // Animate bars
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#statusChart .status-bar i').forEach(el => {
+      el.style.width = el.dataset.w;
+    });
+    document.querySelectorAll('#themeChart .topic-bar i, #collegeChart .topic-bar i').forEach(el => {
+      el.style.width = el.dataset.w;
+    });
+    document.querySelectorAll('#dailyChart .bar').forEach(el => {
+      el.style.height = el.dataset.h;
+    });
+  });
 }
 
 async function loadAdminTeams(){
