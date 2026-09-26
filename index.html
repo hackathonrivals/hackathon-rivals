@@ -4091,7 +4091,9 @@ fetch('/.netlify/functions/send-email', {
     paneEls.forEach(p => p.classList.toggle('active', parseInt(p.dataset.pane,10) === currentStep));
     curStepEl.textContent = currentStep;
     prevBtn.disabled = currentStep === 1;
-    nextBtn.textContent = currentStep === totalSteps ? 'Submit Application ✓' : 'Next →';
+   nextBtn.textContent = currentStep === totalSteps 
+  ? (editingRegistrationId ? 'Update Registration ✓' : 'Submit Application ✓')
+  : 'Next →';
   }
   prevBtn.addEventListener('click', () => setStep(currentStep - 1));
  nextBtn.addEventListener('click', () => {
