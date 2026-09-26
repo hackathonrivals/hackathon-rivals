@@ -3237,7 +3237,7 @@ let aiHistory = [];
 
 async function getAIResponse(msg){
   try {
-    const res = await fetch('/.netlify/functions/ai-chat', {
+    const res = await fetch('/api/ai-chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: msg, history: aiHistory })
@@ -4033,7 +4033,7 @@ showToast(successMsg, 'success', '✓');
     showToast('🎉 Registration submitted successfully!', 'success', '✓');
 
 // Send emails (background)
-fetch('/.netlify/functions/send-email', {
+fetch('/api/send-email', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
