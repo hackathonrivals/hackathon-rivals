@@ -7418,6 +7418,10 @@ function exportTeamsCSV(rows){
   const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
+  a.download = 'team-registrations-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  showToast(`Exported ${rows.length} teams`, 'success', '⬇');
+}
 function openTeamDetails(r){
   const modal = document.getElementById('myRegModal');
   if (!modal) return;
