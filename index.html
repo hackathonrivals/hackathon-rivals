@@ -3304,7 +3304,6 @@
     });
   });
 
-  /* ============ LEADERBOARD ============ */
   /* ============ LEADERBOARD — REAL DATA ============ */
 const rowsEl = $('#boardRows');
 const inits = n => (n || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
@@ -3378,37 +3377,7 @@ $$('[data-board]').forEach(tab => {
 });
 
 loadLeaderboard('live');
-  const rowsEl = $('#boardRows');
-  const inits = n => n.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-  function renderBoard(key){
-    const list = DATA[key] || [];
-    rowsEl.innerHTML = list.map((t, i) => {
-      const rank = i + 1;
-      const rankCls = rank===1?'gold':rank===2?'silver':rank===3?'bronze':'';
-      const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
-      const tCls = t.trend>0?'up':t.trend<0?'down':'flat';
-      const tTxt = t.trend>0?'▲ '+t.trend:t.trend<0?'▼ '+Math.abs(t.trend):'—';
-      return `
-        <div class="row ${rank<=3?'top3':''}">
-          <div class="rank ${rankCls}">${medal || '#'+rank}</div>
-          <div class="team">
-            <span class="avatar" style="background:${t.color}">${inits(t.name)}</span>
-            <div>${t.name}<small>${t.college}</small></div>
-          </div>
-          <div class="pts">${t.pts.toLocaleString()}</div>
-          <div class="trend ${tCls}">${tTxt}</div>
-        </div>`;
-    }).join('');
-  }
-  renderBoard('live');
-  $$('[data-board]').forEach(tab => {
-    tab.addEventListener('click', () => {
-      $$('[data-board]').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      renderBoard(tab.dataset.board);
-    });
-  });
-
+ 
   /* ============ FAQ ============ */
   $$('.faq-item').forEach(item => {
     item.querySelector('.faq-q').addEventListener('click', () => item.classList.toggle('open'));
