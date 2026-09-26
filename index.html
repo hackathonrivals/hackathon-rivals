@@ -7413,66 +7413,6 @@ function exportTeamsCSV(rows){
   showToast(`Exported ${rows.length} teams`, 'success', '⬇');
 }
 
-// Event bindings
-if (teamSortBy) teamSortBy.addEventListener('change', () => { adminTeamPage = 1; renderAdminTeams(); });
-if (teamExportCSV) teamExportCSV.addEventListener('click', () => exportTeamsCSV(applyTeamFilters(adminAllTeams)));
-if (teamTbody) teamTbody.addEventListener('change', (e) => {
-  const cb = e.target.closest('.team-check');
-  if (!cb) return;
-  if (cb.checked) adminTeamSelection.add(cb.dataset.id);
-  else adminTeamSelection.delete(cb.dataset.id);
-  updateTeamBulkBar();
-});
-if (teamSelectAll) teamSelectAll.addEventListener('change', () => {
-  const visible = teamTbody.querySelectorAll('.team-check');
-  visible.forEach(c => {
-    if (teamSelectAll.checked){ c.checked = true; adminTeamSelection.add(c.dataset.id); }
-    else { c.checked = false; adminTeamSelection.delete(c.dataset.id); }
-  });
-  updateTeamBulkBar();
-});
-if (teamBulkClear) teamBulkClear.addEventListener('click', () => {
-  adminTeamSelection.clear();
-  if (teamSelectAll) teamSelectAll.checked = false;
-  renderAdminTeams();
-});
-if (teamBulkApprove) teamBulkApprove.addEventListener('click', () => bulkUpdateTeamStatus([...adminTeamSelection], 'approved'));
-if (teamBulkReject) teamBulkReject.addEventListener('click', () => bulkUpdateTeamStatus([...adminTeamSelection], 'rejected'));
-if (teamBulkExport) teamBulkExport.addEventListener('click', () => {
-  const rows = adminAllTeams.filter(r => adminTeamSelection.has(r.id));
-  exportTeamsCSV(rows);
-});
-if (teamSearch) teamSearch.addEventListener('input', () => { adminTeamPage = 1; renderAdminTeams(); });
-if (teamFilterStatus) teamFilterStatus.addEventListener('change', () => { adminTeamPage = 1; renderAdminTeams(); });
-if (teamRefresh) teamRefresh.addEventListener('click', () => { adminTeamSelection.clear(); loadAdminTeams(); });
-
-// Tab switching
-document.querySelectorAll('[data-admin-tab]').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    const which = tab.dataset.adminTab;
-    const arena = document.getElementById('adminArenaSection');
-    const teams = document.getElementById('adminTeamsSection');
-    if (arena) arena.style.display = which === 'arena' ? 'block' : 'none';
-    if (teams) teams.style.display = which === 'teams' ? 'block' : 'none';
-    if (which === 'teams') loadAdminTeams();
-  });
-});
-
-// Row actions
-if (teamTbody) teamTbody.addEventListener('click', async (e) => {
-  const btn = e.target.closest('.team-actions button');
-  if (!btn) return;
-  const id = btn.dataset.id;
-  const act = btn.dataset.act;
-  if (act === 'approve') await updateTeamStatus(id, 'approved');
-  else if (act === 'reject') await updateTeamStatus(id, 'rejected');
-  else if (act === 'view'){
-    const r = adminAllTeams.find(x => x.id === id);
-    if (r) openTeamDetails(r);
-  }
-});
 /* --- Team Registrations: Event bindings --- */
 const teamSortBy = document.getElementById('teamSortBy');
 const teamExportCSV = document.getElementById('teamExportCSV');
