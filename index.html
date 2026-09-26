@@ -2892,6 +2892,7 @@
   function escapeHtml(s){
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+  const esc = escapeHtml;
   function scoreCls(s){ return s >= 75 ? 'good' : s >= 50 ? 'mid' : 'low'; }
 
   /* ============ SUPABASE ============ */
