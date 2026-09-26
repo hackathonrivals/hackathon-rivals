@@ -2229,7 +2229,7 @@
           <div class="tabs">
             <button class="tab active" data-board="live">Live</button>
             <button class="tab" data-board="week">This Week</button>
-            <button class="tab" data-board="state">State-wise</button>
+            <button class="tab" data-board="submissions">Most Active</button>
           </div>
           <span class="info">● Showing top 5 of 1,284 teams</span>
         </div>
@@ -3305,29 +3305,79 @@
   });
 
   /* ============ LEADERBOARD ============ */
-  const DATA = {
-    live: [
-      { name:'Team Nova', college:'IIT Bombay', pts:9420, trend:12, color:'#7c5cff' },
-      { name:'Byte Force', college:'NIT Trichy', pts:9180, trend:5, color:'#22d3ee' },
-      { name:'Null Pointer', college:'BITS Pilani', pts:8875, trend:-2, color:'#ff4d9d' },
-      { name:'Syntax Squad', college:'IIIT Hyderabad', pts:8410, trend:8, color:'#4ade80' },
-      { name:'Async Await', college:'VIT Vellore', pts:8190, trend:0, color:'#fbbf24' }
-    ],
-    week: [
-      { name:'Syntax Squad', college:'IIIT Hyderabad', pts:41200, trend:3, color:'#4ade80' },
-      { name:'Team Nova', college:'IIT Bombay', pts:39880, trend:1, color:'#7c5cff' },
-      { name:'Async Await', college:'VIT Vellore', pts:37650, trend:6, color:'#fbbf24' },
-      { name:'Byte Force', college:'NIT Trichy', pts:35110, trend:-1, color:'#22d3ee' },
-      { name:'Null Pointer', college:'BITS Pilani', pts:33420, trend:-4, color:'#ff4d9d' }
-    ],
-    state: [
-      { name:'Team Nova', college:'Maharashtra', pts:9420, trend:2, color:'#7c5cff' },
-      { name:'Byte Force', college:'Tamil Nadu', pts:9180, trend:4, color:'#22d3ee' },
-      { name:'Code Titans', college:'Karnataka', pts:8990, trend:1, color:'#4ade80' },
-      { name:'Null Pointer', college:'Rajasthan', pts:8875, trend:-1, color:'#ff4d9d' },
-      { name:'Async Await', college:'Delhi NCR', pts:8190, trend:0, color:'#fbbf24' }
-    ]
-  };
+  /* ============ LEADERBOARD — REAL DATA ============ */
+const rowsEl = $('#boardRows');
+const inits = n => (n || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
+
+async function loadLeaderboard(period = 'live'){
+  rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading leaderboard…</div>';
+
+  try {
+    let query = supabase.from('arena_submissions').select('email, full_name, score, created_at');
+    if (period === 'week'){
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      query = query.gte('created_at', weekAgo);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Aggregate by email
+    const agg = {};
+    (data || []).forEach(r => {
+      const key = r.email || 'unknown';
+      if (!agg[key]) agg[key] = { email: key, name: r.full_name || '', total: 0, count: 0 };
+      agg[key].total += (r.score || 0);
+      agg[key].count++;
+    });
+
+    let list;
+    if (period === 'submissions'){
+      list = Object.values(agg).sort((a, b) => b.count - a.count).slice(0, 5);
+    } else {
+      list = Object.values(agg).sort((a, b) => b.total - a.total).slice(0, 5);
+    }
+
+    if (!list.length){
+      rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">No submissions yet. Be the first one!</div>';
+      return;
+    }
+
+    const colors = ['#7c5cff', '#22d3ee', '#ff4d9d', '#4ade80', '#fbbf24'];
+    const medals = ['🥇', '🥈', '🥉', '', ''];
+
+    rowsEl.innerHTML = list.map((u, i) => {
+      const rank = i + 1;
+      const rankCls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+      const val = period === 'submissions' ? u.count : u.total;
+      const meta = period === 'submissions' ? ' submissions' : ' pts';
+      return `
+        <div class="row ${rank <= 3 ? 'top3' : ''}">
+          <div class="rank ${rankCls}">${medals[i] || '#' + rank}</div>
+          <div class="team">
+            <span class="avatar" style="background:${colors[i]}">${inits(u.name || u.email)}</span>
+            <div>${escapeHtml(u.name || u.email.split('@')[0])}<small>${escapeHtml(u.email)}</small></div>
+          </div>
+          <div class="pts">${val.toLocaleString()}</div>
+          <div class="trend flat">${meta}</div>
+        </div>`;
+    }).join('');
+
+  } catch (e){
+    console.error('Leaderboard error:', e);
+    rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Could not load leaderboard.</div>';
+  }
+}
+
+$$('[data-board]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    $$('[data-board]').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    loadLeaderboard(tab.dataset.board);
+  });
+});
+
+loadLeaderboard('live');
   const rowsEl = $('#boardRows');
   const inits = n => n.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
   function renderBoard(key){
