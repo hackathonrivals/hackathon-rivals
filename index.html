@@ -4375,7 +4375,7 @@ if (editingRegistrationId){
       ...spoc,
       ...team,
       members,
-      status: 'submitted'
+      status: 'submitted',
       ppt_url: uploadedPptUrl || null,
     }]);
   dbError = error;
@@ -6709,11 +6709,10 @@ _start:
   async function saveWebhookToCloud(url){
     const { error } = await supabase.from('app_settings').upsert(
       { key: 'webhook_url', value: url || null, updated_at: new Date().toISOString() },
-
       { onConflict: 'key' }
     );
     if (error) throw error;
-  }
+  }s
   function refreshAsState(){
     if (!asState || !asWebhook) return;
     const u = asWebhook.value.trim();
