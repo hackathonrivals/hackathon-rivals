@@ -2581,7 +2581,6 @@
 
   <div class="admin-filters">
     <input type="text" id="teamSearch" placeholder="🔍 Search by team, college, or email…" />
-   <input type="text" id="teamSearch" placeholder="🔍 Search by team, college, or email…" />
 <select id="teamSortBy">
   <option value="created_desc">📅 Newest first</option>
   <option value="created_asc">📅 Oldest first</option>
@@ -6187,18 +6186,20 @@ _start:
     if (rtText) rtText.textContent = text;
   }
 
-  async function fireWebhookViaEdge(row, isTest){
-    try {
-      const { data, error } = await supabase.functions.invoke('notify-webhook', {
-        body: { row, isTest: !!isTest }
-      });
-      if (error) throw error;
-      return !!data?.ok;
-    } catch (e){
-      console.warn('Edge webhook failed:', e);
-      return false;
-    }
+ async function fireWebhookViaEdge(row, isTest){
+  try {
+    const res = await fetch('/api/notify-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ row, isTest: !!isTest })
+    });
+    const data = await res.json();
+    return !!data?.ok;
+  } catch (e){
+    console.warn('Webhook failed:', e);
+    return false;
   }
+}
 
   function startRealtime(){
     if (!window.__hrArenaConfig.realtime) return;
