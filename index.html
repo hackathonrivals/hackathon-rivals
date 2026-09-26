@@ -367,6 +367,17 @@
     background:rgba(0,0,0,.2)}
   [data-theme="light"] .upload-zone{background:rgba(15,17,25,.02)}
   .upload-zone:hover{border-color:var(--violet);background:rgba(124,92,255,.06)}
+  .upload-zone.loaded{
+  border-style:solid;
+  border-color:rgba(61,220,132,.5);
+  background:rgba(61,220,132,.06);
+}
+.upload-zone.loaded .icon::after{content:' ✓';color:var(--green)}
+.upload-zone.uploading{
+  border-color:var(--violet);
+  background:rgba(124,92,255,.06);
+  cursor:wait;
+}
   .upload-zone .icon{font-size:30px;margin-bottom:8px}
   .upload-zone .t{font-size:14px;font-weight:600;margin-bottom:4px}
   .upload-zone .s{font-size:12px;color:var(--muted)}
@@ -2136,11 +2147,12 @@
             </div>
             <div class="field">
               <label>Idea Presentation (PPT) <span class="req">*</span></label>
-              <div class="upload-zone">
-                <div class="icon">📊</div>
-                <div class="t">Upload your idea PPT</div>
-                <div class="s">PDF / PPT / PPTX · Max 10 MB · <span class="browse">Browse files</span></div>
-              </div>
+           <div class="upload-zone" id="pptUploadZone">
+  <div class="icon" id="pptIcon">📊</div>
+  <div class="t" id="pptTitle">Upload your idea PPT</div>
+  <div class="s" id="pptSub">PDF / PPT / PPTX · Max 10 MB · <span class="browse">Browse files</span></div>
+  <input type="file" id="pptFileInput" accept=".pdf,.ppt,.pptx" hidden />
+</div>
             </div>
             <label class="checkbox-row">
               <input type="checkbox" />
@@ -3535,11 +3547,7 @@ async function getAIResponse(msg){
      document.getElementById('ddRegister').addEventListener('click', () => {
   userMenu.classList.remove('open');
   showMyRegistration();
-});('click', () => {
-        userMenu.classList.remove('open');
-        document.getElementById('register').scrollIntoView({behavior:'smooth'});
-      });
-
+});
       // Admin menu injection
       if (user.role === 'Admin'){
         const dd = userMenu.querySelector('.user-dropdown');
@@ -4368,6 +4376,7 @@ if (editingRegistrationId){
       ...team,
       members,
       status: 'submitted'
+      ppt_url: uploadedPptUrl || null,
     }]);
   dbError = error;
 }
@@ -4419,6 +4428,83 @@ fetch('/api/send-email', {
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit Application ✓';
   }
+}
+/* ============ PPT UPLOAD ============ */
+let uploadedPptUrl = null;
+
+function initPptUpload(){
+  const zone = document.getElementById('pptUploadZone');
+  const input = document.getElementById('pptFileInput');
+  if (!zone || !input) return;
+
+  zone.addEventListener('click', () => input.click());
+  input.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) handlePptFile(f);
+  });
+}
+
+async function handlePptFile(file){
+  const zone = document.getElementById('pptUploadZone');
+  const icon = document.getElementById('pptIcon');
+  const title = document.getElementById('pptTitle');
+  const sub = document.getElementById('pptSub');
+
+  if (file.size > 10 * 1024 * 1024){
+    showToast('File too large (max 10 MB)', 'warn', '⚠️');
+    return;
+  }
+  const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+  if (!['.pdf', '.ppt', '.pptx'].includes(ext)){
+    showToast('Only PDF, PPT, or PPTX files allowed', 'warn', '⚠️');
+    return;
+  }
+
+  zone.classList.add('uploading');
+  icon.textContent = '⏳';
+  title.textContent = 'Uploading…';
+  sub.textContent = file.name;
+
+  try {
+    const user = await getCurrentUser();
+    if (!user){ showToast('Please log in first', 'warn', '🔒'); return; }
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `${user.id}/${Date.now()}-${safeName}`;
+
+    const { error: upErr } = await supabase.storage
+      .from('team-ppts')
+      .upload(filePath, file);
+
+    if (upErr) throw upErr;
+
+    const { data: urlData } = supabase.storage
+      .from('team-ppts')
+      .getPublicUrl(filePath);
+
+    uploadedPptUrl = urlData.publicUrl;
+
+    zone.classList.remove('uploading');
+    zone.classList.add('loaded');
+    icon.textContent = '📊';
+    title.textContent = '✓ PPT uploaded';
+    sub.textContent = file.name;
+
+    showToast('PPT uploaded!', 'success', '✓');
+
+  } catch (err){
+    console.error('PPT upload error:', err);
+    showToast('Upload failed: ' + (err.message || 'Error'), 'warn', '⚠️');
+    zone.classList.remove('uploading');
+    icon.textContent = '📊';
+    title.textContent = 'Upload your idea PPT';
+  }
+}
+
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initPptUpload);
+} else {
+  initPptUpload();
 }
 
   /* ============ REGISTRATION STEPPER ============ */
@@ -6623,6 +6709,7 @@ _start:
   async function saveWebhookToCloud(url){
     const { error } = await supabase.from('app_settings').upsert(
       { key: 'webhook_url', value: url || null, updated_at: new Date().toISOString() },
+      ppt_url: uploadedPptUrl || null,
       { onConflict: 'key' }
     );
     if (error) throw error;
@@ -7332,151 +7419,6 @@ function exportTeamsCSV(rows){
   const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'team-registrations-' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-  showToast(`Exported ${rows.length} teams`, 'success', '⬇');
-}
-
-function openTeamDetails(r){
-  const modal = document.getElementById('myRegModal');
-  if (!modal) return;
-  document.getElementById('myRegTitle').textContent = r.team_name || 'Team';
-  document.getElementById('myRegSub').textContent = `${r.college_name || ''} · ${r.spoc_email || r.email}`;
-  const members = Array.isArray(r.members) ? r.members : [];
-  document.getElementById('myRegBody').innerHTML = `
-    <div class="myreg-hero">
-      <div>
-        <h3>${escapeHtml(r.team_name || '')}</h3>
-        <div class="team-sub">${escapeHtml(r.college_name || '')}</div>
-      </div>
-      <div class="myreg-status ${r.status || 'submitted'}">${r.status || 'submitted'}</div>
-    </div>
-    <div class="myreg-grid">
-      <div class="myreg-box">
-        <h4>🎯 Team & Theme</h4>
-        <div class="row"><span class="lbl">Theme</span><span class="val">${escapeHtml(r.theme||'—')}</span></div>
-        <div class="row"><span class="lbl">Category</span><span class="val">${escapeHtml(r.category||'—')}</span></div>
-        <div class="row"><span class="lbl">Problem</span><span class="val" style="font-size:12px">${escapeHtml((r.problem_statement||'—').slice(0,60))}</span></div>
-      </div>
-      <div class="myreg-box">
-        <h4>🏫 SPOC</h4>
-        <div class="row"><span class="lbl">Name</span><span class="val">${escapeHtml(r.spoc_name||'—')}</span></div>
-        <div class="row"><span class="lbl">Email</span><span class="val" style="font-size:12px">${escapeHtml(r.spoc_email||'—')}</span></div>
-        <div class="row"><span class="lbl">Mobile</span><span class="val">${escapeHtml(r.spoc_mobile||'—')}</span></div>
-      </div>
-    </div>
-    <div class="myreg-box">
-      <h4>💡 Idea Summary</h4>
-      <p style="font-size:13.5px;line-height:1.7;margin:0">${escapeHtml(r.idea_summary||'—')}</p>
-    </div>
-    <div class="myreg-box" style="margin-top:16px">
-      <h4>👥 Members (${members.length})</h4>
-      ${members.length ? members.map((m,i)=>`<div class="myreg-member"><div class="num">${i+1}</div><div class="nm">${escapeHtml(m.name||'—')}</div>${m.role?`<div class="rl">${escapeHtml(m.role)}</div>`:''}</div>`).join('') : '<div style="color:var(--muted);font-size:13px">No members</div>'}
-    </div>`;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-// Event bindings — sorting, pagination, bulk
-const teamSortBy = document.getElementById('teamSortBy');
-const teamExportCSV = document.getElementById('teamExportCSV');
-const teamSelectAll = document.getElementById('teamSelectAll');
-const teamBulkBar = document.getElementById('teamBulkBar');
-const teamBulkClear = document.getElementById('teamBulkClear');
-const teamBulkApprove = document.getElementById('teamBulkApprove');
-const teamBulkReject = document.getElementById('teamBulkReject');
-const teamBulkExport = document.getElementById('teamBulkExport');
-
-if (teamSortBy) teamSortBy.addEventListener('change', () => { adminTeamPage = 1; renderAdminTeams(); });
-if (teamExportCSV) teamExportCSV.addEventListener('click', () => exportTeamsCSV(applyTeamFilters(adminAllTeams)));
-
-if (teamTbody){
-  teamTbody.addEventListener('change', (e) => {
-    const cb = e.target.closest('.team-check');
-    if (!cb) return;
-    if (cb.checked) adminTeamSelection.add(cb.dataset.id);
-    else adminTeamSelection.delete(cb.dataset.id);
-    updateTeamBulkBar();
-  });
-}
-if (teamSelectAll){
-  teamSelectAll.addEventListener('change', () => {
-    const visible = teamTbody.querySelectorAll('.team-check');
-    visible.forEach(c => {
-      if (teamSelectAll.checked){ c.checked = true; adminTeamSelection.add(c.dataset.id); }
-      else { c.checked = false; adminTeamSelection.delete(c.dataset.id); }
-    });
-    updateTeamBulkBar();
-  });
-}
-if (teamBulkClear) teamBulkClear.addEventListener('click', () => {
-  adminTeamSelection.clear();
-  if (teamSelectAll) teamSelectAll.checked = false;
-  renderAdminTeams();
-});
-if (teamBulkApprove) teamBulkApprove.addEventListener('click', () => bulkUpdateTeamStatus([...adminTeamSelection], 'approved'));
-if (teamBulkReject) teamBulkReject.addEventListener('click', () => bulkUpdateTeamStatus([...adminTeamSelection], 'rejected'));
-if (teamBulkExport) teamBulkExport.addEventListener('click', () => {
-  const rows = adminAllTeams.filter(r => adminTeamSelection.has(r.id));
-  exportTeamsCSV(rows);
-});
-
-if (teamSearch) teamSearch.addEventListener('input', () => { adminTeamPage = 1; renderAdminTeams(); });
-if (teamFilterStatus) teamFilterStatus.addEventListener('change', () => { adminTeamPage = 1; renderAdminTeams(); });
-if (teamRefresh) teamRefresh.addEventListener('click', () => { adminTeamSelection.clear(); loadAdminTeams(); });
-
-if (teamTbody){
-  teamTbody.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.team-actions button');
-    if (!btn) return;
-    const id = btn.dataset.id;
-    const act = btn.dataset.act;
-    if (act === 'approve') await updateTeamStatus(id, 'approved');
-    else if (act === 'reject') await updateTeamStatus(id, 'rejected');
-    else if (act === 'view'){
-      const r = adminAllTeams.find(x => x.id === id);
-      if (r) openTeamDetails(r);
-    }
-  });
-}
-
-
-
-// Tab switching
-document.querySelectorAll('[data-admin-tab]').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    const which = tab.dataset.adminTab;
-    const arena = document.getElementById('adminArenaSection');
-    const teams = document.getElementById('adminTeamsSection');
-    if (arena) arena.style.display = which === 'arena' ? 'block' : 'none';
-    if (teams) teams.style.display = which === 'teams' ? 'block' : 'none';
-    if (which === 'teams') loadAdminTeams();
-  });
-});
-
-// Filters
-if (teamSearch) teamSearch.addEventListener('input', renderAdminTeams);
-if (teamFilterStatus) teamFilterStatus.addEventListener('change', renderAdminTeams);
-if (teamRefresh) teamRefresh.addEventListener('click', loadAdminTeams);
-
-// Row actions
-if (teamTbody){
-  teamTbody.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.team-actions button');
-    if (!btn) return;
-    const id = btn.dataset.id;
-    const act = btn.dataset.act;
-    if (act === 'approve') await updateTeamStatus(id, 'approved');
-    else if (act === 'reject') await updateTeamStatus(id, 'rejected');
-    else if (act === 'view'){
-      const r = adminAllTeams.find(x => x.id === id);
-      if (r) openTeamDetails(r);
-    }
-  });
-}
-
 function openTeamDetails(r){
   const modal = document.getElementById('myRegModal');
   if (!modal) return;
