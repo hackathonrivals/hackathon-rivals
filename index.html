@@ -3770,6 +3770,29 @@ async function submitTeamRegistration(){
 
     showToast('🎉 Registration submitted successfully!', 'success', '✓');
 
+// Send emails (background)
+fetch('/.netlify/functions/send-email', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    registration: {
+      ...spoc,
+      ...team,
+      email: user.email,
+      team_size: team.team_size
+    }
+  })
+})
+.then(r => r.json())
+.then(d => {
+  if (d && d.ok) {
+    console.log('✅ Admin email:', d.admin);
+    console.log('✅ User email:', d.user);
+    if (!d.admin) console.warn('Admin err:', d.adminErr);
+    if (!d.user)  console.warn('User err:', d.userErr);
+  }
+})
+.catch(e => console.warn('Email send failed:', e));
     setTimeout(() => {
       submitBtn.textContent = 'Next →';
       submitBtn.style.background = '';
