@@ -1332,6 +1332,27 @@
   .il-row .n.ok{color:var(--green);background:rgba(61,220,132,.12)}
   .il-row .n.bad{color:var(--red);background:rgba(255,107,107,.12)}
   .il-row .when{color:var(--muted);font-size:11.5px;white-space:nowrap}
+  /* ===== TEAM REGISTRATIONS ===== */
+.team-status-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:8px;font-size:11.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;
+}
+.team-status-pill.submitted{background:rgba(124,92,255,.15);color:var(--violet);border:1px solid rgba(124,92,255,.3)}
+.team-status-pill.approved{background:rgba(61,220,132,.15);color:var(--green);border:1px solid rgba(61,220,132,.35)}
+.team-status-pill.rejected{background:rgba(255,107,107,.15);color:var(--red);border:1px solid rgba(255,107,107,.35)}
+
+.team-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.team-actions button{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  cursor:pointer;font-size:11.5px;padding:6px 12px;border-radius:8px;
+  font-family:inherit;font-weight:600;transition:.2s;
+}
+.team-actions button:hover{border-color:var(--border-strong);color:var(--text)}
+.team-actions button.approve:hover{border-color:var(--green);color:var(--green);background:rgba(61,220,132,.08)}
+.team-actions button.reject:hover{border-color:var(--red);color:var(--red);background:rgba(255,107,107,.08)}
+.team-actions button.view:hover{border-color:var(--violet);color:var(--violet);background:rgba(124,92,255,.08)}
+.team-actions button:disabled{opacity:.4;cursor:wait}
 
   /* ===== MODALS ===== */
   .code-modal-bg{position:fixed;inset:0;background:rgba(5,6,10,.85);backdrop-filter:blur(8px);
@@ -2369,6 +2390,20 @@
         <h2>All Code Arena submissions</h2>
         <p>Live view of every submission across all users. Sorted newest first. Admin-only — RLS enforced at the database level.</p>
       </div>
+<div class="tabs" style="margin-bottom:20px">
+  <button class="tab active" data-admin-tab="arena">⚔️ Arena Submissions</button>
+  <button class="tab" data-admin-tab="teams">📝 Team Registrations</button>
+</div>
+
+<div id="adminArenaSection">
+  <!-- existing admin content yahan rahega -->
+   <!-- ADMIN TAB SWITCHER -->
+<div class="tabs" style="margin-bottom:20px">
+  <button class="tab active" data-admin-tab="arena">⚔️ Arena Submissions</button>
+  <button class="tab" data-admin-tab="teams">📝 Team Registrations</button>
+</div>
+
+<div id="adminArenaSection" style="display:block">
 
       <div class="admin-stats" id="adminStats">
         <div class="admin-stat accent">
@@ -2516,6 +2551,64 @@
           </div>
         </div>
       </div>
+      </div><!-- /adminArenaSection -->
+
+<!-- TEAM REGISTRATIONS SECTION -->
+<div id="adminTeamsSection" style="display:none">
+  <div class="admin-stats" style="margin-bottom:22px">
+    <div class="admin-stat accent">
+      <div class="lbl">Total Teams</div>
+      <div class="val" id="teamStatTotal">—</div>
+      <div class="sub">across all colleges</div>
+    </div>
+    <div class="admin-stat">
+      <div class="lbl">Pending</div>
+      <div class="val" id="teamStatPending">—</div>
+      <div class="sub">awaiting review</div>
+    </div>
+    <div class="admin-stat">
+      <div class="lbl">Approved</div>
+      <div class="val" id="teamStatApproved">—</div>
+      <div class="sub">confirmed teams</div>
+    </div>
+    <div class="admin-stat">
+      <div class="lbl">Rejected</div>
+      <div class="val" id="teamStatRejected">—</div>
+      <div class="sub">didn't make it</div>
+    </div>
+  </div>
+
+  <div class="admin-filters">
+    <input type="text" id="teamSearch" placeholder="🔍 Search by team, college, or email…" />
+    <select id="teamFilterStatus">
+      <option value="">All statuses</option>
+      <option value="submitted">Submitted (pending)</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <div class="spacer"></div>
+    <span class="count" id="teamCount">—</span>
+    <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th class="hide-sm">College</th>
+          <th class="hide-sm">Theme</th>
+          <th class="hide-sm">Members</th>
+          <th>Status</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="teamTbody">
+        <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
       <div class="digest-panel">
         <h4>📬 Scheduled digest <span class="tag">pg_cron · daily 9 AM IST</span></h4>
@@ -6603,6 +6696,200 @@ _start:
     if (e.target === userModal){ userModal.classList.remove('open'); document.body.style.overflow = ''; }
   });
   if (umMore) umMore.addEventListener('click', () => fetchUserPage(false));
+  /* ============================================================
+   ADMIN — TEAM REGISTRATIONS
+   ============================================================ */
+const teamTbody = document.getElementById('teamTbody');
+const teamSearch = document.getElementById('teamSearch');
+const teamFilterStatus = document.getElementById('teamFilterStatus');
+const teamCount = document.getElementById('teamCount');
+const teamRefresh = document.getElementById('teamRefresh');
+
+let adminAllTeams = [];
+
+function applyTeamFilters(rows){
+  const q = (teamSearch?.value || '').trim().toLowerCase();
+  const status = teamFilterStatus?.value || '';
+  return rows.filter(r => {
+    if (status && r.status !== status) return false;
+    if (q){
+      const hay = `${r.team_name||''} ${r.college_name||''} ${r.email||''} ${r.spoc_name||''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function renderAdminTeams(){
+  if (!teamTbody) return;
+  const rows = applyTeamFilters(adminAllTeams);
+  if (teamCount) teamCount.textContent = `${rows.length} / ${adminAllTeams.length} shown`;
+
+  if (!rows.length){
+    teamTbody.innerHTML = `<tr><td colspan="6" class="admin-empty">No team registrations found.</td></tr>`;
+    return;
+  }
+
+  teamTbody.innerHTML = rows.map(r => {
+    const members = Array.isArray(r.members) ? r.members.length : 0;
+    const status = (r.status || 'submitted').toLowerCase();
+    const statusLabel = { submitted:'🟣 Submitted', approved:'✅ Approved', rejected:'❌ Rejected' }[status] || '🟣 Submitted';
+    return `
+      <tr data-id="${r.id}">
+        <td>
+          <div class="u-email">${escapeHtml(r.team_name || '—')}</div>
+          <div class="u-name">${escapeHtml(r.spoc_name || '')}</div>
+        </td>
+        <td class="hide-sm">${escapeHtml((r.college_name || '—').slice(0, 30))}</td>
+        <td class="hide-sm">${escapeHtml((r.theme || '—').slice(0, 22))}</td>
+        <td class="hide-sm">${members}</td>
+        <td><span class="team-status-pill ${status}">${statusLabel}</span></td>
+        <td class="actions-cell">
+          <div class="team-actions">
+            <button class="view" data-act="view" data-id="${r.id}">View</button>
+            ${status !== 'approved' ? `<button class="approve" data-act="approve" data-id="${r.id}">✓ Approve</button>` : ''}
+            ${status !== 'rejected' ? `<button class="reject" data-act="reject" data-id="${r.id}">✕ Reject</button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function renderTeamStats(rows){
+  const total = rows.length;
+  const pending = rows.filter(r => (r.status || 'submitted') === 'submitted').length;
+  const approved = rows.filter(r => r.status === 'approved').length;
+  const rejected = rows.filter(r => r.status === 'rejected').length;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('teamStatTotal', total);
+  set('teamStatPending', pending);
+  set('teamStatApproved', approved);
+  set('teamStatRejected', rejected);
+}
+
+async function loadAdminTeams(){
+  if (!teamTbody) return;
+  teamTbody.innerHTML = `<tr><td colspan="6" class="admin-empty"><span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid var(--border-strong);border-top-color:var(--violet);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:8px"></span>Loading teams…</td></tr>`;
+  try {
+    const { data, error } = await supabase
+      .from('team_registrations')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    adminAllTeams = data || [];
+    renderTeamStats(adminAllTeams);
+    renderAdminTeams();
+  } catch (e){
+    console.error('Team load error:', e);
+    teamTbody.innerHTML = `<tr><td colspan="6" class="admin-empty">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+  }
+}
+
+async function updateTeamStatus(id, status){
+  const row = adminAllTeams.find(r => r.id === id);
+  if (!row) return;
+  try {
+    const { error } = await supabase
+      .from('team_registrations')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+    row.status = status;
+    renderTeamStats(adminAllTeams);
+    renderAdminTeams();
+    showToast(`Team ${status === 'approved' ? '✅ approved' : '❌ rejected'}`, 
+              status === 'approved' ? 'success' : 'warn', 
+              status === 'approved' ? '✅' : '❌');
+
+    // Optional email notification
+    if (row.spoc_email || row.email){
+      fetch('/api/notify-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registration: row, status })
+      }).catch(() => {});
+    }
+  } catch (e){
+    console.error('Status update error:', e);
+    showToast('Failed: ' + e.message, 'warn', '⚠️');
+  }
+}
+
+// Tab switching
+document.querySelectorAll('[data-admin-tab]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('[data-admin-tab]').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const which = tab.dataset.adminTab;
+    const arena = document.getElementById('adminArenaSection');
+    const teams = document.getElementById('adminTeamsSection');
+    if (arena) arena.style.display = which === 'arena' ? 'block' : 'none';
+    if (teams) teams.style.display = which === 'teams' ? 'block' : 'none';
+    if (which === 'teams') loadAdminTeams();
+  });
+});
+
+// Filters
+if (teamSearch) teamSearch.addEventListener('input', renderAdminTeams);
+if (teamFilterStatus) teamFilterStatus.addEventListener('change', renderAdminTeams);
+if (teamRefresh) teamRefresh.addEventListener('click', loadAdminTeams);
+
+// Row actions
+if (teamTbody){
+  teamTbody.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.team-actions button');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const act = btn.dataset.act;
+    if (act === 'approve') await updateTeamStatus(id, 'approved');
+    else if (act === 'reject') await updateTeamStatus(id, 'rejected');
+    else if (act === 'view'){
+      const r = adminAllTeams.find(x => x.id === id);
+      if (r) openTeamDetails(r);
+    }
+  });
+}
+
+function openTeamDetails(r){
+  const modal = document.getElementById('myRegModal');
+  if (!modal) return;
+  // Reuse My Registration modal for admin view
+  document.getElementById('myRegTitle').textContent = r.team_name || 'Team';
+  document.getElementById('myRegSub').textContent = `${r.college_name || ''} · ${r.spoc_email || r.email}`;
+  const members = Array.isArray(r.members) ? r.members : [];
+  document.getElementById('myRegBody').innerHTML = `
+    <div class="myreg-hero">
+      <div>
+        <h3>${escapeHtml(r.team_name || '')}</h3>
+        <div class="team-sub">${escapeHtml(r.college_name || '')}</div>
+      </div>
+      <div class="myreg-status ${r.status || 'submitted'}">${r.status || 'submitted'}</div>
+    </div>
+    <div class="myreg-grid">
+      <div class="myreg-box">
+        <h4>🎯 Team & Theme</h4>
+        <div class="row"><span class="lbl">Theme</span><span class="val">${escapeHtml(r.theme||'—')}</span></div>
+        <div class="row"><span class="lbl">Category</span><span class="val">${escapeHtml(r.category||'—')}</span></div>
+        <div class="row"><span class="lbl">Problem</span><span class="val" style="font-size:12px">${escapeHtml((r.problem_statement||'—').slice(0,60))}</span></div>
+      </div>
+      <div class="myreg-box">
+        <h4>🏫 SPOC</h4>
+        <div class="row"><span class="lbl">Name</span><span class="val">${escapeHtml(r.spoc_name||'—')}</span></div>
+        <div class="row"><span class="lbl">Email</span><span class="val" style="font-size:12px">${escapeHtml(r.spoc_email||'—')}</span></div>
+        <div class="row"><span class="lbl">Mobile</span><span class="val">${escapeHtml(r.spoc_mobile||'—')}</span></div>
+      </div>
+    </div>
+    <div class="myreg-box">
+      <h4>💡 Idea Summary</h4>
+      <p style="font-size:13.5px;line-height:1.7;margin:0">${escapeHtml(r.idea_summary||'—')}</p>
+    </div>
+    <div class="myreg-box" style="margin-top:16px">
+      <h4>👥 Members (${members.length})</h4>
+      ${members.length ? members.map((m,i)=>`<div class="myreg-member"><div class="num">${i+1}</div><div class="nm">${escapeHtml(m.name||'—')}</div>${m.role?`<div class="rl">${escapeHtml(m.role)}</div>`:''}</div>`).join('') : '<div style="color:var(--muted);font-size:13px">No members</div>'}
+    </div>`;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
 
   /* ============================================================
      CSV IMPORT
