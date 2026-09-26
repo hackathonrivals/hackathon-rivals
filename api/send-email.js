@@ -18,8 +18,7 @@ export default async function handler(req, res) {
     if (!API_KEY) return res.status(500).json({ error: 'RESEND_API_KEY not set' });
     if (!ADMIN_EMAIL) return res.status(500).json({ error: 'ADMIN_EMAIL not set' });
 
-    const FROM = 'Hackathon Rivals <onboarding@resend.dev>';
-
+   from: 'Hackathon Rivals <noreply@hackathonrivals.in>',
     const adminHtml = `
       <div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#0f1119;color:#e9ebf2;border-radius:12px">
         <h2 style="color:#7c5cff;margin:0 0 16px">🎉 New Team Registration!</h2>

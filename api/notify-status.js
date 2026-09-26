@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
       body: JSON.stringify({
-        from: 'Hackathon Rivals <onboarding@resend.dev>',
+       from: 'Hackathon Rivals <noreply@hackathonrivals.in>',
         to: [to], subject, html
       })
     });
