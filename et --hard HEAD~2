@@ -1,0 +1,10 @@
+[33m6d27813[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Add user dashboard
+[33ma37a05b[m Use verified domain for emails
+[33m547265a[m Remove duplicate team search input
+[33m5bdc370[m Add notify-webhook API for Vercel
+[33m4352a5e[m Remove duplicate team search input
+[33m743ccf4[m Add sorting pagination bulk actions
+[33mc47e72c[m Add missing admin team registration functions
+[33m307a50f[m Add admin team approval + user status notifications
+[33md214fe2[m Fix esc function alias
+[33m3e7560d[m Migrate to versal
