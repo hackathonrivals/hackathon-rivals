@@ -2501,7 +2501,14 @@
         <button class="btn btn-primary" id="bulkDelete" type="button"
           style="background:linear-gradient(135deg,#ff6b6b,#ff4d9d)">🗑 Delete</button>
       </div>
-
+<div class="bulk-bar" id="teamBulkBar" style="margin-bottom:12px">
+  <span class="cnt"><b id="teamBulkCount">0</b> selected</span>
+  <div class="spacer"></div>
+  <button class="btn btn-ghost" id="teamBulkClear" type="button">Clear</button>
+  <button class="btn btn-ghost" id="teamBulkApprove" type="button">✓ Approve all</button>
+  <button class="btn btn-ghost" id="teamBulkReject" type="button">✕ Reject all</button>
+  <button class="btn btn-primary" id="teamBulkExport" type="button">⬇ Export</button>
+</div>
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
@@ -2575,6 +2582,14 @@
   <div class="admin-filters">
     <input type="text" id="teamSearch" placeholder="🔍 Search by team, college, or email…" />
     <select id="teamFilterStatus">
+      <select id="teamSortBy">
+  <option value="created_desc">📅 Newest first</option>
+  <option value="created_asc">📅 Oldest first</option>
+  <option value="name_asc">🔤 Name (A-Z)</option>
+  <option value="name_desc">🔤 Name (Z-A)</option>
+  <option value="college_asc">🏫 College (A-Z)</option>
+  <option value="status_asc">🏷 Status</option>
+</select>
       <option value="">All statuses</option>
       <option value="submitted">Submitted (pending)</option>
       <option value="approved">Approved</option>
@@ -2583,23 +2598,29 @@
     <div class="spacer"></div>
     <span class="count" id="teamCount">—</span>
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
-  </div>
+    <button class="btn btn-ghost" id="teamExportCSV" type="button">⬇ CSV</button>
+   </div>
 
   <div class="admin-table-wrap">
     <table class="admin-table">
-      <thead>
-        <tr>
-          <th>Team</th>
-          <th class="hide-sm">College</th>
-          <th class="hide-sm">Theme</th>
-          <th class="hide-sm">Members</th>
-          <th>Status</th>
-          <th style="text-align:right">Actions</th>
-        </tr>
-      </thead>
+     <thead>
+  <tr>
+    <th style="width:36px;text-align:center"><input type="checkbox" id="teamSelectAll" /></th>
+    <th>Team</th>
+    <th class="hide-sm">College</th>
+    <th class="hide-sm">Theme</th>
+    <th class="hide-sm">Members</th>
+    <th>Status</th>
+    <th style="text-align:right">Actions</th>
+  </tr>
+</thead>
       <tbody id="teamTbody">
         <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
       </tbody>
+      <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
+  <span style="font-size:12.5px;color:var(--muted)" id="teamPageInfo">—</span>
+  <div style="display:flex;gap:6px" id="teamPageBtns"></div>
+</div>
     </table>
   </div>
 </div>
@@ -6700,11 +6721,20 @@ const teamCount = document.getElementById('teamCount');
 const teamRefresh = document.getElementById('teamRefresh');
 
 let adminAllTeams = [];
+let adminTeamSelection = new Set();
+let adminTeamPage = 1;
+const ADMIN_TEAM_PER_PAGE = 10;
+let adminTeamFiltered = [];
+
+function getTeamSortOption(){
+  const sel = document.getElementById('teamSortBy');
+  return sel?.value || 'created_desc';
+}
 
 function applyTeamFilters(rows){
   const q = (teamSearch?.value || '').trim().toLowerCase();
   const status = teamFilterStatus?.value || '';
-  return rows.filter(r => {
+  let out = rows.filter(r => {
     if (status && r.status !== status) return false;
     if (q){
       const hay = `${r.team_name||''} ${r.college_name||''} ${r.email||''} ${r.spoc_name||''}`.toLowerCase();
@@ -6712,24 +6742,105 @@ function applyTeamFilters(rows){
     }
     return true;
   });
+
+  const sort = getTeamSortOption();
+  out.sort((a, b) => {
+    const an = (a.team_name||'').toLowerCase();
+    const bn = (b.team_name||'').toLowerCase();
+    const ac = (a.college_name||'').toLowerCase();
+    const bc = (b.college_name||'').toLowerCase();
+    const ad = new Date(a.created_at || 0).getTime();
+    const bd = new Date(b.created_at || 0).getTime();
+    switch (sort){
+      case 'created_asc': return ad - bd;
+      case 'name_asc':    return an.localeCompare(bn);
+      case 'name_desc':   return bn.localeCompare(an);
+      case 'college_asc': return ac.localeCompare(bc);
+      case 'status_asc':  return (a.status||'submitted').localeCompare(b.status||'submitted');
+      default:            return bd - ad;
+    }
+  });
+  return out;
+}
+
+function updateTeamBulkBar(){
+  const bar = document.getElementById('teamBulkBar');
+  const cnt = document.getElementById('teamBulkCount');
+  if (!bar || !cnt) return;
+  cnt.textContent = adminTeamSelection.size;
+  bar.classList.toggle('show', adminTeamSelection.size > 0);
+
+  const selectAll = document.getElementById('teamSelectAll');
+  if (selectAll){
+    const visibleBoxes = teamTbody.querySelectorAll('.team-check');
+    selectAll.checked = visibleBoxes.length > 0 && Array.from(visibleBoxes).every(c => adminTeamSelection.has(c.dataset.id));
+    selectAll.indeterminate = adminTeamSelection.size > 0 && !selectAll.checked;
+  }
+}
+
+function renderTeamPagination(total, perPage, current){
+  const info = document.getElementById('teamPageInfo');
+  const btns = document.getElementById('teamPageBtns');
+  if (!info || !btns) return;
+
+  const pages = Math.max(1, Math.ceil(total / perPage));
+  const start = total === 0 ? 0 : (current - 1) * perPage + 1;
+  const end = Math.min(current * perPage, total);
+  info.textContent = `Showing ${start}–${end} of ${total}`;
+
+  btns.innerHTML = '';
+  const mkBtn = (label, page, disabled, active) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.className = 'btn btn-ghost';
+    b.style.padding = '6px 12px';
+    b.style.fontSize = '12.5px';
+    if (active) b.style.background = 'rgba(124,92,255,.15)', b.style.color = 'var(--violet)', b.style.borderColor = 'var(--violet)';
+    b.disabled = disabled;
+    if (!disabled && !active) b.addEventListener('click', () => { adminTeamPage = page; renderAdminTeams(); });
+    return b;
+  };
+  btns.appendChild(mkBtn('← Prev', current - 1, current === 1, false));
+  const maxShow = 5;
+  let startPage = Math.max(1, current - Math.floor(maxShow/2));
+  let endPage = Math.min(pages, startPage + maxShow - 1);
+  if (endPage - startPage < maxShow - 1) startPage = Math.max(1, endPage - maxShow + 1);
+  for (let p = startPage; p <= endPage; p++){
+    btns.appendChild(mkBtn(p, p, false, p === current));
+  }
+  btns.appendChild(mkBtn('Next →', current + 1, current === pages, false));
 }
 
 function renderAdminTeams(){
   if (!teamTbody) return;
   const rows = applyTeamFilters(adminAllTeams);
-  if (teamCount) teamCount.textContent = `${rows.length} / ${adminAllTeams.length} shown`;
+  adminTeamFiltered = rows;
 
-  if (!rows.length){
-    teamTbody.innerHTML = `<tr><td colspan="6" class="admin-empty">No team registrations found.</td></tr>`;
+  const total = rows.length;
+  const pages = Math.max(1, Math.ceil(total / ADMIN_TEAM_PER_PAGE));
+  if (adminTeamPage > pages) adminTeamPage = pages;
+  if (adminTeamPage < 1) adminTeamPage = 1;
+
+  const startIdx = (adminTeamPage - 1) * ADMIN_TEAM_PER_PAGE;
+  const pageRows = rows.slice(startIdx, startIdx + ADMIN_TEAM_PER_PAGE);
+
+  if (teamCount) teamCount.textContent = `${total} / ${adminAllTeams.length} shown`;
+
+  if (!pageRows.length){
+    teamTbody.innerHTML = `<tr><td colspan="7" class="admin-empty">No team registrations found.</td></tr>`;
+    renderTeamPagination(0, ADMIN_TEAM_PER_PAGE, 1);
+    updateTeamBulkBar();
     return;
   }
 
-  teamTbody.innerHTML = rows.map(r => {
+  teamTbody.innerHTML = pageRows.map(r => {
     const members = Array.isArray(r.members) ? r.members.length : 0;
     const status = (r.status || 'submitted').toLowerCase();
     const statusLabel = { submitted:'🟣 Submitted', approved:'✅ Approved', rejected:'❌ Rejected' }[status] || '🟣 Submitted';
+    const checked = adminTeamSelection.has(r.id) ? 'checked' : '';
     return `
       <tr data-id="${r.id}">
+        <td class="col-check"><input type="checkbox" class="team-check" data-id="${r.id}" ${checked} /></td>
         <td>
           <div class="u-email">${escapeHtml(r.team_name || '—')}</div>
           <div class="u-name">${escapeHtml(r.spoc_name || '')}</div>
@@ -6747,6 +6858,9 @@ function renderAdminTeams(){
         </td>
       </tr>`;
   }).join('');
+
+  renderTeamPagination(total, ADMIN_TEAM_PER_PAGE, adminTeamPage);
+  updateTeamBulkBar();
 }
 
 function renderTeamStats(rows){
@@ -6763,7 +6877,7 @@ function renderTeamStats(rows){
 
 async function loadAdminTeams(){
   if (!teamTbody) return;
-  teamTbody.innerHTML = `<tr><td colspan="6" class="admin-empty"><span class="spin" style="display:inline-block;width:14px;height:14px;border:2px solid var(--border-strong);border-top-color:var(--violet);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:8px"></span>Loading teams…</td></tr>`;
+  teamTbody.innerHTML = `<tr><td colspan="7" class="admin-empty">Loading teams…</td></tr>`;
   try {
     const { data, error } = await supabase
       .from('team_registrations')
@@ -6771,11 +6885,13 @@ async function loadAdminTeams(){
       .order('created_at', { ascending: false });
     if (error) throw error;
     adminAllTeams = data || [];
+    adminTeamSelection.clear();
+    adminTeamPage = 1;
     renderTeamStats(adminAllTeams);
     renderAdminTeams();
   } catch (e){
     console.error('Team load error:', e);
-    teamTbody.innerHTML = `<tr><td colspan="6" class="admin-empty">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+    teamTbody.innerHTML = `<tr><td colspan="7" class="admin-empty">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
   }
 }
 
@@ -6791,23 +6907,174 @@ async function updateTeamStatus(id, status){
     row.status = status;
     renderTeamStats(adminAllTeams);
     renderAdminTeams();
-    showToast(`Team ${status === 'approved' ? '✅ approved' : '❌ rejected'}`, 
-              status === 'approved' ? 'success' : 'warn', 
+    showToast(`Team ${status === 'approved' ? '✅ approved' : '❌ rejected'}`,
+              status === 'approved' ? 'success' : 'warn',
               status === 'approved' ? '✅' : '❌');
 
-    // Optional email notification
-    if (row.spoc_email || row.email){
-      fetch('/api/notify-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ registration: row, status })
-      }).catch(() => {});
-    }
+    fetch('/api/notify-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registration: row, status })
+    }).catch(() => {});
   } catch (e){
     console.error('Status update error:', e);
     showToast('Failed: ' + e.message, 'warn', '⚠️');
   }
 }
+
+async function bulkUpdateTeamStatus(ids, status){
+  if (!ids.length) return;
+  if (!confirm(`${status === 'approved' ? 'Approve' : 'Reject'} ${ids.length} team(s)?`)) return;
+  try {
+    const { error } = await supabase
+      .from('team_registrations')
+      .update({ status, updated_at: new Date().toISOString() })
+      .in('id', ids);
+    if (error) throw error;
+    ids.forEach(id => {
+      const r = adminAllTeams.find(x => x.id === id);
+      if (r) r.status = status;
+    });
+    adminTeamSelection.clear();
+    renderTeamStats(adminAllTeams);
+    renderAdminTeams();
+    showToast(`${ids.length} team(s) ${status === 'approved' ? '✅ approved' : '❌ rejected'}`, 
+              status === 'approved' ? 'success' : 'warn', status === 'approved' ? '✅' : '❌');
+    ids.forEach(id => {
+      const r = adminAllTeams.find(x => x.id === id);
+      if (r){
+        fetch('/api/notify-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ registration: r, status })
+        }).catch(() => {});
+      }
+    });
+  } catch (e){
+    console.error('Bulk update error:', e);
+    showToast('Bulk update failed: ' + e.message, 'warn', '⚠️');
+  }
+}
+
+function exportTeamsCSV(rows){
+  if (!rows.length){ showToast('Nothing to export', 'warn', '⚠️'); return; }
+  const head = ['team_name','spoc_name','spoc_email','spoc_mobile','college_name','college_city','theme','category','problem_statement','team_size','status','created_at'];
+  const csv = [head.join(',')].concat(rows.map(r => head.map(k => {
+    const v = r[k] == null ? '' : String(r[k]);
+    return '"' + v.replace(/"/g,'""').replace(/\n/g,' ') + '"';
+  }).join(','))).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'team-registrations-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  showToast(`Exported ${rows.length} teams`, 'success', '⬇');
+}
+
+function openTeamDetails(r){
+  const modal = document.getElementById('myRegModal');
+  if (!modal) return;
+  document.getElementById('myRegTitle').textContent = r.team_name || 'Team';
+  document.getElementById('myRegSub').textContent = `${r.college_name || ''} · ${r.spoc_email || r.email}`;
+  const members = Array.isArray(r.members) ? r.members : [];
+  document.getElementById('myRegBody').innerHTML = `
+    <div class="myreg-hero">
+      <div>
+        <h3>${escapeHtml(r.team_name || '')}</h3>
+        <div class="team-sub">${escapeHtml(r.college_name || '')}</div>
+      </div>
+      <div class="myreg-status ${r.status || 'submitted'}">${r.status || 'submitted'}</div>
+    </div>
+    <div class="myreg-grid">
+      <div class="myreg-box">
+        <h4>🎯 Team & Theme</h4>
+        <div class="row"><span class="lbl">Theme</span><span class="val">${escapeHtml(r.theme||'—')}</span></div>
+        <div class="row"><span class="lbl">Category</span><span class="val">${escapeHtml(r.category||'—')}</span></div>
+        <div class="row"><span class="lbl">Problem</span><span class="val" style="font-size:12px">${escapeHtml((r.problem_statement||'—').slice(0,60))}</span></div>
+      </div>
+      <div class="myreg-box">
+        <h4>🏫 SPOC</h4>
+        <div class="row"><span class="lbl">Name</span><span class="val">${escapeHtml(r.spoc_name||'—')}</span></div>
+        <div class="row"><span class="lbl">Email</span><span class="val" style="font-size:12px">${escapeHtml(r.spoc_email||'—')}</span></div>
+        <div class="row"><span class="lbl">Mobile</span><span class="val">${escapeHtml(r.spoc_mobile||'—')}</span></div>
+      </div>
+    </div>
+    <div class="myreg-box">
+      <h4>💡 Idea Summary</h4>
+      <p style="font-size:13.5px;line-height:1.7;margin:0">${escapeHtml(r.idea_summary||'—')}</p>
+    </div>
+    <div class="myreg-box" style="margin-top:16px">
+      <h4>👥 Members (${members.length})</h4>
+      ${members.length ? members.map((m,i)=>`<div class="myreg-member"><div class="num">${i+1}</div><div class="nm">${escapeHtml(m.name||'—')}</div>${m.role?`<div class="rl">${escapeHtml(m.role)}</div>`:''}</div>`).join('') : '<div style="color:var(--muted);font-size:13px">No members</div>'}
+    </div>`;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+// Event bindings — sorting, pagination, bulk
+const teamSortBy = document.getElementById('teamSortBy');
+const teamExportCSV = document.getElementById('teamExportCSV');
+const teamSelectAll = document.getElementById('teamSelectAll');
+const teamBulkBar = document.getElementById('teamBulkBar');
+const teamBulkClear = document.getElementById('teamBulkClear');
+const teamBulkApprove = document.getElementById('teamBulkApprove');
+const teamBulkReject = document.getElementById('teamBulkReject');
+const teamBulkExport = document.getElementById('teamBulkExport');
+
+if (teamSortBy) teamSortBy.addEventListener('change', () => { adminTeamPage = 1; renderAdminTeams(); });
+if (teamExportCSV) teamExportCSV.addEventListener('click', () => exportTeamsCSV(applyTeamFilters(adminAllTeams)));
+
+if (teamTbody){
+  teamTbody.addEventListener('change', (e) => {
+    const cb = e.target.closest('.team-check');
+    if (!cb) return;
+    if (cb.checked) adminTeamSelection.add(cb.dataset.id);
+    else adminTeamSelection.delete(cb.dataset.id);
+    updateTeamBulkBar();
+  });
+}
+if (teamSelectAll){
+  teamSelectAll.addEventListener('change', () => {
+    const visible = teamTbody.querySelectorAll('.team-check');
+    visible.forEach(c => {
+      if (teamSelectAll.checked){ c.checked = true; adminTeamSelection.add(c.dataset.id); }
+      else { c.checked = false; adminTeamSelection.delete(c.dataset.id); }
+    });
+    updateTeamBulkBar();
+  });
+}
+if (teamBulkClear) teamBulkClear.addEventListener('click', () => {
+  adminTeamSelection.clear();
+  if (teamSelectAll) teamSelectAll.checked = false;
+  renderAdminTeams();
+});
+if (teamBulkApprove) teamBulkApprove.addEventListener('click', () => bulkUpdateTeamStatus([...adminTeamSelection], 'approved'));
+if (teamBulkReject) teamBulkReject.addEventListener('click', () => bulkUpdateTeamStatus([...adminTeamSelection], 'rejected'));
+if (teamBulkExport) teamBulkExport.addEventListener('click', () => {
+  const rows = adminAllTeams.filter(r => adminTeamSelection.has(r.id));
+  exportTeamsCSV(rows);
+});
+
+if (teamSearch) teamSearch.addEventListener('input', () => { adminTeamPage = 1; renderAdminTeams(); });
+if (teamFilterStatus) teamFilterStatus.addEventListener('change', () => { adminTeamPage = 1; renderAdminTeams(); });
+if (teamRefresh) teamRefresh.addEventListener('click', () => { adminTeamSelection.clear(); loadAdminTeams(); });
+
+if (teamTbody){
+  teamTbody.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.team-actions button');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const act = btn.dataset.act;
+    if (act === 'approve') await updateTeamStatus(id, 'approved');
+    else if (act === 'reject') await updateTeamStatus(id, 'rejected');
+    else if (act === 'view'){
+      const r = adminAllTeams.find(x => x.id === id);
+      if (r) openTeamDetails(r);
+    }
+  });
+}
+
+
 
 // Tab switching
 document.querySelectorAll('[data-admin-tab]').forEach(tab => {
