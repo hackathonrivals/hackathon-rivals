@@ -2581,8 +2581,8 @@
 
   <div class="admin-filters">
     <input type="text" id="teamSearch" placeholder="🔍 Search by team, college, or email…" />
-    <select id="teamFilterStatus">
-      <select id="teamSortBy">
+   <input type="text" id="teamSearch" placeholder="🔍 Search by team, college, or email…" />
+<select id="teamSortBy">
   <option value="created_desc">📅 Newest first</option>
   <option value="created_asc">📅 Oldest first</option>
   <option value="name_asc">🔤 Name (A-Z)</option>
@@ -2590,11 +2590,12 @@
   <option value="college_asc">🏫 College (A-Z)</option>
   <option value="status_asc">🏷 Status</option>
 </select>
-      <option value="">All statuses</option>
-      <option value="submitted">Submitted (pending)</option>
-      <option value="approved">Approved</option>
-      <option value="rejected">Rejected</option>
-    </select>
+<select id="teamFilterStatus">
+  <option value="">All statuses</option>
+  <option value="submitted">Submitted (pending)</option>
+  <option value="approved">Approved</option>
+  <option value="rejected">Rejected</option>
+</select>
     <div class="spacer"></div>
     <span class="count" id="teamCount">—</span>
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
