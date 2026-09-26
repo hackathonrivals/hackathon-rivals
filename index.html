@@ -2757,7 +2757,21 @@
     </div>
   </div>
 </div>
-
+<!-- MY REGISTRATION MODAL -->
+<div class="user-modal-bg" id="myRegModal">
+  <div class="user-modal" style="max-width:820px">
+    <div class="um-head">
+      <div>
+        <div class="who" id="myRegTitle">My Registration</div>
+        <div class="sub" id="myRegSub">Loading…</div>
+      </div>
+      <button class="um-close" id="myRegClose" aria-label="Close">✕</button>
+    </div>
+    <div class="um-body" id="myRegBody">
+      <div class="ana-empty">Loading your registration…</div>
+    </div>
+  </div>
+</div>
 <!-- USER HISTORY MODAL -->
 <div class="user-modal-bg" id="userModal">
   <div class="user-modal">
@@ -3394,7 +3408,10 @@ async function getAIResponse(msg){
         userMenu.classList.remove('open');
         showToast('Dashboard coming soon!', 'info', '📊');
       });
-      document.getElementById('ddRegister').addEventListener('click', () => {
+     document.getElementById('ddRegister').addEventListener('click', () => {
+  userMenu.classList.remove('open');
+  showMyRegistration();
+});('click', () => {
         userMenu.classList.remove('open');
         document.getElementById('register').scrollIntoView({behavior:'smooth'});
       });
@@ -3708,7 +3725,171 @@ async function getAIResponse(msg){
       }
     });
   });
+/* ============ MY REGISTRATION ============ */
+async function showMyRegistration(){
+  const modal = document.getElementById('myRegModal');
+  const body = document.getElementById('myRegBody');
+  const title = document.getElementById('myRegTitle');
+  const sub = document.getElementById('myRegSub');
+  if (!modal) return;
 
+  const user = await getCurrentUser();
+  if (!user){
+    showToast('Please log in first', 'warn', '🔒');
+    return;
+  }
+
+  // Open modal + show loading
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  title.textContent = 'My Registration';
+  sub.textContent = 'Loading…';
+  body.innerHTML = '<div class="ana-empty">Fetching your registration…</div>';
+
+  try {
+    const { data, error } = await supabase
+      .from('team_registrations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0){
+      // No registration found
+      title.textContent = 'No Registration Yet';
+      sub.textContent = 'You haven\'t registered any team';
+      body.innerHTML = `
+        <div class="myreg-empty">
+          <div class="ic">📝</div>
+          <h3>You haven't registered a team yet</h3>
+          <p>Register your team for Hackathon Rivals Season 2026. It's free and takes just 4 steps!</p>
+          <button class="btn btn-primary btn-lg" id="myRegGoBtn">Register Now →</button>
+        </div>`;
+      const goBtn = document.getElementById('myRegGoBtn');
+      if (goBtn) goBtn.addEventListener('click', () => {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+        document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
+      });
+      return;
+    }
+
+    const r = data[0];
+
+    // Status label
+    const status = (r.status || 'submitted').toLowerCase();
+    const statusLabel = {
+      submitted: '✓ Submitted',
+      approved: '✅ Approved',
+      rejected: '✕ Rejected',
+      draft: '● Draft'
+    }[status] || '✓ Submitted';
+
+    const submittedDate = new Date(r.created_at).toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+
+    title.textContent = 'My Registration';
+    sub.textContent = `Submitted on ${submittedDate}`;
+
+    // Members
+    const members = Array.isArray(r.members) ? r.members : [];
+    const membersHtml = members.length
+      ? members.map((m, i) => `
+          <div class="myreg-member">
+            <div class="num">${i + 1}</div>
+            <div class="nm">${esc(m.name || '—')}${i === 0 ? ' <span style="color:var(--violet);font-size:11px;font-weight:600">(Leader)</span>' : ''}</div>
+            ${m.role ? `<div class="rl">${esc(m.role)}</div>` : ''}
+          </div>`).join('')
+      : '<div style="color:var(--muted);font-size:13px">No members added</div>';
+
+    body.innerHTML = `
+      <div class="myreg-hero">
+        <div>
+          <h3>${esc(r.team_name || 'Untitled Team')}</h3>
+          <div class="team-sub">${esc(r.college_name || '')} ${r.college_city ? '· ' + esc(r.college_city) : ''}</div>
+        </div>
+        <div class="myreg-status ${status}">${statusLabel}</div>
+      </div>
+
+      <div class="myreg-grid">
+        <div class="myreg-box">
+          <h4>🎯 Team & Theme</h4>
+          <div class="row"><span class="lbl">Team Name</span><span class="val">${esc(r.team_name || '—')}</span></div>
+          <div class="row"><span class="lbl">Team Size</span><span class="val">${r.team_size || 1} member${(r.team_size || 1) > 1 ? 's' : ''}</span></div>
+          <div class="row"><span class="lbl">Theme</span><span class="val">${esc(r.theme || '—')}</span></div>
+          <div class="row"><span class="lbl">Category</span><span class="val">${esc(r.category || '—')}</span></div>
+          <div class="row"><span class="lbl">Problem</span><span class="val" style="font-size:12px">${esc((r.problem_statement || '—').slice(0, 60))}</span></div>
+        </div>
+
+        <div class="myreg-box">
+          <h4>🏫 SPOC Details</h4>
+          <div class="row"><span class="lbl">Name</span><span class="val">${esc(r.spoc_name || '—')}</span></div>
+          <div class="row"><span class="lbl">Designation</span><span class="val">${esc(r.spoc_designation || '—')}</span></div>
+          <div class="row"><span class="lbl">Email</span><span class="val" style="font-size:12px">${esc(r.spoc_email || '—')}</span></div>
+          <div class="row"><span class="lbl">Mobile</span><span class="val">${esc(r.spoc_mobile || '—')}</span></div>
+          <div class="row"><span class="lbl">College</span><span class="val" style="font-size:12px">${esc(r.college_name || '—')}</span></div>
+        </div>
+      </div>
+
+      <div class="myreg-box" style="margin-bottom:22px">
+        <h4>💡 Idea Summary</h4>
+        <p style="font-size:13.5px;line-height:1.7;margin:0;color:var(--text)">${esc(r.idea_summary || 'No summary provided.')}</p>
+      </div>
+
+      <div class="myreg-box">
+        <h4>👥 Team Members (${members.length})</h4>
+        <div class="myreg-members">${membersHtml}</div>
+      </div>
+
+      <div class="myreg-foot">
+        <button class="btn btn-ghost" id="myRegCloseBtn2">Close</button>
+        <button class="btn btn-ghost" id="myRegEditBtn">✏️ Edit & Re-submit</button>
+      </div>
+    `;
+
+    // Close button
+    document.getElementById('myRegCloseBtn2').addEventListener('click', () => {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+
+    // Edit → scroll to register section
+    document.getElementById('myRegEditBtn').addEventListener('click', () => {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+      document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => setStep(1), 400);
+    });
+
+  } catch (err){
+    console.error('My registration fetch error:', err);
+    body.innerHTML = `
+      <div class="myreg-empty">
+        <div class="ic">⚠️</div>
+        <h3>Could not load registration</h3>
+        <p>${esc(err.message || 'Something went wrong. Please try again.')}</p>
+      </div>`;
+  }
+}
+
+// Attach to close button
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#myRegClose')){
+    document.getElementById('myRegModal')?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+});
+document.addEventListener('click', (e) => {
+  const m = document.getElementById('myRegModal');
+  if (m && e.target === m){
+    m.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+});
   supabase.auth.onAuthStateChange(() => { updateAuthUI(); });
   setTimeout(updateAuthUI, 500);
 async function submitTeamRegistration(){
@@ -3890,6 +4071,79 @@ fetch('/.netlify/functions/send-email', {
     button { margin-top: 16px; padding: 10px 22px; border: none; border-radius: 10px;
              font-weight: 700; cursor: pointer; }
     #out { margin-top: 14px; font-weight: 700; }
+    /* ===== MY REGISTRATION ===== */
+.myreg-status{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 14px;border-radius:10px;font-size:12.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;
+}
+.myreg-status.submitted{background:rgba(124,92,255,.15);color:var(--violet);border:1px solid rgba(124,92,255,.35)}
+.myreg-status.approved{background:rgba(61,220,132,.15);color:var(--green);border:1px solid rgba(61,220,132,.35)}
+.myreg-status.rejected{background:rgba(255,107,107,.15);color:var(--red);border:1px solid rgba(255,107,107,.35)}
+.myreg-status.draft{background:rgba(139,144,164,.15);color:var(--muted);border:1px solid var(--border-strong)}
+
+.myreg-hero{
+  background:linear-gradient(135deg,rgba(124,92,255,.12),rgba(34,211,238,.08));
+  border:1px solid rgba(124,92,255,.25);border-radius:16px;
+  padding:22px 24px;margin-bottom:22px;
+  display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.myreg-hero h3{font-size:22px;margin:0 0 4px}
+.myreg-hero .team-sub{font-size:13px;color:var(--muted)}
+
+.myreg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.myreg-box{
+  background:rgba(0,0,0,.25);border:1px solid var(--border);
+  border-radius:12px;padding:16px 18px;
+}
+[data-theme="light"] .myreg-box{background:rgba(15,17,25,.02)}
+.myreg-box h4{
+  font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);margin:0 0 12px;font-weight:700;
+}
+.myreg-box .row{
+  display:flex;justify-content:space-between;gap:12px;
+  font-size:13.5px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.myreg-box .row:last-child{border-bottom:none}
+.myreg-box .row .lbl{color:var(--muted);flex-shrink:0}
+.myreg-box .row .val{font-weight:600;text-align:right;word-break:break-word}
+
+.myreg-members{display:flex;flex-direction:column;gap:8px}
+.myreg-member{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+  background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:10px;
+  font-size:13.5px;
+}
+[data-theme="light"] .myreg-member{background:rgba(15,17,25,.02)}
+.myreg-member .num{
+  width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:11px;
+  background:rgba(124,92,255,.15);color:var(--violet);
+  border:1px solid rgba(124,92,255,.3);
+}
+.myreg-member .nm{flex:1;font-weight:600}
+.myreg-member .rl{font-size:11.5px;color:var(--muted);padding:3px 10px;
+  border-radius:6px;background:rgba(34,211,238,.1);color:var(--cyan);
+  border:1px solid rgba(34,211,238,.25);font-weight:600}
+
+.myreg-empty{
+  text-align:center;padding:50px 20px;
+}
+.myreg-empty .ic{font-size:56px;margin-bottom:16px;opacity:.7}
+.myreg-empty h3{font-size:20px;margin:0 0 10px}
+.myreg-empty p{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.6}
+
+.myreg-foot{
+  display:flex;gap:10px;justify-content:flex-end;
+  padding-top:18px;border-top:1px solid var(--border);margin-top:22px;flex-wrap:wrap;
+}
+
+@media (max-width:600px){
+  .myreg-grid{grid-template-columns:1fr}
+  .myreg-hero{padding:18px 16px}
+  .myreg-hero h3{font-size:18px}
+}
   </style>
 </head>
 <body>
