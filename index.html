@@ -3725,6 +3725,61 @@ async function getAIResponse(msg){
       }
     });
   });
+  /* ============ LOAD REGISTRATION FOR EDIT ============ */
+async function loadRegistrationForEdit(reg){
+  if (!reg) return;
+
+  editingRegistrationId = reg.id;
+
+  // Populate SPOC fields
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
+  };
+
+  setVal('regSpocName', reg.spoc_name);
+  setVal('regSpocDesignation', reg.spoc_designation);
+  setVal('regSpocEmail', reg.spoc_email);
+  setVal('regSpocMobile', reg.spoc_mobile);
+  setVal('regCollegeName', reg.college_name);
+  setVal('regCollegeCity', reg.college_city);
+  setVal('regCollegeAddress', reg.college_address);
+
+  setVal('regTeamName', reg.team_name);
+  setVal('regTeamSize', String(reg.team_size || 1));
+  setVal('regTheme', reg.theme);
+  setVal('regCategory', reg.category);
+  setVal('regProblemStatement', reg.problem_statement);
+  setVal('regIdeaSummary', reg.idea_summary);
+
+  // Populate members
+  const membersList = document.getElementById('membersList');
+  if (membersList && Array.isArray(reg.members) && reg.members.length){
+    membersList.innerHTML = '';
+    reg.members.forEach((m, i) => {
+      addMember();
+      const card = membersList.querySelectorAll('.member-card')[i];
+      if (!card) return;
+      const inputs = card.querySelectorAll('input, select');
+      if (inputs[0]) inputs[0].value = m.name || '';
+      if (inputs[1] && m.role) inputs[1].value = m.role;
+      if (inputs[2] && m.gender) inputs[2].value = m.gender;
+    });
+    syncMembers();
+  }
+
+  // Change submit button text
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn && currentStep === totalSteps){
+    nextBtn.textContent = 'Update Registration ✓';
+  }
+
+  // Scroll to register section
+  document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
+  setStep(1);
+
+  showToast('✏️ Edit mode — update your details and re-submit', 'info', '✏️');
+}
 /* ============ MY REGISTRATION ============ */
 async function showMyRegistration(){
   const modal = document.getElementById('myRegModal');
@@ -3858,12 +3913,11 @@ async function showMyRegistration(){
     });
 
     // Edit → scroll to register section
-    document.getElementById('myRegEditBtn').addEventListener('click', () => {
-      modal.classList.remove('open');
-      document.body.style.overflow = '';
-      document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
-      setTimeout(() => setStep(1), 400);
-    });
+   document.getElementById('myRegEditBtn').addEventListener('click', () => {
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+  loadRegistrationForEdit(r);
+});
 
   } catch (err){
     console.error('My registration fetch error:', err);
@@ -3938,7 +3992,26 @@ async function submitTeamRegistration(){
   submitBtn.textContent = 'Submitting...';
 
   try {
-    const { error } = await supabase.from('team_registrations').insert([{
+   let dbError = null;
+
+if (editingRegistrationId){
+  // UPDATE existing registration
+  const { error } = await supabase
+    .from('team_registrations')
+    .update({
+      ...spoc,
+      ...team,
+      members,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', editingRegistrationId)
+    .eq('user_id', user.id); // safety check
+  dbError = error;
+} else {
+  // INSERT new registration
+  const { error } = await supabase
+    .from('team_registrations')
+    .insert([{
       user_id: user.id,
       email: user.email,
       ...spoc,
@@ -3946,8 +4019,16 @@ async function submitTeamRegistration(){
       members,
       status: 'submitted'
     }]);
+  dbError = error;
+}
 
-    if (error) throw error;
+if (dbError) throw dbError;
+
+const successMsg = editingRegistrationId
+  ? '✅ Registration updated successfully!'
+  : '🎉 Registration submitted successfully!';
+
+showToast(successMsg, 'success', '✓');
 
     showToast('🎉 Registration submitted successfully!', 'success', '✓');
 
@@ -3975,6 +4056,7 @@ fetch('/.netlify/functions/send-email', {
 })
 .catch(e => console.warn('Email send failed:', e));
     setTimeout(() => {
+      editingRegistrationId = null;
       submitBtn.textContent = 'Next →';
       submitBtn.style.background = '';
       submitBtn.disabled = false;
@@ -3990,6 +4072,7 @@ fetch('/.netlify/functions/send-email', {
 }
 
   /* ============ REGISTRATION STEPPER ============ */
+  let editingRegistrationId = null;
   let currentStep = 1;
   const totalSteps = 4;
   const stepEls = $$('.reg-step');
