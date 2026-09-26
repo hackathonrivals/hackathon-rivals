@@ -8,24 +8,17 @@ export default async function handler(req, res) {
   try {
     const { row, isTest } = req.body || {};
 
-    const SUPABASE_URL = 'https://awvcorswnzbxsrrzepto.supabase.co';
-    const ANON_KEY = 'sb_publishable_6GqdbyBWEX7cIkTzcp9yvw_WYNp5GJh';
+    // ⚠️ TEMPORARY HARDCODE — apna actual Discord URL daal
+    const webhookUrl = 'https://discord.com/api/webhooks/1553515404586917930/t6abGGaYpSvRcc3UEGoaAq5Av7L-4LypnFf8j6Z1NEWslXl8Z2rr4fTZQ95bw4flejBP';
 
-    const settingsRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/app_settings?key=eq.webhook_url&select=value`,
-      { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
-    );
-    const settings = await settingsRes.json();
-    const webhookUrl = settings?.[0]?.value;
-
-    if (!webhookUrl){
+    if (!webhookUrl) {
       return res.status(200).json({ ok: false, reason: 'no_webhook' });
     }
 
     const isDiscord = webhookUrl.includes('discord.com');
     let message;
     if (isTest) message = '🧪 **Test ping** from Hackathon Rivals ✅';
-    else if (row) message = `📥 **New Submission**\nUser: ${row.email}\nScore: ${row.score}/100\nLang: ${row.lang}`;
+    else if (row) message = `📥 **New Submission**\n**User:** ${row.email || '—'}\n**Score:** ${row.score || 0}/100\n**Lang:** ${row.lang || '—'}`;
     else message = '📡 Hackathon Rivals';
 
     const body = isDiscord ? { content: message } : { text: message };
@@ -36,13 +29,19 @@ export default async function handler(req, res) {
       body: JSON.stringify(body)
     });
 
-    if (!postRes.ok){
+    if (!postRes.ok) {
       const errText = await postRes.text().catch(() => '');
-      return res.status(200).json({ ok: false, status: postRes.status, error: errText.slice(0, 200) });
+      console.error('Discord error:', postRes.status, errText);
+      return res.status(200).json({ 
+        ok: false, 
+        status: postRes.status, 
+        error: errText.slice(0, 300) 
+      });
     }
 
     return res.status(200).json({ ok: true });
-  } catch (e){
+  } catch (e) {
+    console.error('Function error:', e);
     return res.status(500).json({ ok: false, error: String(e.message || e) });
   }
 }
