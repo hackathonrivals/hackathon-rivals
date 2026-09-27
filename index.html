@@ -3308,8 +3308,7 @@
   }
 });
   const FORMSPREE_URL = 'https://formspree.io/f/mppwlbwq';
-  const ADMIN_INVITE_CODE = 'HR-ADMIN-2026';
-  const JUDGE_INVITE_CODE = 'HR-JUDGE-2026';
+ 
 
   /* ============ THEME ============ */
   const themeToggle = $('#themeToggle');
@@ -4034,37 +4033,45 @@ async function getAIResponse(msg){
         loginErrorText.textContent = 'Please enter your designation';
         loginError.classList.add('show'); signupInputs.designation.focus(); return;
       }
-      if (selectedRole === 'Judge' && !signupInputs.org?.value.trim()){
-        loginErrorText.textContent = 'Please enter your organization';
-        loginError.classList.add('show'); signupInputs.org.focus(); return;
-      }
-      if (selectedRole === 'Judge'){
-        if (!signupInputs.invite?.value.trim()){
-          loginErrorText.textContent = 'Judge invite code is required';
-          loginError.classList.add('show'); signupInputs.invite.focus(); return;
-        }
-        if (signupInputs.invite.value.trim() !== JUDGE_INVITE_CODE){
-          loginErrorText.textContent = 'Invalid judge invite code';
-          loginError.classList.add('show'); signupInputs.invite.focus(); return;
-        }
-      }
-      if (selectedRole === 'Admin'){
-        if (!signupInputs.invite?.value.trim()){
-          loginErrorText.textContent = 'Admin invite code is required';
-          loginError.classList.add('show'); signupInputs.invite.focus(); return;
-        }
-        if (signupInputs.invite.value.trim() !== ADMIN_INVITE_CODE){
-          loginErrorText.textContent = 'Invalid admin invite code';
-          loginError.classList.add('show'); signupInputs.invite.focus(); return;
-        }
-      }
+     if (selectedRole === 'Judge'){
+  if (!signupInputs.invite?.value.trim()){
+    loginErrorText.textContent = 'Judge invite code is required';
+    loginError.classList.add('show'); signupInputs.invite.focus(); return;
+  }
+  const verifyRes = await fetch('/api/verify-invite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: signupInputs.invite.value.trim(), role: 'Judge' })
+  });
+  const verifyData = await verifyRes.json();
+  if (!verifyData.ok){
+    loginErrorText.textContent = 'Invalid judge invite code';
+    loginError.classList.add('show'); signupInputs.invite.focus(); return;
+  }
+}
+     if (selectedRole === 'Admin'){
+  if (!signupInputs.invite?.value.trim()){
+    loginErrorText.textContent = 'Admin invite code is required';
+    loginError.classList.add('show'); signupInputs.invite.focus(); return;
+  }
+  const verifyRes = await fetch('/api/verify-invite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: signupInputs.invite.value.trim(), role: 'Admin' })
+  });
+  const verifyData = await verifyRes.json();
+ if (!verifyData.ok){
+    loginErrorText.textContent = 'Invalid admin invite code';
+    loginError.classList.add('show'); signupInputs.invite.focus(); return;
+  }
+}
       if (!signupInputs.terms?.checked){
         loginErrorText.textContent = 'Please accept the Terms & Conditions';
         loginError.classList.add('show'); return;
       }
     }
 
-    loginError.classList.remove('show');
+    loginError.classList.remove('show');   ← ye line
     loginSubmit.textContent = isSignup ? 'Creating account...' : 'Logging in...';
     loginSubmit.disabled = true;
 
@@ -4113,7 +4120,7 @@ async function getAIResponse(msg){
       loginSubmit.style.background = '';
       loginSubmit.disabled = false;
     }
-  });
+});
 
   [loginEmail, loginPassword].forEach(inp => {
     inp.addEventListener('keydown', (e) => {
