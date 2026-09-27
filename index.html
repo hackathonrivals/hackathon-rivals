@@ -1969,10 +1969,10 @@
         </div>
       </div>
       <div class="stats reveal">
-        <div class="stat"><b data-count="12400" data-suffix="+">0</b><span>Student Innovators</span></div>
-        <div class="stat"><b data-count="860" data-suffix="+">0</b><span>Colleges Participating</span></div>
+        <div class="stat"><b id="statStudents" data-count="0" data-suffix="+">0</b><span>Student Innovators</span></div>
+        <div class="stat"><b id="statColleges" data-count="0" data-suffix="+">0</b><span>Colleges Participating</span></div>
         <div class="stat"><b data-count="17" data-suffix="">0</b><span>Problem Themes</span></div>
-        <div class="stat"><b data-count="1.2" data-suffix="Cr" data-decimal="1">0</b><span>Prize Pool</span></div>
+        <div class="stat"><b>TBA</b><span>Prize Pool</span></div>
       </div>
     </div>
   </section>
@@ -3576,6 +3576,54 @@ $$('[data-board]').forEach(tab => {
 });
 
 loadLeaderboard('live');
+async function loadHeroStats(){
+  try {
+    const { data, error } = await supabase
+      .from('team_registrations')
+      .select('college_name, members');
+    if (error) throw error;
+
+    const teams = data || [];
+    const colleges = new Set(
+      teams.map(t => (t.college_name || '').trim().toLowerCase()).filter(Boolean)
+    ).size;
+
+    let totalMembers = 0;
+    teams.forEach(t => {
+      if (Array.isArray(t.members) && t.members.length) totalMembers += t.members.length;
+      else totalMembers += 1;
+    });
+
+    const studentsEl = document.getElementById('statStudents');
+    const collegesEl = document.getElementById('statColleges');
+
+    if (studentsEl) {
+      studentsEl.dataset.count = totalMembers || 0;
+      // re-animate if observer already ran
+      animateCounter(studentsEl, totalMembers, '+');
+    }
+    if (collegesEl) {
+      collegesEl.dataset.count = colleges;
+      animateCounter(collegesEl, colleges, '+');
+    }
+  } catch (e) {
+    console.warn('Hero stats load failed:', e);
+  }
+}
+
+function animateCounter(el, target, suffix){
+  const duration = 1600, start = performance.now();
+  function tick(now){
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const v = target * eased;
+    el.textContent = Math.round(v).toLocaleString() + (suffix || '');
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+loadHeroStats();
  
   /* ============ FAQ ============ */
   $$('.faq-item').forEach(item => {
