@@ -2502,7 +2502,7 @@
     <div class="wrap">
       <div class="sec-head reveal">
         <span class="eyebrow">Voices from the arena</span>
-        <h2>Trusted by 12,000+ innovators</h2>
+        <h2>Voices from the arena</h2>
       </div>
      <div class="testi" id="testiGrid">
   <div class="testi-loading">Loading testimonials…</div>
@@ -2661,6 +2661,7 @@
 <div class="tabs" style="margin-bottom:20px">
   <button class="tab active" data-admin-tab="arena">⚔️ Arena Submissions</button>
   <button class="tab" data-admin-tab="teams">📝 Team Registrations</button>
+  <button class="tab" data-admin-tab="testimonials">💬 Testimonials</button>
 </div>
 
 <div id="adminArenaSection" style="display:block">
@@ -2866,6 +2867,95 @@
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
     <button class="btn btn-ghost" id="teamExportCSV" type="button">⬇ CSV</button>
    </div>
+<!-- TESTIMONIALS SECTION -->
+<div id="adminTestimonialsSection" style="display:none">
+  <div class="admin-filters" style="margin-bottom:16px">
+    <button class="btn btn-primary" id="tmAddBtn" type="button">+ Add Testimonial</button>
+    <div class="spacer"></div>
+    <span class="count" id="tmCount">—</span>
+    <button class="btn btn-ghost" id="tmRefresh" type="button">↻ Refresh</button>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th class="hide-sm">Role</th>
+          <th>Quote</th>
+          <th class="hide-sm">Rating</th>
+          <th class="hide-sm">Order</th>
+          <th class="hide-sm">Published</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tmTbody">
+        <tr><td colspan="7" class="admin-empty">Loading testimonials…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TESTIMONIAL EDIT MODAL -->
+<div class="import-modal-bg" id="tmModal">
+  <div class="import-modal" style="max-width:640px">
+    <div class="im-head">
+      <div>
+        <h3 id="tmModalTitle">Add Testimonial</h3>
+        <div class="sub">Fill in the details below</div>
+      </div>
+      <button class="im-close" id="tmModalClose" type="button">✕</button>
+    </div>
+    <div class="im-body">
+      <div class="field" style="margin-bottom:14px">
+        <label>Name <span class="req">*</span></label>
+        <input type="text" id="tmName" placeholder="e.g. Arjun Kumar" />
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Role / College</label>
+        <input type="text" id="tmRole" placeholder="e.g. Student · IIT Delhi" />
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Quote <span class="req">*</span></label>
+        <textarea id="tmQuote" rows="4" placeholder="What did they say?"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="field">
+          <label>Rating (1–5)</label>
+          <select id="tmRating">
+            <option value="5">★★★★★ 5</option>
+            <option value="4">★★★★ 4</option>
+            <option value="3">★★★ 3</option>
+            <option value="2">★★ 2</option>
+            <option value="1">★ 1</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Avatar Color</label>
+          <input type="color" id="tmColor" value="#7c5cff" style="height:42px;padding:4px" />
+        </div>
+        <div class="field">
+          <label>Display Order</label>
+          <input type="number" id="tmOrder" value="0" />
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="tmPublished" checked />
+          <span>Published (visible on site)</span>
+        </label>
+      </div>
+    </div>
+    <div class="im-actions">
+      <span class="as-hint" id="tmModalNote"></span>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" id="tmCancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="tmSave" type="button">Save Testimonial</button>
+      </div>
+    </div>
+  </div>
+</div>
+
    <!-- TEAM ANALYTICS -->
 <div class="team-analytics" id="teamAnalytics">
   <div class="ana-grid">
@@ -3758,6 +3848,137 @@ async function loadTestimonials(){
 }
 
 loadTestimonials();
+/* ============ ADMIN — TESTIMONIALS ============ */
+let tmState = { rows: [], editing: null };
+
+async function loadAdminTestimonials(){
+  const tbody = document.getElementById('tmTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Loading…</td></tr>';
+  try {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .select('*')
+      .order('display_order', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    tmState.rows = data || [];
+    renderAdminTestimonials();
+  } catch (e){
+    tbody.innerHTML = `<tr><td colspan="7" class="admin-empty">Failed: ${escapeHtml(e.message)}</td></tr>`;
+  }
+}
+
+function renderAdminTestimonials(){
+  const tbody = document.getElementById('tmTbody');
+  const count = document.getElementById('tmCount');
+  if (!tbody) return;
+  const rows = tmState.rows;
+  if (count) count.textContent = `${rows.length} total`;
+  if (!rows.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">No testimonials yet. Click "Add Testimonial".</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(t => `
+    <tr data-id="${t.id}">
+      <td><div class="u-email">${escapeHtml(t.name || '—')}</div></td>
+      <td class="hide-sm">${escapeHtml(t.role || '—')}</td>
+      <td>${escapeHtml((t.quote || '').slice(0, 60))}${(t.quote || '').length > 60 ? '…' : ''}</td>
+      <td class="hide-sm">${'★'.repeat(t.rating || 5)}</td>
+      <td class="hide-sm">${t.display_order || 0}</td>
+      <td class="hide-sm">${t.published ? '✅ Yes' : '❌ No'}</td>
+      <td class="actions-cell">
+        <button class="rowbtn" data-tm-act="edit" data-id="${t.id}">Edit</button>
+        <button class="rowbtn danger" data-tm-act="del" data-id="${t.id}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openTmModal(row){
+  tmState.editing = row ? row.id : null;
+  document.getElementById('tmModalTitle').textContent = row ? 'Edit Testimonial' : 'Add Testimonial';
+  document.getElementById('tmName').value  = row?.name || '';
+  document.getElementById('tmRole').value  = row?.role || '';
+  document.getElementById('tmQuote').value = row?.quote || '';
+  document.getElementById('tmRating').value= String(row?.rating || 5);
+  document.getElementById('tmColor').value = row?.avatar_color || '#7c5cff';
+  document.getElementById('tmOrder').value = row?.display_order || 0;
+  document.getElementById('tmPublished').checked = row ? !!row.published : true;
+  document.getElementById('tmModalNote').textContent = '';
+  document.getElementById('tmModal').classList.add('open');
+}
+
+async function saveTmModal(){
+  const name  = document.getElementById('tmName').value.trim();
+  const quote = document.getElementById('tmQuote').value.trim();
+  const note  = document.getElementById('tmModalNote');
+  if (!name){ note.textContent = 'Name is required'; return; }
+  if (!quote){ note.textContent = 'Quote is required'; return; }
+
+  const payload = {
+    name,
+    role: document.getElementById('tmRole').value.trim() || null,
+    quote,
+    rating: parseInt(document.getElementById('tmRating').value, 10) || 5,
+    avatar_color: document.getElementById('tmColor').value || '#7c5cff',
+    display_order: parseInt(document.getElementById('tmOrder').value, 10) || 0,
+    published: document.getElementById('tmPublished').checked
+  };
+
+  const btn = document.getElementById('tmSave');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    if (tmState.editing){
+      const { error } = await supabase.from('testimonials').update(payload).eq('id', tmState.editing);
+      if (error) throw error;
+      showToast('Testimonial updated', 'success', '✅');
+    } else {
+      const { error } = await supabase.from('testimonials').insert([payload]);
+      if (error) throw error;
+      showToast('Testimonial added', 'success', '✅');
+    }
+    document.getElementById('tmModal').classList.remove('open');
+    await loadAdminTestimonials();
+    loadTestimonials();
+  } catch (e){
+    note.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Testimonial';
+  }
+}
+
+document.addEventListener('click', async (e) => {
+  if (e.target.closest('#tmAddBtn')){ openTmModal(null); return; }
+  if (e.target.closest('#tmRefresh')){ loadAdminTestimonials(); return; }
+  if (e.target.closest('#tmCancel') || e.target.closest('#tmModalClose')){
+    document.getElementById('tmModal').classList.remove('open');
+    return;
+  }
+  if (e.target.closest('#tmSave')){ saveTmModal(); return; }
+  const tmModal = document.getElementById('tmModal');
+  if (tmModal && e.target === tmModal){
+    tmModal.classList.remove('open');
+    return;
+  }
+  const actBtn = e.target.closest('[data-tm-act]');
+  if (actBtn){
+    const id = actBtn.dataset.id;
+    const row = tmState.rows.find(t => t.id === id);
+    if (!row) return;
+    if (actBtn.dataset.tmAct === 'edit'){
+      openTmModal(row);
+    } else if (actBtn.dataset.tmAct === 'del'){
+      if (!confirm('Delete this testimonial?')) return;
+      const { error } = await supabase.from('testimonials').delete().eq('id', id);
+      if (error){ showToast('Delete failed: ' + error.message, 'warn', '⚠️'); return; }
+      showToast('Testimonial deleted', 'success', '🗑️');
+      await loadAdminTestimonials();
+      loadTestimonials();
+    }
+  }
+});
 
 loadHeroMockup();
  
@@ -8170,9 +8391,12 @@ document.querySelectorAll('[data-admin-tab]').forEach(tab => {
     const which = tab.dataset.adminTab;
     const arena = document.getElementById('adminArenaSection');
     const teams = document.getElementById('adminTeamsSection');
+    const testi = document.getElementById('adminTestimonialsSection');
     if (arena) arena.style.display = which === 'arena' ? 'block' : 'none';
     if (teams) teams.style.display = which === 'teams' ? 'block' : 'none';
+    if (testi) testi.style.display = which === 'testimonials' ? 'block' : 'none';
     if (which === 'teams') loadAdminTeams();
+    if (which === 'testimonials') loadAdminTestimonials();
   });
 });
 
