@@ -6658,11 +6658,12 @@ _start:
     }
   }
 
-  async function loadAdminData(){
-    await fetchAdminPage(true);
-    startRealtime();
-    renderImportLog();
-  }
+async function loadAdminData(){
+  await fetchAdminPage(true);
+  startRealtime();
+  startImportLogRealtime();
+  renderImportLog();
+}
 
   if (adminSentinel && 'IntersectionObserver' in window){
     const sentinelIO = new IntersectionObserver(entries => {
@@ -7289,8 +7290,7 @@ _start:
     setIlLive(false, 'Paused');
   }
   window.addEventListener('beforeunload', stopImportLogRealtime);
-  setTimeout(startImportLogRealtime, 1500);
-  renderImportLog();
+ // These are only called when admin opens Admin Console via loadAdminData()
 
   /* --- Auto-flag filter + review queue --- */
   const filterFlaggedBtn = document.getElementById('filterFlagged');
