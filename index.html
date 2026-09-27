@@ -2974,6 +2974,7 @@
     </table>
   </div>
 </div>
+
 <!-- TESTIMONIALS SECTION -->
 <div id="adminTestimonialsSection" style="display:none">
   <div class="admin-filters" style="margin-bottom:16px">
@@ -3896,19 +3897,7 @@ function renderAdminTestimonials(){
   `).join('');
 }
 
-function openTmModal(row){
-  tmState.editing = row ? row.id : null;
-  document.getElementById('tmModalTitle').textContent = row ? 'Edit Testimonial' : 'Add Testimonial';
-  document.getElementById('tmName').value  = row?.name || '';
-  document.getElementById('tmRole').value  = row?.role || '';
-  document.getElementById('tmQuote').value = row?.quote || '';
-  document.getElementById('tmRating').value= String(row?.rating || 5);
-  document.getElementById('tmColor').value = row?.avatar_color || '#7c5cff';
-  document.getElementById('tmOrder').value = row?.display_order || 0;
-  document.getElementById('tmPublished').checked = row ? !!row.published : true;
-  document.getElementById('tmModalNote').textContent = '';
-  document.getElementById('tmModal').classList.add('open');
-}
+
 
 async function saveTmModal(){
   const name  = document.getElementById('tmName').value.trim();
@@ -3949,7 +3938,19 @@ async function saveTmModal(){
     btn.disabled = false; btn.textContent = 'Save Testimonial';
   }
 }
-
+function openTmModal(row){
+  tmState.editing = row ? row.id : null;
+  document.getElementById('tmModalTitle').textContent = row ? 'Edit Testimonial' : 'Add Testimonial';
+  document.getElementById('tmName').value  = row?.name || '';
+  document.getElementById('tmRole').value  = row?.role || '';
+  document.getElementById('tmQuote').value = row?.quote || '';
+  document.getElementById('tmRating').value= String(row?.rating || 5);
+  document.getElementById('tmColor').value = row?.avatar_color || '#7c5cff';
+  document.getElementById('tmOrder').value = row?.display_order || 0;
+  document.getElementById('tmPublished').checked = row ? !!row.published : true;
+  document.getElementById('tmModalNote').textContent = '';
+  document.getElementById('tmModal').classList.add('open');
+}
 document.addEventListener('click', async (e) => {
   if (e.target.closest('#tmAddBtn')){ openTmModal(null); return; }
   if (e.target.closest('#tmRefresh')){ loadAdminTestimonials(); return; }
