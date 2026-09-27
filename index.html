@@ -602,6 +602,40 @@
   .pts{font-family:'Space Grotesk';font-weight:700;text-align:right;font-size:16px}
   .trend{text-align:right;font-size:13px;font-weight:600}
   .up{color:var(--green)}.down{color:var(--red)}.flat{color:var(--muted)}
+  .fame-coming-soon{
+  background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--surface) 50%, transparent));
+  border:1px dashed var(--border-strong);border-radius:var(--radius);
+  padding:60px 40px;text-align:center;position:relative;overflow:hidden;
+  transition:.3s;
+}
+.fame-coming-soon:hover{
+  border-color:rgba(124,92,255,.5);
+  background:linear-gradient(180deg,var(--surface-2),var(--surface));
+}
+.fame-coming-soon .fcs-icon{
+  font-size:64px;margin-bottom:20px;line-height:1;
+  filter:drop-shadow(0 10px 30px rgba(124,92,255,.5));
+  animation:fabPulse 3s infinite;
+}
+.fame-coming-soon h3{
+  font-size:26px;margin-bottom:14px;
+  background:linear-gradient(110deg,var(--violet),var(--cyan));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.fame-coming-soon p{
+  color:var(--muted);font-size:15px;line-height:1.7;
+  max-width:620px;margin:0 auto 24px;
+}
+.fame-coming-soon .fcs-meta{
+  display:flex;gap:24px;justify-content:center;flex-wrap:wrap;
+  font-size:13px;color:var(--muted);margin-bottom:28px;
+}
+.fame-coming-soon .fcs-meta span{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:9px;
+  background:rgba(124,92,255,.08);border:1px solid rgba(124,92,255,.2);
+  color:var(--violet);font-weight:600;
+}
 
   .fame-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
   .fame-card{background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--surface) 50%, transparent));
@@ -2440,36 +2474,17 @@
         <h2>Winners who made it count</h2>
         <p>Past champions whose projects became real-world products and startups.</p>
       </div>
-      <div class="fame-grid">
-        <div class="fame-card gold reveal">
-          <div class="fame-badge">🥇 Winner 2025</div>
-          <div class="fame-head">
-            <div class="fame-avatar" style="background:linear-gradient(135deg,#7c5cff,#22d3ee)">TN</div>
-            <h3>Team Nova</h3><div class="college">IIT Bombay · Smart Automation</div>
-            <div class="project"><strong>AgriSense AI</strong> — Real-time crop disease detection. Deployed across 40+ villages.</div>
-          </div>
-          <div class="fame-foot"><span>🏆 ₹1.5 Lakh Prize</span><span class="fame-prize">₹5 Cr raised</span></div>
-        </div>
-        <div class="fame-card silver reveal">
-          <div class="fame-badge">🥈 Runner-Up 2025</div>
-          <div class="fame-head">
-            <div class="fame-avatar" style="background:linear-gradient(135deg,#22d3ee,#4ade80)">BF</div>
-            <h3>Byte Force</h3><div class="college">NIT Trichy · MedTech</div>
-            <div class="project"><strong>PulseOne</strong> — Portable ventilator under ₹22,000. Partnerships with 2 medtech startups.</div>
-          </div>
-          <div class="fame-foot"><span>🏆 ₹1 Lakh Prize</span><span class="fame-prize">3 patents filed</span></div>
-        </div>
-        <div class="fame-card bronze reveal">
-          <div class="fame-badge">🥉 3rd Place 2025</div>
-          <div class="fame-head">
-            <div class="fame-avatar" style="background:linear-gradient(135deg,#ff4d9d,#fbbf24)">NP</div>
-            <h3>Null Pointer</h3><div class="college">BITS Pilani · Blockchain</div>
-            <div class="project"><strong>LandChain</strong> — Blockchain land registry piloting with Rajasthan government.</div>
-          </div>
-          <div class="fame-foot"><span>🏆 ₹75,000 Prize</span><span class="fame-prize">Govt pilot live</span></div>
-        </div>
-      </div>
-    </div>
+       <div class="fame-coming-soon reveal">
+  <div class="fcs-icon">🏆</div>
+  <h3>Winners will be announced soon</h3>
+  <p>The Hall of Fame is reserved for the champions of Hackathon Rivals Season 2026. After the 36-hour Grand Finale, winners across all 17 themes will be featured here with their projects, colleges, and prize details.</p>
+  <div class="fcs-meta">
+    <span>📅 Grand Finale: 15–17 May 2026</span>
+    <span>📍 New Delhi</span>
+  </div>
+  <a href="#register" class="btn btn-primary btn-lg">Register your team →</a>
+</div>
+   </div>
   </section>
 
   <section class="sec">
