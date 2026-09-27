@@ -747,6 +747,17 @@
     font-size:14px;color:var(--muted);line-height:1.7}
   .faq-item.open .faq-a{max-height:400px}
   .faq-a-inner{padding:0 22px 22px}
+  .testi-loading{
+  text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;
+}
+.testi-empty{
+  grid-column:1/-1;text-align:center;padding:60px 20px;
+  background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--surface) 50%, transparent));
+  border:1px dashed var(--border-strong);border-radius:var(--radius);
+}
+.testi-empty .ic{font-size:44px;margin-bottom:14px;opacity:.7}
+.testi-empty h3{font-size:18px;margin-bottom:8px;color:var(--text)}
+.testi-empty p{font-size:13.5px;color:var(--muted);max-width:440px;margin:0 auto}
 
   .testi{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
   .testi-card{background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--surface) 50%, transparent));
@@ -2493,23 +2504,9 @@
         <span class="eyebrow">Voices from the arena</span>
         <h2>Trusted by 12,000+ innovators</h2>
       </div>
-      <div class="testi">
-        <div class="testi-card reveal">
-          <div class="stars">★★★★★</div>
-          <p>"Hackathon Rivals ne humein real problem statements diye. 36 ghante mein jo humne banaya, wo abhi bhi production mein chal raha hai."</p>
-          <div class="testi-author"><div class="testi-avatar" style="background:#7c5cff">AK</div><div><div class="testi-name">Arjun Kumar</div><div class="testi-role">Winner 2025 · IIT Delhi</div></div></div>
-        </div>
-        <div class="testi-card reveal">
-          <div class="stars">★★★★★</div>
-          <p>"The blind judging system is what makes this fair. Purely on merit. Our team got matched with the right ministry."</p>
-          <div class="testi-author"><div class="testi-avatar" style="background:#22d3ee">PS</div><div><div class="testi-name">Priya Sharma</div><div class="testi-role">Finalist 2025 · NIT Trichy</div></div></div>
-        </div>
-        <div class="testi-card reveal">
-          <div class="stars">★★★★★</div>
-          <p>"As a SPOC, managing 12 teams was never this easy. Registration, nomination, PPT submission — sab ek jagah."</p>
-          <div class="testi-author"><div class="testi-avatar" style="background:#ff4d9d">RM</div><div><div class="testi-name">Dr. Ravi Menon</div><div class="testi-role">SPOC · VIT Vellore</div></div></div>
-        </div>
-      </div>
+     <div class="testi" id="testiGrid">
+  <div class="testi-loading">Loading testimonials…</div>
+</div>
     </div>
   </section>
 
@@ -3703,6 +3700,64 @@ async function loadHeroMockup(){
       </div>`;
   }
 }
+async function loadTestimonials(){
+  const grid = document.getElementById('testiGrid');
+  if (!grid) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .select('name, role, quote, rating, avatar_color, display_order')
+      .eq('published', true)
+      .order('display_order', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    if (error) throw error;
+    const list = data || [];
+
+    if (!list.length){
+      grid.innerHTML = `
+        <div class="testi-empty">
+          <div class="ic">💬</div>
+          <h3>Testimonials coming soon</h3>
+          <p>Real participant feedback will appear here once the season kicks off.</p>
+        </div>`;
+      return;
+    }
+
+    const initials = n => (n || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
+    const colorFromIdx = i => ['#7c5cff','#22d3ee','#ff4d9d','#4ade80','#fbbf24','#ff9f43'][i % 6];
+
+    grid.innerHTML = list.map((t, i) => {
+      const stars = '★'.repeat(Math.max(1, Math.min(5, t.rating || 5)));
+      const color = t.avatar_color || colorFromIdx(i);
+      return `
+        <div class="testi-card reveal in">
+          <div class="stars">${stars}</div>
+          <p>${escapeHtml(t.quote || '')}</p>
+          <div class="testi-author">
+            <div class="testi-avatar" style="background:${color}">${initials(t.name)}</div>
+            <div>
+              <div class="testi-name">${escapeHtml(t.name || 'Anonymous')}</div>
+              <div class="testi-role">${escapeHtml(t.role || '')}</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch (e){
+    console.warn('Testimonials load failed:', e);
+    grid.innerHTML = `
+      <div class="testi-empty">
+        <div class="ic">⚠️</div>
+        <h3>Could not load testimonials</h3>
+        <p>Please refresh the page.</p>
+      </div>`;
+  }
+}
+
+loadTestimonials();
 
 loadHeroMockup();
  
