@@ -2869,64 +2869,6 @@
    </div>
 
 <!-- TESTIMONIAL EDIT MODAL -->
-<div class="import-modal-bg" id="tmModal">
-  <div class="import-modal" style="max-width:640px">
-    <div class="im-head">
-      <div>
-        <h3 id="tmModalTitle">Add Testimonial</h3>
-        <div class="sub">Fill in the details below</div>
-      </div>
-      <button class="im-close" id="tmModalClose" type="button">✕</button>
-    </div>
-    <div class="im-body">
-      <div class="field" style="margin-bottom:14px">
-        <label>Name <span class="req">*</span></label>
-        <input type="text" id="tmName" placeholder="e.g. Arjun Kumar" />
-      </div>
-      <div class="field" style="margin-bottom:14px">
-        <label>Role / College</label>
-        <input type="text" id="tmRole" placeholder="e.g. Student · IIT Delhi" />
-      </div>
-      <div class="field" style="margin-bottom:14px">
-        <label>Quote <span class="req">*</span></label>
-        <textarea id="tmQuote" rows="4" placeholder="What did they say?"></textarea>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-        <div class="field">
-          <label>Rating (1–5)</label>
-          <select id="tmRating">
-            <option value="5">★★★★★ 5</option>
-            <option value="4">★★★★ 4</option>
-            <option value="3">★★★ 3</option>
-            <option value="2">★★ 2</option>
-            <option value="1">★ 1</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Avatar Color</label>
-          <input type="color" id="tmColor" value="#7c5cff" style="height:42px;padding:4px" />
-        </div>
-        <div class="field">
-          <label>Display Order</label>
-          <input type="number" id="tmOrder" value="0" />
-        </div>
-      </div>
-      <div class="field" style="margin-top:14px">
-        <label style="display:flex;align-items:center;gap:8px">
-          <input type="checkbox" id="tmPublished" checked />
-          <span>Published (visible on site)</span>
-        </label>
-      </div>
-    </div>
-    <div class="im-actions">
-      <span class="as-hint" id="tmModalNote"></span>
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-ghost" id="tmCancel" type="button">Cancel</button>
-        <button class="btn btn-primary" id="tmSave" type="button">Save Testimonial</button>
-      </div>
-    </div>
-  </div>
-</div>
 
    <!-- TEAM ANALYTICS -->
 <div class="team-analytics" id="teamAnalytics">
@@ -3293,6 +3235,64 @@
       </div>
       <div class="um-timeline" id="umTimeline"></div>
       <button class="um-more" id="umMore" style="display:none">Load more submissions</button>
+    </div>
+  </div>
+</div>
+<div class="import-modal-bg" id="tmModal">
+  <div class="import-modal" style="max-width:640px">
+    <div class="im-head">
+      <div>
+        <h3 id="tmModalTitle">Add Testimonial</h3>
+        <div class="sub">Fill in the details below</div>
+      </div>
+      <button class="im-close" id="tmModalClose" type="button">✕</button>
+    </div>
+    <div class="im-body">
+      <div class="field" style="margin-bottom:14px">
+        <label>Name <span class="req">*</span></label>
+        <input type="text" id="tmName" placeholder="e.g. Arjun Kumar" />
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Role / College</label>
+        <input type="text" id="tmRole" placeholder="e.g. Student · IIT Delhi" />
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Quote <span class="req">*</span></label>
+        <textarea id="tmQuote" rows="4" placeholder="What did they say?"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="field">
+          <label>Rating (1–5)</label>
+          <select id="tmRating">
+            <option value="5">★★★★★ 5</option>
+            <option value="4">★★★★ 4</option>
+            <option value="3">★★★ 3</option>
+            <option value="2">★★ 2</option>
+            <option value="1">★ 1</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Avatar Color</label>
+          <input type="color" id="tmColor" value="#7c5cff" style="height:42px;padding:4px" />
+        </div>
+        <div class="field">
+          <label>Display Order</label>
+          <input type="number" id="tmOrder" value="0" />
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="tmPublished" checked />
+          <span>Published (visible on site)</span>
+        </label>
+      </div>
+    </div>
+    <div class="im-actions">
+      <span class="as-hint" id="tmModalNote"></span>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" id="tmCancel" type="button">Cancel</button>
+        <button class="btn btn-primary" id="tmSave" type="button">Save Testimonial</button>
+      </div>
     </div>
   </div>
 </div>
