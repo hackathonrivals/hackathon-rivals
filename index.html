@@ -1754,7 +1754,7 @@
   .import-modal-bg{position:fixed;inset:0;background:rgba(5,6,10,.85);backdrop-filter:blur(8px);
     z-index:258;display:none;align-items:center;justify-content:center;padding:24px;
     animation:fadeIn .2s ease}
-  .import-modal-bg.open{display:flex}
+  .import-modal-bg.open{display:flex !important; z-index:9999 !important}
   .import-modal{width:100%;max-width:720px;max-height:88vh;display:flex;
     flex-direction:column;background:linear-gradient(180deg,var(--surface-2),var(--surface));
     border:1px solid var(--border-strong);border-radius:20px;overflow:hidden;
