@@ -1959,7 +1959,7 @@
           </div>
           <div class="mockup-body" id="heroMockupBody">
           <div class="mock-row"><span class="mock-title">Live Leaderboard · Grand Finale</span><span class="mock-tag">● LIVE</span></div>
-          <div id="heroMockupRows" style="min-height:180px"></div>
+          <div id="heroMockupRows"></div>
          </div>
         </div>
       </div>
@@ -3667,7 +3667,7 @@ async function loadHeroMockup(){
       return `
         <div class="mock-team ${isFirst ? 'win' : ''}" ${i > 0 ? 'style="margin-top:12px"' : ''}>
           <span class="mock-avatar" style="background:${colors[i]}">${initials(name)}</span>
-          <span class="mock-name">${escapeHtml(name)} · ${escapeHtml(u.email.split('@')[1] || '')}</span>
+          <span class="mock-name">${escapeHtml(name)} </span>
           <span class="mock-pts">${u.total.toLocaleString()}</span>
         </div>
         <div class="mock-bar"><i data-fill="${pct}%" style="background:${barColors[i]}"></i></div>`;
