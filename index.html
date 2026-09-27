@@ -107,7 +107,104 @@
   [data-theme="light"] .btn-ghost{background:rgba(15,17,25,.03)}
   .btn-ghost:hover{background:rgba(255,255,255,.09)}
   .btn-lg{padding:14px 26px;font-size:15.5px;border-radius:12px}
+/* ===== DASHBOARD ENHANCEMENTS ===== */
+.db-chart-wrap{
+  background:rgba(0,0,0,.2);border:1px solid var(--border);
+  border-radius:12px;padding:18px 20px;
+}
+[data-theme="light"] .db-chart-wrap{background:rgba(15,17,25,.02)}
 
+.db-progress-chart{
+  display:flex;align-items:flex-end;gap:6px;height:120px;
+  padding:8px 4px 0;border-bottom:1px solid var(--border);
+}
+.db-progress-col{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-end;height:100%;gap:4px;
+}
+.db-progress-bar{
+  width:100%;border-radius:6px 6px 0 0;min-height:4px;
+  background:linear-gradient(180deg,var(--violet),var(--cyan));
+  transition:height 1s cubic-bezier(.2,.8,.3,1);
+  position:relative;
+}
+.db-progress-bar span{
+  position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  font-family:'Space Grotesk';font-weight:700;font-size:10px;
+  color:var(--text);white-space:nowrap;
+}
+.db-progress-lbl{
+  font-size:9.5px;color:var(--muted);text-align:center;
+  font-weight:600;white-space:nowrap;
+}
+
+.db-lang-list{display:flex;flex-direction:column;gap:10px}
+.db-lang-bar-wrap{display:flex;flex-direction:column;gap:5px;}
+.db-lang-lbl{
+  display:flex;justify-content:space-between;font-weight:600;
+  font-size:12px;
+}
+.db-lang-lbl .meta{color:var(--muted);font-weight:400;font-size:11px}
+.db-lang-bar{
+  height:6px;border-radius:99px;background:rgba(255,255,255,.05);
+  overflow:hidden;
+}
+[data-theme="light"] .db-lang-bar{background:rgba(15,17,25,.05)}
+.db-lang-bar i{
+  display:block;height:100%;border-radius:99px;width:0;
+  background:linear-gradient(90deg,var(--cyan),var(--violet));
+  transition:width 1s cubic-bezier(.2,.8,.3,1);
+}
+
+.db-timeline{display:flex;flex-direction:column;gap:8px}
+.db-timeline-item{
+  display:grid;grid-template-columns:30px 1fr auto;gap:10px;
+  align-items:center;padding:10px 12px;
+  background:rgba(0,0,0,.2);border:1px solid var(--border);
+  border-radius:10px;font-size:12.5px;
+}
+[data-theme="light"] .db-timeline-item{background:rgba(15,17,25,.02)}
+.db-timeline-item .icon{
+  width:26px;height:26px;border-radius:8px;display:grid;
+  place-items:center;font-size:13px;flex-shrink:0;
+}
+.db-timeline-item .icon.green{background:rgba(61,220,132,.15);border:1px solid rgba(61,220,132,.3)}
+.db-timeline-item .icon.violet{background:rgba(124,92,255,.15);border:1px solid rgba(124,92,255,.3)}
+.db-timeline-item .icon.orange{background:rgba(255,159,67,.15);border:1px solid rgba(255,159,67,.3)}
+.db-timeline-item .icon.red{background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.3)}
+.db-timeline-item .icon.cyan{background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.3)}
+.db-timeline-item .body{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;font-weight:500;
+}
+.db-timeline-item .body small{
+  display:block;color:var(--muted);font-weight:400;
+  font-size:11px;margin-top:2px;
+}
+.db-timeline-item .when{
+  font-size:11px;color:var(--muted);white-space:nowrap;
+}
+
+.db-upgrade-banner{
+  background:linear-gradient(135deg,rgba(124,92,255,.15),rgba(34,211,238,.1));
+  border:1px solid rgba(124,92,255,.3);border-radius:14px;
+  padding:16px 20px;margin-bottom:22px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.db-upgrade-banner .icon{
+  width:44px;height:44px;border-radius:12px;
+  background:rgba(124,92,255,.2);border:1px solid rgba(124,92,255,.35);
+  display:grid;place-items:center;font-size:20px;flex-shrink:0;
+}
+.db-upgrade-banner .content{flex:1;min-width:200px}
+.db-upgrade-banner h4{margin:0 0 3px;font-size:14px}
+.db-upgrade-banner p{margin:0;font-size:12.5px;color:var(--muted)}
+.db-upgrade-banner .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.db-stats{grid-template-columns:repeat(4,1fr) !important}
+@media (max-width:600px){
+  .db-stats{grid-template-columns:1fr 1fr !important}
+}
   /* ===== DASHBOARD ENHANCEMENTS ===== */
 .db-chart-wrap{
   background:rgba(0,0,0,.2);border:1px solid var(--border);
