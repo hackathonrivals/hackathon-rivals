@@ -2378,17 +2378,18 @@
             <div class="review-grid">
               <div class="review-card">
                 <h4>SPOC</h4>
-                <div class="row-line"><span>Name</span><span>Dr. Ravi Menon</span></div>
-                <div class="row-line"><span>College</span><span>VIT Vellore</span></div>
-                <div class="row-line"><span>Email</span><span>spoc@vit.ac.in</span></div>
-                <div class="row-line"><span>City</span><span>Vellore, TN</span></div>
+                <div class="row-line"><span>Name</span><span id="rvSpocName">—</span></div>
+                <div class="row-line"><span>College</span><span id="rvSpocCollege">—</span></div>
+                <div class="row-line"><span>Email</span><span id="rvSpocEmail">—</span></div>
+                <div class="row-line"><span>City</span><span id="rvSpocCity">—</span></div>
+              </div>
               </div>
               <div class="review-card">
                 <h4>Team</h4>
-                <div class="row-line"><span>Team Name</span><span>Team Nova</span></div>
-                <div class="row-line"><span>Theme</span><span>Smart Automation</span></div>
-                <div class="row-line"><span>Problem</span><span>PS-2026-001</span></div>
-                <div class="row-line"><span>Members</span><span id="reviewMembers">1</span></div>
+               <div class="row-line"><span>Team Name</span><span id="rvTeamName">—</span></div>
+               <div class="row-line"><span>Theme</span><span id="rvTeamTheme">—</span></div>
+               <div class="row-line"><span>Problem</span><span id="rvTeamProblem">—</span></div>
+                  <div class="row-line"><span>Members</span><span id="rvTeamMembers">—</span></div>
               </div>
             </div>
             <div class="field">
@@ -4810,6 +4811,22 @@ if (document.readyState === 'loading'){
   const prevBtn = $('#prevBtn');
   const nextBtn = $('#nextBtn');
   const curStepEl = $('#curStep');
+
+function populateReviewSection(){
+  const setT = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = (val && String(val).trim()) || '—';
+  };
+  setT('rvSpocName', $('#regSpocName')?.value);
+  setT('rvSpocCollege', $('#regCollegeName')?.value);
+  setT('rvSpocEmail', $('#regSpocEmail')?.value);
+  setT('rvSpocCity', $('#regCollegeCity')?.value);
+  setT('rvTeamName', $('#regTeamName')?.value);
+  setT('rvTeamTheme', $('#regTheme')?.value);
+  setT('rvTeamProblem', $('#regProblemStatement')?.value);
+  const members = $$('.member-card').length;
+  setT('rvTeamMembers', String(members || 1));
+}
 
   function setStep(n){
     currentStep = Math.max(1, Math.min(totalSteps, n));
