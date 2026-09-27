@@ -1957,15 +1957,10 @@
             <div class="mockup-dots"><span></span><span></span><span></span></div>
             <div class="mockup-url">hackathonrivals.in/dashboard</div>
           </div>
-          <div class="mockup-body">
-            <div class="mock-row"><span class="mock-title">Live Leaderboard · Grand Finale</span><span class="mock-tag">● LIVE</span></div>
-            <div class="mock-team win"><span class="mock-avatar" style="background:#7c5cff">TN</span><span class="mock-name">Team Nova · IIT Bombay</span><span class="mock-pts">9,420</span></div>
-            <div class="mock-bar"><i data-fill="94%"></i></div>
-            <div class="mock-team" style="margin-top:12px"><span class="mock-avatar" style="background:#22d3ee">BF</span><span class="mock-name">Byte Force · NIT Trichy</span><span class="mock-pts">9,180</span></div>
-            <div class="mock-bar"><i data-fill="88%" style="background:linear-gradient(90deg,#22d3ee,#4ade80)"></i></div>
-            <div class="mock-team" style="margin-top:12px"><span class="mock-avatar" style="background:#ff4d9d">NP</span><span class="mock-name">Null Pointer · BITS Pilani</span><span class="mock-pts">8,875</span></div>
-            <div class="mock-bar"><i data-fill="82%" style="background:linear-gradient(90deg,#ff4d9d,#fbbf24)"></i></div>
-          </div>
+          <div class="mockup-body" id="heroMockupBody">
+          <div class="mock-row"><span class="mock-title">Live Leaderboard · Grand Finale</span><span class="mock-tag">● LIVE</span></div>
+          <div id="heroMockupRows" style="min-height:180px"></div>
+         </div>
         </div>
       </div>
       <div class="stats reveal">
@@ -3624,6 +3619,77 @@ function animateCounter(el, target, suffix){
 }
 
 loadHeroStats();
+async function loadHeroMockup(){
+  const container = document.getElementById('heroMockupRows');
+  if (!container) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('arena_submissions')
+      .select('email, full_name, score, created_at');
+    if (error) throw error;
+
+    // Aggregate by email
+    const agg = {};
+    (data || []).forEach(r => {
+      const key = r.email || 'unknown';
+      if (!agg[key]) agg[key] = { email: key, name: r.full_name || '', total: 0 };
+      agg[key].total += (r.score || 0);
+    });
+
+    const top3 = Object.values(agg)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 3);
+
+    // If no data, show placeholder
+    if (!top3.length){
+      container.innerHTML = `
+        <div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:13px">
+          No submissions yet — be the first! 🚀
+        </div>`;
+      return;
+    }
+
+    const colors = ['#7c5cff', '#22d3ee', '#ff4d9d'];
+    const barColors = [
+      'linear-gradient(90deg,#7c5cff,#9b7fff)',
+      'linear-gradient(90deg,#22d3ee,#4ade80)',
+      'linear-gradient(90deg,#ff4d9d,#fbbf24)'
+    ];
+    const maxScore = top3[0].total || 1;
+
+    const initials = n => (n || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
+
+    container.innerHTML = top3.map((u, i) => {
+      const pct = Math.round((u.total / maxScore) * 100);
+      const name = u.name || u.email.split('@')[0];
+      const isFirst = i === 0;
+      return `
+        <div class="mock-team ${isFirst ? 'win' : ''}" ${i > 0 ? 'style="margin-top:12px"' : ''}>
+          <span class="mock-avatar" style="background:${colors[i]}">${initials(name)}</span>
+          <span class="mock-name">${escapeHtml(name)} · ${escapeHtml(u.email.split('@')[1] || '')}</span>
+          <span class="mock-pts">${u.total.toLocaleString()}</span>
+        </div>
+        <div class="mock-bar"><i data-fill="${pct}%" style="background:${barColors[i]}"></i></div>`;
+    }).join('');
+
+    // Trigger bars animation
+    requestAnimationFrame(() => {
+      container.querySelectorAll('.mock-bar i').forEach((b, idx) => {
+        setTimeout(() => { b.style.width = b.dataset.fill; }, 200 + idx * 200);
+      });
+    });
+
+  } catch (e) {
+    console.warn('Hero mockup load failed:', e);
+    container.innerHTML = `
+      <div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:13px">
+        Leaderboard loading…
+      </div>`;
+  }
+}
+
+loadHeroMockup();
  
   /* ============ FAQ ============ */
   $$('.faq-item').forEach(item => {
