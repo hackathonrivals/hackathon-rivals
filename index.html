@@ -2867,34 +2867,6 @@
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
     <button class="btn btn-ghost" id="teamExportCSV" type="button">⬇ CSV</button>
    </div>
-<!-- TESTIMONIALS SECTION -->
-<div id="adminTestimonialsSection" style="display:none">
-  <div class="admin-filters" style="margin-bottom:16px">
-    <button class="btn btn-primary" id="tmAddBtn" type="button">+ Add Testimonial</button>
-    <div class="spacer"></div>
-    <span class="count" id="tmCount">—</span>
-    <button class="btn btn-ghost" id="tmRefresh" type="button">↻ Refresh</button>
-  </div>
-
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th class="hide-sm">Role</th>
-          <th>Quote</th>
-          <th class="hide-sm">Rating</th>
-          <th class="hide-sm">Order</th>
-          <th class="hide-sm">Published</th>
-          <th style="text-align:right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="tmTbody">
-        <tr><td colspan="7" class="admin-empty">Loading testimonials…</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
 
 <!-- TESTIMONIAL EDIT MODAL -->
 <div class="import-modal-bg" id="tmModal">
@@ -3002,6 +2974,35 @@
     </table>
   </div>
 </div>
+<!-- TESTIMONIALS SECTION -->
+<div id="adminTestimonialsSection" style="display:none">
+  <div class="admin-filters" style="margin-bottom:16px">
+    <button class="btn btn-primary" id="tmAddBtn" type="button">+ Add Testimonial</button>
+    <div class="spacer"></div>
+    <span class="count" id="tmCount">—</span>
+    <button class="btn btn-ghost" id="tmRefresh" type="button">↻ Refresh</button>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th class="hide-sm">Role</th>
+          <th>Quote</th>
+          <th class="hide-sm">Rating</th>
+          <th class="hide-sm">Order</th>
+          <th class="hide-sm">Published</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tmTbody">
+        <tr><td colspan="7" class="admin-empty">Loading testimonials…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 
       <div class="digest-panel">
         <h4>📬 Scheduled digest <span class="tag">pg_cron · daily 9 AM IST</span></h4>
