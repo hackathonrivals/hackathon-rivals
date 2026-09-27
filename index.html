@@ -4841,6 +4841,7 @@ function populateReviewSection(){
    nextBtn.textContent = currentStep === totalSteps 
   ? (editingRegistrationId ? 'Update Registration ✓' : 'Submit Application ✓')
   : 'Next →';
+  if (currentStep === 4) populateReviewSection();
   }
   prevBtn.addEventListener('click', () => setStep(currentStep - 1));
  nextBtn.addEventListener('click', () => {
