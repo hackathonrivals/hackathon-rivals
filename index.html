@@ -2459,109 +2459,114 @@
           <div class="reg-step" data-step="4"><div class="num">4</div><div class="lbl">Idea Submission</div></div>
         </div>
 
-        <div class="reg-body">
-          <div class="reg-pane active" data-pane="1">
-            <h3 class="pane-title">SPOC / College Details</h3>
-            <p class="pane-desc">The Single Point of Contact from your college who will manage all team nominations.</p>
-            <div class="form-grid">
-  <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" id="regSpocName" placeholder="Dr. Abhi Yadav" /></div>
-  <div class="field"><label>Designation <span class="req">*</span></label><input type="text" id="regSpocDesignation" placeholder="Professor, Dept. of CSE" /></div>
-  <div class="field"><label>Official Email <span class="req">*</span></label><input type="email" id="regSpocEmail" placeholder="spoc@college.edu.in" /></div>
-  <div class="field"><label>Mobile Number <span class="req">*</span></label><input type="tel" id="regSpocMobile" placeholder="+91 98765 43210" /></div>
-  <div class="field"><label>College / Institute Name <span class="req">*</span></label><input type="text" id="regCollegeName" placeholder="Vellore Institute of Technology" /></div>
-  <div class="field"><label>City / State <span class="req">*</span></label><input type="text" id="regCollegeCity" placeholder="Vellore, Tamil Nadu" /></div>
-  <div class="field" style="grid-column:1/-1"><label>College Address <span class="req">*</span></label><input type="text" id="regCollegeAddress" placeholder="Street, City, State, PIN" /></div>
+       <div class="reg-body">
+  <div class="reg-pane active" data-pane="1">
+    <h3 class="pane-title">SPOC / College Details</h3>
+    <p class="pane-desc">The Single Point of Contact from your college who will manage all team nominations.</p>
+    <div class="form-grid">
+      <div class="field"><label>Full Name <span class="req">*</span></label><input type="text" id="regSpocName" placeholder="Dr. Abhi Yadav" /></div>
+      <div class="field"><label>Designation <span class="req">*</span></label><input type="text" id="regSpocDesignation" placeholder="Professor, Dept. of CSE" /></div>
+      <div class="field"><label>Official Email <span class="req">*</span></label><input type="email" id="regSpocEmail" placeholder="spoc@college.edu.in" /></div>
+      <div class="field"><label>Mobile Number <span class="req">*</span></label><input type="tel" id="regSpocMobile" placeholder="+91 98765 43210" /></div>
+      <div class="field"><label>College / Institute Name <span class="req">*</span></label><input type="text" id="regCollegeName" placeholder="Vellore Institute of Technology" /></div>
+      <div class="field"><label>City / State <span class="req">*</span></label><input type="text" id="regCollegeCity" placeholder="Vellore, Tamil Nadu" /></div>
+      <div class="field" style="grid-column:1/-1"><label>College Address <span class="req">*</span></label><input type="text" id="regCollegeAddress" placeholder="Street, City, State, PIN" /></div>
+    </div>
+  </div>
+
+  <div class="reg-pane" data-pane="2">
+    <h3 class="pane-title">Team &amp; Theme Selection</h3>
+    <p class="pane-desc">Choose a team name and select the theme &amp; problem statement.</p>
+    <div class="form-grid">
+      <div class="field"><label>Team Name <span class="req">*</span></label><input type="text" id="regTeamName" placeholder="Team Nova" /></div>
+      <div class="field"><label>Team Size <span class="req">*</span></label>
+        <select id="regTeamSize">
+          <option value="1">1 member (solo)</option>
+          <option value="2">2 members</option>
+          <option value="3">3 members</option>
+          <option value="4">4 members</option>
+          <option value="5">5 members</option>
+          <option value="6" selected>6 members</option>
+        </select>
+      </div>
+      <div class="field"><label>Preferred Theme <span class="req">*</span></label>
+        <select id="regTheme">
+          <option>Select a theme</option>
+          <option>Smart Automation &amp; AI</option>
+          <option>Agriculture &amp; FoodTech</option>
+          <option>MedTech &amp; Health</option>
+          <option>Blockchain &amp; Cybersecurity</option>
+          <option>Robotics, Drones &amp; Space Tech</option>
+          <option>Clean &amp; Renewable Energy</option>
+          <option>Smart Cities &amp; Mobility</option>
+          <option>EdTech &amp; Skill Development</option>
+        </select>
+      </div>
+      <div class="field"><label>Category <span class="req">*</span></label>
+        <select id="regCategory">
+          <option>Software</option>
+          <option>Hardware</option>
+          <option>Student Innovation</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:1/-1"><label>Problem Statement <span class="req">*</span></label>
+        <select id="regProblemStatement">
+          <option>PS-2026-001 · AI-powered crop disease detection</option>
+          <option>PS-2026-014 · Low-cost portable ventilator</option>
+          <option>PS-2026-027 · Blockchain-based land records</option>
+          <option>PS-2026-041 · Smart railway track monitoring</option>
+          <option>PS-2026-058 · Assistive tech for disabled</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:1/-1"><label>Brief Idea Summary (max 200 chars) <span class="req">*</span></label>
+        <textarea id="regIdeaSummary" placeholder="Our solution uses edge AI cameras to detect crop diseases..."></textarea>
+      </div>
+    </div>
+    <div class="hint"><span>💡</span><div><strong>Tip:</strong> Choose a problem statement that matches your team's actual tech stack.</div></div>
+  </div>
+
+  <div class="reg-pane" data-pane="3">
+    <h3 class="pane-title">Team Members</h3>
+    <p class="pane-desc">Add 1–6 members. The Team Leader is added by default.</p>
+    <div class="members" id="membersList"></div>
+    <button class="add-member" id="addMember">+ Add another member</button>
+    <div class="hint info"><span>ℹ️</span><div>You can register as a solo hacker (1 member) or with a full team of up to 6 members.</div></div>
+  </div>
+
+  <div class="reg-pane" data-pane="4">
+    <h3 class="pane-title">Review &amp; Submit</h3>
+    <p class="pane-desc">Verify your details before final submission.</p>
+    <div class="review-grid">
+      <div class="review-card">
+        <h4>SPOC</h4>
+        <div class="row-line"><span>Name</span><span id="rvSpocName">—</span></div>
+        <div class="row-line"><span>College</span><span id="rvSpocCollege">—</span></div>
+        <div class="row-line"><span>Email</span><span id="rvSpocEmail">—</span></div>
+        <div class="row-line"><span>City</span><span id="rvSpocCity">—</span></div>
+      </div>
+      <div class="review-card">
+        <h4>Team</h4>
+        <div class="row-line"><span>Team Name</span><span id="rvTeamName">—</span></div>
+        <div class="row-line"><span>Theme</span><span id="rvTeamTheme">—</span></div>
+        <div class="row-line"><span>Problem</span><span id="rvTeamProblem">—</span></div>
+        <div class="row-line"><span>Members</span><span id="rvTeamMembers">—</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Idea Presentation (PPT) <span class="req">*</span></label>
+      <div class="upload-zone" id="pptUploadZone">
+        <div class="icon" id="pptIcon">📊</div>
+        <div class="t" id="pptTitle">Upload your idea PPT</div>
+        <div class="s" id="pptSub">PDF / PPT / PPTX · Max 10 MB · <span class="browse">Browse files</span></div>
+        <input type="file" id="pptFileInput" accept=".pdf,.ppt,.pptx" hidden />
+      </div>
+    </div>
+    <label class="checkbox-row">
+      <input type="checkbox" />
+      <span>I confirm all details are correct and I agree to the <a href="#" style="color:var(--violet);text-decoration:underline">Terms &amp; Conditions</a>.</span>
+    </label>
+  </div>
 </div>
-          </div>
-
-          <div class="reg-pane" data-pane="2">
-            <h3 class="pane-title">Team & Theme Selection</h3>
-            <p class="pane-desc">Choose a team name and select the theme & problem statement.</p>
-            <div class="form-grid">
-  <div class="field"><label>Team Name <span class="req">*</span></label><input type="text" id="regTeamName" placeholder="Team Nova" /></div>
-  <div class="field"><label>Team Size <span class="req">*</span></label>
-    <select id="regTeamSize">
-      <option value="1">1 member (solo)</option>
-      <option value="2">2 members</option>
-      <option value="3">3 members</option>
-      <option value="4">4 members</option>
-      <option value="5">5 members</option>
-      <option value="6" selected>6 members</option>
-    </select>
-  </div>
-  <div class="field"><label>Preferred Theme <span class="req">*</span></label>
-    <select id="regTheme">
-      <option>Select a theme</option><option>Smart Automation & AI</option><option>Agriculture & FoodTech</option>
-      <option>MedTech & Health</option><option>Blockchain & Cybersecurity</option>
-      <option>Robotics, Drones & Space Tech</option><option>Clean & Renewable Energy</option>
-      <option>Smart Cities & Mobility</option><option>EdTech & Skill Development</option>
-    </select>
-  </div>
-  <div class="field"><label>Category <span class="req">*</span></label>
-    <select id="regCategory"><option>Software</option><option>Hardware</option><option>Student Innovation</option></select>
-  </div>
-  <div class="field" style="grid-column:1/-1"><label>Problem Statement <span class="req">*</span></label>
-    <select id="regProblemStatement">
-      <option>PS-2026-001 · AI-powered crop disease detection</option>
-      <option>PS-2026-014 · Low-cost portable ventilator</option>
-      <option>PS-2026-027 · Blockchain-based land records</option>
-      <option>PS-2026-041 · Smart railway track monitoring</option>
-      <option>PS-2026-058 · Assistive tech for disabled</option>
-    </select>
-  </div>
-  <div class="field" style="grid-column:1/-1"><label>Brief Idea Summary (max 200 chars) <span class="req">*</span></label>
-    <textarea id="regIdeaSummary" placeholder="Our solution uses edge AI cameras to detect crop diseases..."></textarea>
-  </div>
-</div>
-            <div class="hint"><span>💡</span><div><strong>Tip:</strong> Choose a problem statement that matches your team's actual tech stack.</div></div>
-          </div>
-           </div>
-
-          <div class="reg-pane" data-pane="3">
-            <h3 class="pane-title">Team Members</h3>
-            <p class="pane-desc">Add 1–6 members. The Team Leader is added by default.</p>
-            <div class="members" id="membersList"></div>
-            <button class="add-member" id="addMember">+ Add another member</button>
-            <div class="hint info"><span>ℹ️</span><div>You can register as a solo hacker (1 member) or with a full team of up to 6 members.</div></div>
-          </div>
-        </div>
-
-          <div class="reg-pane" data-pane="4">
-            <h3 class="pane-title">Review & Submit</h3>
-            <p class="pane-desc">Verify your details before final submission.</p>
-            <div class="review-grid">
-              <div class="review-card">
-                <h4>SPOC</h4>
-                <div class="row-line"><span>Name</span><span id="rvSpocName">—</span></div>
-                <div class="row-line"><span>College</span><span id="rvSpocCollege">—</span></div>
-                <div class="row-line"><span>Email</span><span id="rvSpocEmail">—</span></div>
-                <div class="row-line"><span>City</span><span id="rvSpocCity">—</span></div>
-              </div>
-              </div>
-              <div class="review-card">
-                <h4>Team</h4>
-               <div class="row-line"><span>Team Name</span><span id="rvTeamName">—</span></div>
-               <div class="row-line"><span>Theme</span><span id="rvTeamTheme">—</span></div>
-               <div class="row-line"><span>Problem</span><span id="rvTeamProblem">—</span></div>
-                  <div class="row-line"><span>Members</span><span id="rvTeamMembers">—</span></div>
-              </div>
-            </div>
-            <div class="field">
-              <label>Idea Presentation (PPT) <span class="req">*</span></label>
-           <div class="upload-zone" id="pptUploadZone">
-  <div class="icon" id="pptIcon">📊</div>
-  <div class="t" id="pptTitle">Upload your idea PPT</div>
-  <div class="s" id="pptSub">PDF / PPT / PPTX · Max 10 MB · <span class="browse">Browse files</span></div>
-  <input type="file" id="pptFileInput" accept=".pdf,.ppt,.pptx" hidden />
-</div>
-            </div>
-            <label class="checkbox-row">
-              <input type="checkbox" />
-              <span>I confirm all details are correct and I agree to the <a href="#" style="color:var(--violet);text-decoration:underline">Terms &amp; Conditions</a>.</span>
-            </label>
-          </div>
-        </div>
-
         <div class="reg-actions">
           <button class="btn btn-ghost" id="prevBtn" disabled>← Back</button>
           <div class="reg-progress">Step <b id="curStep">1</b> of <b>4</b></div>
