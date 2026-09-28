@@ -6836,58 +6836,93 @@ _start:
 
   /* --- Scoring --- */
   function computeScore({ ran, error, passed, total, timeMs, code, lang, hintCount = 0, topic = '' }){
-    const bd = [];
-    let correct = 0;
-    if (total > 0){
-      correct = Math.round((passed / total) * 50);
-      bd.push({ label:'Correctness', got: correct, max: 50,
-        note: `${passed}/${total} test cases passed` });
-    } else {
-      correct = ran && !error ? 36 : 12;
-      bd.push({ label:'Correctness', got: correct, max: 50, note:'No test cases — heuristic only' });
-    }
-    let q = 0;
-    const hasComments = /(\/\/|#(?!include)|\/\*|--|%)/.test(code);
-    const hasStructure = /(function |def |class |=>|void |int main|public |fun |fn |proc |module )/i.test(code);
-    const lines = code.split('\n').filter(l => l.trim()).length;
-    if (hasComments) q += 6;
-    if (hasStructure) q += 6;
-    if (lines >= 5 && lines <= 80) q += 5;
-    if (code.length > 180) q += 4;
-    if (lines <= 150) q += 4;
-    q = Math.min(q, 25);
-    bd.push({ label:'Code Quality', got: q, max: 25,
-      note: hasComments && hasStructure ? 'Comments + structured' : 'Add comments / structure' });
+  const bd = [];
+  const hasTestCases = total > 0;
+  const tcRatio = hasTestCases ? (passed / total) : 0;
 
-    let exec = 0;
-    if (ran) exec += 9;
-    if (!error) exec += 6;
-    bd.push({ label:'Execution', got: exec, max: 15,
-      note: error ? 'Runtime/compile issue' : 'Ran cleanly' });
-
-    let eff = 0;
-    const loopRisk = /while\s*\(\s*(true|1)\s*\)/.test(code) && !/break|return/.test(code);
-    if (!loopRisk) eff += 5;
-    if (timeMs < 2000) eff += 3;
-    if (code.length / Math.max(lines, 1) < 90) eff += 2;
-    eff = Math.min(eff, 10);
-    bd.push({ label:'Efficiency', got: eff, max: 10,
-      note: timeMs ? `${Math.round(timeMs)} ms` : 'Not measured' });
-
-    let total_ = bd.reduce((s, x) => s + x.got, 0);
-
-    const tbl = (window.__hrArenaConfig && window.__hrArenaConfig.hintPenalty) || [0,2,5,10];
-    const hc  = Math.min(hintCount || 0, tbl.length - 1);
-    const penalty = tbl[hc] || 0;
-    if (penalty > 0){
-      bd.push({ label:'Hint Usage', got:-penalty, max:0, penalty:true,
-        note:`${hc} hint${hc>1?'s':''} revealed` });
-    }
-
-    total_ = Math.max(1, Math.min(100, total_ - penalty));
-    return { score: total_, breakdown: bd, penalty, topic };
+  // ===== CORRECTNESS (60 pts) =====
+  let correct = 0;
+  if (hasTestCases){
+    // Full 60 pts for 100% test pass, scaled down linearly
+    correct = Math.round(tcRatio * 60);
+    // Bonus: harsh fail penalty for partial passes
+    if (tcRatio === 1) correct = 60;
+    bd.push({ label:'Correctness', got: correct, max: 60,
+      note: `${passed}/${total} test cases passed (${Math.round(tcRatio*100)}%)` });
+  } else {
+    // No test cases: cap at 24/60 (40% max) — heuristic only
+    correct = (ran && !error) ? 24 : 6;
+    bd.push({ label:'Correctness', got: correct, max: 60,
+      note: '⚠️ No test cases — heuristic cap 40%' });
   }
 
+  // ===== EXECUTION (15 pts) =====
+  let exec = 0;
+  if (ran) exec += 8;
+  if (!error) exec += 7;
+  bd.push({ label:'Execution', got: exec, max: 15,
+    note: error ? 'Runtime/compile issue' : (ran ? 'Ran cleanly' : 'Did not run') });
+
+  // ===== EFFICIENCY (10 pts) =====
+  let eff = 0;
+  const lines = code.split('\n').filter(l => l.trim()).length;
+  // Infinite loop risk detection
+  const loopRisk = /while\s*\(\s*(true|1)\s*\)/.test(code) && !/break|return/.test(code);
+  if (!loopRisk) eff += 3;
+  // Fast execution
+  if (timeMs > 0 && timeMs < 500) eff += 4;
+  else if (timeMs > 0 && timeMs < 2000) eff += 3;
+  else if (timeMs === 0 && !error) eff += 2;
+  // Reasonable code density (not overly verbose)
+  if (code.length / Math.max(lines, 1) < 80) eff += 2;
+  // Nested loops = complexity penalty for large inputs
+  const nestedLoops = (code.match(/for\s*\(/g) || []).length >= 2 || 
+                      (code.match(/while\s*\(/g) || []).length >= 2;
+  if (!nestedLoops) eff += 1;
+  eff = Math.min(eff, 10);
+  bd.push({ label:'Efficiency', got: eff, max: 10,
+    note: timeMs ? `${Math.round(timeMs)} ms · ${nestedLoops ? 'nested loops' : 'single pass'}` : 'Not measured' });
+
+  // ===== CODE QUALITY (15 pts) =====
+  let q = 0;
+  const hasComments = /(\/\/|#(?!include)|\/\*|--|%)/.test(code);
+  const hasFunctions = /(function |def |class |=>|void |int main|public |fun |fn |proc |module )/i.test(code);
+  const hasMeaningfulNames = /[a-zA-Z_]{3,}\s*[=\(]/.test(code); // at least 3-char variable names
+  
+  if (hasComments) q += 4;
+  if (hasFunctions) q += 4;
+  if (hasMeaningfulNames) q += 3;
+  if (lines >= 3 && lines <= 100) q += 2;
+  if (code.length > 100) q += 2;
+  q = Math.min(q, 15);
+  bd.push({ label:'Code Quality', got: q, max: 15,
+    note: hasComments && hasFunctions ? 'Comments + structured' : 'Add comments / structure' });
+
+  // ===== TOTAL =====
+  let total_ = bd.reduce((s, x) => s + x.got, 0);
+
+  // ===== NO TEST CASE CAP =====
+  const NO_TC_CAP = 65;
+  let capped = false;
+  if (!hasTestCases && total_ > NO_TC_CAP){
+    total_ = NO_TC_CAP;
+    capped = true;
+    bd.push({ label:'Test Case Bonus', got: 0, max: 0, penalty: true,
+      note: `Capped at ${NO_TC_CAP} — add test cases for full score` });
+  }
+
+  // ===== HINT PENALTY =====
+  const tbl = (window.__hrArenaConfig && window.__hrArenaConfig.hintPenalty) || [0, 2, 5, 10];
+  const hc  = Math.min(hintCount || 0, tbl.length - 1);
+  const penalty = tbl[hc] || 0;
+  if (penalty > 0){
+    bd.push({ label:'Hint Usage', got:-penalty, max:0, penalty:true,
+      note:`${hc} hint${hc>1?'s':''} revealed` });
+  }
+
+  total_ = Math.max(1, Math.min(100, total_ - penalty));
+  return { score: total_, breakdown: bd, penalty, topic, capped };
+}
   function verdictFor(score){
     if (score >= 90) return { color:'#3ddc84', label:'Excellent — production ready', txt:'Outstanding. Your solution is well-structured and correct.' };
     if (score >= 75) return { color:'#22d3ee', label:'Strong — minor gaps', txt:'Solid solution. Tighten edge cases and comments to reach 90+.' };
