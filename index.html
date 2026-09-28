@@ -2797,6 +2797,7 @@
   <button class="tab active" data-admin-tab="arena">⚔️ Arena Submissions</button>
   <button class="tab" data-admin-tab="teams">📝 Team Registrations</button>
   <button class="tab" data-admin-tab="testimonials">💬 Testimonials</button>
+  <button class="tab" data-admin-tab="messages">📬 Messages</button>
 </div>
 
 <div id="adminArenaSection" style="display:block">
@@ -3002,7 +3003,61 @@
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
     <button class="btn btn-ghost" id="teamExportCSV" type="button">⬇ CSV</button>
    </div>
+<!-- CONTACT MESSAGES SECTION -->
+<div id="adminMessagesSection" style="display:none">
+  <div class="admin-filters" style="margin-bottom:16px">
+    <select id="msgFilterStatus">
+      <option value="">All messages</option>
+      <option value="new">🆕 New</option>
+      <option value="read">👁 Read</option>
+      <option value="replied">✅ Replied</option>
+      <option value="archived">📦 Archived</option>
+    </select>
+    <input type="text" id="msgSearch" placeholder="🔍 Search by name, email, subject…" />
+    <div class="spacer"></div>
+    <span class="count" id="msgCount">—</span>
+    <button class="btn btn-ghost" id="msgRefresh" type="button">↻ Refresh</button>
+  </div>
 
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>From</th>
+          <th class="hide-sm">Category</th>
+          <th>Subject</th>
+          <th class="hide-sm">Status</th>
+          <th class="hide-sm">When</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="msgTbody">
+        <tr><td colspan="6" class="admin-empty">Loading messages…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MESSAGE VIEW MODAL -->
+<div class="import-modal-bg" id="msgModal">
+  <div class="import-modal" style="max-width:680px">
+    <div class="im-head">
+      <div>
+        <h3 id="msgModalTitle">Message</h3>
+        <div class="sub" id="msgModalSub">—</div>
+      </div>
+      <button class="im-close" id="msgModalClose" type="button">✕</button>
+    </div>
+    <div class="im-body" id="msgModalBody"></div>
+    <div class="im-actions">
+      <span class="as-hint" id="msgModalNote"></span>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" id="msgModalArchive" type="button">📦 Archive</button>
+        <button class="btn btn-primary" id="msgModalReply" type="button">✉️ Mark Replied</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- TESTIMONIAL EDIT MODAL -->
 
    <!-- TEAM ANALYTICS -->
@@ -4145,6 +4200,192 @@ async function loadTestimonials(){
 }
 
 loadTestimonials();
+/* ============ ADMIN — CONTACT MESSAGES ============ */
+let msgState = { rows: [], current: null };
+
+async function loadAdminMessages(){
+  const tbody = document.getElementById('msgTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" class="admin-empty">Loading…</td></tr>';
+
+  try {
+    const { data, error } = await supabase
+      .from('contact_messages')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    msgState.rows = data || [];
+    renderAdminMessages();
+  } catch (e){
+    tbody.innerHTML = `<tr><td colspan="6" class="admin-empty">Failed: ${escapeHtml(e.message)}</td></tr>`;
+  }
+}
+
+function renderAdminMessages(){
+  const tbody = document.getElementById('msgTbody');
+  const count = document.getElementById('msgCount');
+  if (!tbody) return;
+
+  const search = (document.getElementById('msgSearch')?.value || '').trim().toLowerCase();
+  const statusF = document.getElementById('msgFilterStatus')?.value || '';
+
+  let rows = msgState.rows.filter(m => {
+    if (statusF && m.status !== statusF) return false;
+    if (search){
+      const hay = `${m.name||''} ${m.email||''} ${m.subject||''} ${m.message||''}`.toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (count){
+    const newCount = msgState.rows.filter(m => m.status === 'new').length;
+    count.textContent = `${rows.length} shown · ${newCount} new`;
+  }
+
+  if (!rows.length){
+    tbody.innerHTML = '<tr><td colspan="6" class="admin-empty">No messages found.</td></tr>';
+    return;
+  }
+
+  const statusLabel = {
+    new: '🆕 New',
+    read: '👁 Read',
+    replied: '✅ Replied',
+    archived: '📦 Archived'
+  };
+
+  tbody.innerHTML = rows.map(m => {
+    const when = new Date(m.created_at).toLocaleString('en-IN', {
+      day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'
+    });
+    return `
+      <tr data-id="${m.id}" class="${m.status === 'new' ? 'flagged-row' : ''}">
+        <td>
+          <div class="u-email">${escapeHtml(m.name || '—')}</div>
+          <div class="u-name">${escapeHtml(m.email || '')}</div>
+        </td>
+        <td class="hide-sm"><span class="role-pill">${escapeHtml(m.category || 'General')}</span></td>
+        <td>${escapeHtml((m.subject || '').slice(0, 50))}</td>
+        <td class="hide-sm"><span class="team-status-pill ${m.status || 'new'}">${statusLabel[m.status] || m.status}</span></td>
+        <td class="hide-sm" style="color:var(--muted);font-size:12px">${when}</td>
+        <td class="actions-cell">
+          <button class="rowbtn" data-msg-act="view" data-id="${m.id}">View</button>
+          <button class="rowbtn danger" data-msg-act="del" data-id="${m.id}">Delete</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function openMsgModal(msg){
+  msgState.current = msg;
+  document.getElementById('msgModalTitle').textContent = msg.subject || 'Message';
+  document.getElementById('msgModalSub').textContent = `From ${msg.name} · ${msg.email}`;
+  document.getElementById('msgModalNote').textContent = 
+    `Received ${new Date(msg.created_at).toLocaleString('en-IN')} · Status: ${msg.status || 'new'}`;
+
+  document.getElementById('msgModalBody').innerHTML = `
+    <div class="field" style="margin-bottom:14px">
+      <label style="font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Contact Info</label>
+      <div style="padding:12px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:10px;font-size:13.5px;line-height:1.7">
+        <div><b>Name:</b> ${escapeHtml(msg.name || '—')}</div>
+        <div><b>Email:</b> <a href="mailto:${escapeHtml(msg.email)}" style="color:var(--violet)">${escapeHtml(msg.email)}</a></div>
+        ${msg.phone ? `<div><b>Phone:</b> ${escapeHtml(msg.phone)}</div>` : ''}
+        ${msg.org ? `<div><b>Organization:</b> ${escapeHtml(msg.org)}</div>` : ''}
+        <div><b>Category:</b> ${escapeHtml(msg.category || 'General')}</div>
+      </div>
+    </div>
+    <div class="field">
+      <label style="font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Message</label>
+      <div style="padding:14px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:10px;font-size:13.5px;line-height:1.7;white-space:pre-wrap">${escapeHtml(msg.message || '')}</div>
+    </div>
+  `;
+
+  // Mark as read automatically
+  if (msg.status === 'new'){
+    supabase.from('contact_messages').update({ 
+      status: 'read', read_at: new Date().toISOString() 
+    }).eq('id', msg.id).then(() => {
+      msg.status = 'read';
+      renderAdminMessages();
+    });
+  }
+
+  document.getElementById('msgModal').classList.add('open');
+}
+
+async function updateMsgStatus(newStatus){
+  if (!msgState.current) return;
+  const id = msgState.current.id;
+  const upd = { status: newStatus };
+  if (newStatus === 'read') upd.read_at = new Date().toISOString();
+  if (newStatus === 'replied') upd.replied_at = new Date().toISOString();
+
+  const { error } = await supabase.from('contact_messages').update(upd).eq('id', id);
+  if (error){ showToast('Update failed: ' + error.message, 'warn', '⚠️'); return; }
+
+  const local = msgState.rows.find(m => m.id === id);
+  if (local) Object.assign(local, upd);
+  showToast(`Marked as ${newStatus}`, 'success', '✅');
+  document.getElementById('msgModal').classList.remove('open');
+  renderAdminMessages();
+}
+
+document.addEventListener('click', async (e) => {
+  // Tab button (handled elsewhere but ensure section shows)
+  // Refresh
+  if (e.target.closest('#msgRefresh')){
+    loadAdminMessages();
+    return;
+  }
+  // Close modal
+  if (e.target.closest('#msgModalClose')){
+    document.getElementById('msgModal').classList.remove('open');
+    return;
+  }
+  // Backdrop
+  const msgModal = document.getElementById('msgModal');
+  if (msgModal && e.target === msgModal){
+    msgModal.classList.remove('open');
+    return;
+  }
+  // Archive
+  if (e.target.closest('#msgModalArchive')){
+    updateMsgStatus('archived');
+    return;
+  }
+  // Reply (mark replied)
+  if (e.target.closest('#msgModalReply')){
+    if (msgState.current){
+      window.location.href = `mailto:${msgState.current.email}?subject=Re: ${encodeURIComponent(msgState.current.subject || '')}`;
+      setTimeout(() => updateMsgStatus('replied'), 800);
+    }
+    return;
+  }
+  // Row actions
+  const actBtn = e.target.closest('[data-msg-act]');
+  if (actBtn){
+    const id = actBtn.dataset.id;
+    const row = msgState.rows.find(m => m.id === id);
+    if (!row) return;
+    if (actBtn.dataset.msgAct === 'view'){
+      openMsgModal(row);
+    } else if (actBtn.dataset.msgAct === 'del'){
+      if (!confirm('Delete this message?')) return;
+      const { error } = await supabase.from('contact_messages').delete().eq('id', id);
+      if (error){ showToast('Delete failed: ' + error.message, 'warn', '⚠️'); return; }
+      msgState.rows = msgState.rows.filter(m => m.id !== id);
+      renderAdminMessages();
+      showToast('Message deleted', 'success', '🗑️');
+    }
+  }
+});
+
+// Wire search + filter
+setTimeout(() => {
+  document.getElementById('msgSearch')?.addEventListener('input', renderAdminMessages);
+  document.getElementById('msgFilterStatus')?.addEventListener('change', renderAdminMessages);
+}, 500);
 /* ============ ADMIN — TESTIMONIALS ============ */
 let tmState = { rows: [], editing: null };
 
@@ -4293,7 +4534,7 @@ loadHeroMockup();
       selectedCat = pill.dataset.cat;
     });
   });
-
+     
   $('#qSubmit').addEventListener('click', () => {
     const name = $('#qName').value.trim();
     const email = $('#qEmail').value.trim();
@@ -4309,6 +4550,17 @@ loadHeroMockup();
     const orig = btn.textContent;
     btn.textContent = 'Sending...';
     btn.disabled = true;
+
+    // Save to Supabase (admin console ke liye)
+supabase.from('contact_messages').insert([{
+  name, email,
+  phone: $('#qPhone').value.trim() || null,
+  org: $('#qOrg').value.trim() || null,
+  category: selectedCat || 'General',
+  subject, message
+}]).then(({ error }) => {
+  if (error) console.warn('Contact save failed:', error);
+});
 
     fetch(FORMSPREE_URL, {
       method: 'POST',
@@ -8724,11 +8976,14 @@ document.querySelectorAll('[data-admin-tab]').forEach(tab => {
     const arena = document.getElementById('adminArenaSection');
     const teams = document.getElementById('adminTeamsSection');
     const testi = document.getElementById('adminTestimonialsSection');
+    const msgs = document.getElementById('adminMessagesSection');
+    if (msgs) msgs.style.display = which === 'messages' ? 'block' : 'none';
     if (arena) arena.style.display = which === 'arena' ? 'block' : 'none';
     if (teams) teams.style.display = which === 'teams' ? 'block' : 'none';
     if (testi) testi.style.display = which === 'testimonials' ? 'block' : 'none';
     if (which === 'teams') loadAdminTeams();
     if (which === 'testimonials') loadAdminTestimonials();
+    if (which === 'messages') loadAdminMessages();
   });
 });
 
