@@ -2798,7 +2798,9 @@
         </table>
       </div>
       <div class="admin-sentinel" id="adminSentinel">Scroll to load more…</div>
-
+   <div style="padding:20px;text-align:center;border-top:1px solid var(--border)">
+  <button class="btn btn-primary btn-lg" id="viewFullLbBtn" type="button">View Full Leaderboard →</button>
+</div>
       <div class="admin-analytics" id="adminAnalytics">
         <div class="ana-grid">
           <div class="ana-card">
@@ -3184,6 +3186,26 @@
         <button class="btn btn-ghost" id="cmToggleFlag" type="button">🚩 Toggle flag</button>
         <span style="font-size:12px;color:var(--muted)" id="cmFlagStatus"></span>
       </div>
+    </div>
+  </div>
+</div>
+<!-- FULL LEADERBOARD MODAL -->
+<div class="user-modal-bg" id="lbModal">
+  <div class="user-modal" style="max-width:900px">
+    <div class="um-head">
+      <div>
+        <div class="who">🏆 Full Leaderboard</div>
+        <div class="sub" id="lbSub">Rankings based on Code Arena submissions</div>
+      </div>
+      <button class="um-close" id="lbClose" aria-label="Close">✕</button>
+    </div>
+    <div class="um-body" style="padding-top:0">
+      <div class="tabs" style="margin-bottom:16px;position:sticky;top:0;background:var(--surface-2);z-index:5;padding:12px 0">
+        <button class="tab active" data-lb="all">All Time</button>
+        <button class="tab" data-lb="month">This Month</button>
+        <button class="tab" data-lb="week">This Week</button>
+      </div>
+      <div id="lbContent" style="display:flex;flex-direction:column;gap:6px">Loading…</div>
     </div>
   </div>
 </div>
@@ -3675,6 +3697,116 @@ $$('[data-board]').forEach(tab => {
 });
 
 loadLeaderboard('live');
+/* ============ FULL LEADERBOARD MODAL ============ */
+let lbCurrentPeriod = 'all';
+
+async function loadFullLeaderboard(period = 'all'){
+  const content = document.getElementById('lbContent');
+  const sub     = document.getElementById('lbSub');
+  if (!content) return;
+
+  lbCurrentPeriod = period;
+  content.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
+
+  try {
+    let query = supabase.from('arena_submissions')
+      .select('email, full_name, score, created_at, lang');
+
+    if (period === 'week'){
+      const wk = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+      query = query.gte('created_at', wk);
+    } else if (period === 'month'){
+      const mo = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+      query = query.gte('created_at', mo);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const agg = {};
+    (data || []).forEach(r => {
+      const key = r.email || 'unknown';
+      if (!agg[key]) agg[key] = { email: key, name: r.full_name || '', total: 0, count: 0 };
+      agg[key].total += r.score || 0;
+      agg[key].count++;
+    });
+
+    const list = Object.values(agg).sort((a,b) => b.total - a.total).slice(0, 50);
+
+    if (sub){
+      const labels = { all: 'All-time rankings', week: 'Last 7 days', month: 'Last 30 days' };
+      sub.textContent = `${labels[period] || ''} · ${list.length} participant${list.length > 1 ? 's' : ''}`;
+    }
+
+    if (!list.length){
+      content.innerHTML = '<div class="ana-empty" style="text-align:center;padding:60px 20px">No submissions in this period yet.</div>';
+      return;
+    }
+
+    const colors = ['#7c5cff','#22d3ee','#ff4d9d','#4ade80','#fbbf24'];
+    const initials = n => (n||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || '??';
+
+    content.innerHTML = list.map((u, i) => {
+      const rank = i + 1;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank;
+      const rankCls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+      const name = u.name || u.email.split('@')[0];
+      return `
+        <div class="row ${rank <= 3 ? 'top3' : ''}">
+          <div class="rank ${rankCls}">${medal}</div>
+          <div class="team">
+            <span class="avatar" style="background:${colors[i % colors.length]}">${initials(name)}</span>
+            <div>${escapeHtml(name)}<small>${escapeHtml(u.email)}</small></div>
+          </div>
+          <div class="pts">${u.total.toLocaleString()}</div>
+          <div class="trend flat">${u.count} sub${u.count > 1 ? 's' : ''}</div>
+        </div>`;
+    }).join('');
+  } catch (e){
+    console.error('Full leaderboard error:', e);
+    content.innerHTML = `<div class="ana-empty" style="text-align:center;padding:40px;color:var(--red)">Failed: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function openFullLb(){
+  const modal = document.getElementById('lbModal');
+  if (!modal) return;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  loadFullLeaderboard('all');
+  // reset tabs
+  document.querySelectorAll('[data-lb]').forEach(t => t.classList.remove('active'));
+  const firstTab = document.querySelector('[data-lb="all"]');
+  if (firstTab) firstTab.classList.add('active');
+}
+
+document.addEventListener('click', (e) => {
+  // Open button
+  if (e.target.closest('#viewFullLbBtn')){
+    openFullLb();
+    return;
+  }
+  // Close
+  if (e.target.closest('#lbClose')){
+    document.getElementById('lbModal')?.classList.remove('open');
+    document.body.style.overflow = '';
+    return;
+  }
+  // Backdrop
+  const lbModal = document.getElementById('lbModal');
+  if (lbModal && e.target === lbModal){
+    lbModal.classList.remove('open');
+    document.body.style.overflow = '';
+    return;
+  }
+  // Filter tabs
+  const lbTab = e.target.closest('[data-lb]');
+  if (lbTab && lbModal && lbModal.classList.contains('open')){
+    document.querySelectorAll('[data-lb]').forEach(t => t.classList.remove('active'));
+    lbTab.classList.add('active');
+    loadFullLeaderboard(lbTab.dataset.lb);
+  }
+});
 async function loadHeroStats(){
   try {
     const { data, error } = await supabase
