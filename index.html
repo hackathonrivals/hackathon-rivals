@@ -519,46 +519,116 @@
     box-shadow:0 0 0 3px rgba(124,92,255,.12)}
   .field textarea{resize:vertical;min-height:90px}
   .field small{font-size:11.5px;color:var(--muted)}
-/* ===== DARK MODE SELECT FIX ===== */
-.field select,
-.arena-lang-select,
-.admin-filters select,
-.role-btn select,
-#regTeamSize,
-#regTheme,
-#regCategory,
-#regProblemStatement,
-#teamSortBy,
-#teamFilterStatus,
-#adminFilterRole,
-#adminFilterLang,
-#adminFilterScore,
-#tmRating {
-  color-scheme: dark;
-  background: rgba(0,0,0,.4) !important;
-  color: var(--text) !important;
+/* ===== CUSTOM SELECT ===== */
+.cs-wrapper {
+  position: relative;
+  width: 100%;
 }
-
-select option {
-  background: #151824 !important;
-  color: #e9ebf2 !important;
-  padding: 8px;
+.cs-wrapper.cs-inline {
+  width: auto;
+  min-width: 200px;
+  display: inline-block;
 }
-
-[data-theme="light"] .field select,
-[data-theme="light"] .arena-lang-select,
-[data-theme="light"] .admin-filters select,
-[data-theme="light"] #regTeamSize,
-[data-theme="light"] #regTheme,
-[data-theme="light"] #regCategory,
-[data-theme="light"] #regProblemStatement {
-  background: rgba(15,17,25,.03) !important;
-  color: var(--text) !important;
+.cs-wrapper > select {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
 }
-
-[data-theme="light"] select option {
-  background: #ffffff !important;
-  color: #0f1119 !important;
+.cs-btn {
+  width: 100%;
+  text-align: left;
+  padding: 11px 40px 11px 14px;
+  background: rgba(0,0,0,.3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: .2s;
+  position: relative;
+}
+[data-theme="light"] .cs-btn {
+  background: rgba(15,17,25,.02);
+}
+.cs-btn:hover {
+  border-color: var(--border-strong);
+}
+.cs-wrapper.open .cs-btn {
+  border-color: var(--violet);
+  background: rgba(124,92,255,.05);
+  box-shadow: 0 0 0 3px rgba(124,92,255,.12);
+}
+.cs-btn::after {
+  content: '▾';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 11px;
+  transition: .25s;
+}
+.cs-wrapper.open .cs-btn::after {
+  transform: translateY(-50%) rotate(180deg);
+  color: var(--violet);
+}
+.cs-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px -12px rgba(0,0,0,.85);
+  z-index: 500;
+  display: none;
+  animation: csIn .2s ease;
+}
+.cs-wrapper.open .cs-menu {
+  display: block;
+}
+@keyframes csIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.cs-item {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: var(--text);
+  cursor: pointer;
+  transition: .15s;
+}
+.cs-item:hover {
+  background: rgba(124,92,255,.12);
+  color: var(--violet);
+}
+.cs-item.active {
+  background: rgba(124,92,255,.15);
+  color: var(--violet);
+  font-weight: 600;
+}
+.cs-item.active::before {
+  content: '✓ ';
+}
+.cs-wrapper.disabled .cs-btn {
+  opacity: .5;
+  cursor: not-allowed;
+}
+@media (max-width:720px){
+  .cs-item {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
 }
   .members{display:flex;flex-direction:column;gap:14px;margin-bottom:18px}
   .member-card{display:grid;grid-template-columns:40px 1fr 1fr 1fr 40px;gap:12px;align-items:end;
@@ -8813,7 +8883,89 @@ kabir@iitb.ac.in,Kabir Joshi,Student,Binary Search,Implement binary search,def b
   console.log('%c🚀 Hackathon Rivals','font-size:20px;font-weight:bold;background:linear-gradient(90deg,#7c5cff,#22d3ee);-webkit-background-clip:text;color:transparent');
   console.log('%cIndia\'s national hackathon arena — built for builders.','color:#8b90a4');
   console.log('%cAll modules loaded: auth · playground · arena · hints · admin · realtime · edge · import','color:#3ddc84');
+/* ============ CUSTOM SELECT DROPDOWNS ============ */
+function initCustomSelects(){
+  document.querySelectorAll('select').forEach(select => {
+    if (select.dataset.csReady) return;
+    select.dataset.csReady = 'true';
 
+    const isInline = !!select.closest('.arena-toolbar');
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cs-wrapper' + (isInline ? ' cs-inline' : '');
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cs-btn';
+    btn.textContent = select.options[select.selectedIndex]?.text || '';
+    wrapper.appendChild(btn);
+
+    const menu = document.createElement('div');
+    menu.className = 'cs-menu';
+    Array.from(select.options).forEach(opt => {
+      const item = document.createElement('div');
+      item.className = 'cs-item';
+      item.dataset.value = opt.value;
+      item.textContent = opt.text;
+      if (opt.selected) item.classList.add('active');
+      menu.appendChild(item);
+    });
+    wrapper.appendChild(menu);
+
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const wasOpen = wrapper.classList.contains('open');
+      document.querySelectorAll('.cs-wrapper.open').forEach(w => w.classList.remove('open'));
+      if (!wasOpen) wrapper.classList.add('open');
+    });
+
+    menu.addEventListener('click', e => {
+      const item = e.target.closest('.cs-item');
+      if (!item) return;
+      select.value = item.dataset.value;
+      menu.querySelectorAll('.cs-item').forEach(i => i.classList.toggle('active', i === item));
+      btn.textContent = item.textContent;
+      wrapper.classList.remove('open');
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const syncDisabled = () => {
+      wrapper.classList.toggle('disabled', select.disabled);
+      btn.disabled = select.disabled;
+    };
+    syncDisabled();
+    new MutationObserver(syncDisabled).observe(select, { attributes: true, attributeFilter: ['disabled'] });
+  });
+
+  setInterval(() => {
+    document.querySelectorAll('.cs-wrapper').forEach(w => {
+      const select = w.querySelector('select');
+      const btn = w.querySelector('.cs-btn');
+      const menu = w.querySelector('.cs-menu');
+      if (!select || !btn) return;
+      const opt = select.options[select.selectedIndex];
+      const txt = opt?.text || '';
+      if (btn.textContent !== txt) btn.textContent = txt;
+      menu.querySelectorAll('.cs-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.value === select.value);
+      });
+    });
+  }, 500);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.cs-wrapper')) {
+    document.querySelectorAll('.cs-wrapper.open').forEach(w => w.classList.remove('open'));
+  }
+});
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCustomSelects);
+} else {
+  setTimeout(initCustomSelects, 100);
+}
 })();
 </script>
 </body>
