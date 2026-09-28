@@ -1988,7 +1988,7 @@
     <div class="wrap">
       <div class="hero-grid">
         <div>
-          <div class="pill"><span class="live-dot"></span> Season 2026 · Registrations Open · 1,284 teams competing</div>
+          <div class="pill"><span class="live-dot"></span> Season 2026 · Registrations Open · <span id="pillTeams">—</span> teams competing</div>        
           <h1 class="hero-title">India's national arena<br>for <span class="grad">student innovators.</span></h1>
           <p class="hero-sub">Hackathon Rivals brings together colleges, ministries and problem-solvers for a 36-hour grand finale. Form a team, pick a problem statement, and build solutions that matter.</p>
           <div class="hero-actions">
@@ -3743,6 +3743,8 @@ async function loadMarquee(){
     if (elColleges) elColleges.textContent = colleges.toLocaleString();
     if (elLive)     elLive.textContent     = teams.length.toLocaleString();
   } catch (e){
+    const elPill = document.getElementById('pillTeams');
+if (elPill) elPill.textContent = teams.length.toLocaleString();
     console.warn('Marquee load failed:', e);
   }
 }
