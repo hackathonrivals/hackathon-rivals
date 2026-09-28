@@ -2474,6 +2474,9 @@
          <span class="info">● Showing top 5 of <span id="lbTotalTeams">—</span> teams</span>      
         </div>
         <div class="rows" id="boardRows"></div>
+          <div style="padding:20px;text-align:center;border-top:1px solid var(--border)">
+          <button class="btn btn-primary btn-lg" id="viewFullLbBtn" type="button">View Full Leaderboard →</button>
+         </div>
       </div>
     </div>
   </section>
@@ -2798,9 +2801,7 @@
         </table>
       </div>
       <div class="admin-sentinel" id="adminSentinel">Scroll to load more…</div>
-   <div style="padding:20px;text-align:center;border-top:1px solid var(--border)">
-  <button class="btn btn-primary btn-lg" id="viewFullLbBtn" type="button">View Full Leaderboard →</button>
-</div>
+ 
       <div class="admin-analytics" id="adminAnalytics">
         <div class="ana-grid">
           <div class="ana-card">
@@ -3884,6 +3885,8 @@ if (elPill) elPill.textContent = teams.length.toLocaleString();
 }
 
 loadMarquee();
+const elLbTotal = document.getElementById('lbTotalTeams');
+if (elLbTotal) elLbTotal.textContent = teams.length.toLocaleString();
 async function loadHeroMockup(){
   const container = document.getElementById('heroMockupRows');
   if (!container) return;
