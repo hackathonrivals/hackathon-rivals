@@ -1947,11 +1947,11 @@
 <div class="marquee">
   <div class="marquee-track">
     <span class="marquee-item"><span class="tag-new">NEW</span> Season 2026 registrations open — deadline 30 April 2026</span>
-    <span class="marquee-item"><span class="dot-live"></span> 1,284 teams registered from 860+ colleges</span>
+    <span class="marquee-item"><span class="dot-live"></span> <span id="mqTeams">—</span> teams registered from <span id="mqColleges">—</span> colleges</span>   
     <span class="marquee-item"><span class="tag-new">HOT</span> Grand Finale: 15–17 May 2026 · New Delhi</span>
-    <span class="marquee-item">💰 ₹1.2 Cr total prize pool across all tracks</span>
+    <span class="marquee-item">💰 Prize pool: <b>TBA</b> · across all tracks</span>    
     <span class="marquee-item"><span class="tag-new">NEW</span> 17 problem statements released by 12 ministries</span>
-    <span class="marquee-item"><span class="dot-live"></span> Live: 240 teams applied to PS-2026-001</span>
+    <span class="marquee-item"><span class="dot-live"></span> Live: <span id="mqLive">—</span> teams competing</span>
   </div>
 </div>
 
@@ -3723,6 +3723,31 @@ function animateCounter(el, target, suffix){
 }
 
 loadHeroStats();
+async function loadMarquee(){
+  try {
+    const { data, error } = await supabase
+      .from('team_registrations')
+      .select('college_name');
+    if (error) throw error;
+
+    const teams = data || [];
+    const colleges = new Set(
+      teams.map(t => (t.college_name || '').trim().toLowerCase()).filter(Boolean)
+    ).size;
+
+    const elTeams    = document.getElementById('mqTeams');
+    const elColleges = document.getElementById('mqColleges');
+    const elLive     = document.getElementById('mqLive');
+
+    if (elTeams)    elTeams.textContent    = teams.length.toLocaleString();
+    if (elColleges) elColleges.textContent = colleges.toLocaleString();
+    if (elLive)     elLive.textContent     = teams.length.toLocaleString();
+  } catch (e){
+    console.warn('Marquee load failed:', e);
+  }
+}
+
+loadMarquee();
 async function loadHeroMockup(){
   const container = document.getElementById('heroMockupRows');
   if (!container) return;
