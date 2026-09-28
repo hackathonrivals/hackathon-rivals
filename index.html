@@ -3742,6 +3742,8 @@ async function loadMarquee(){
     if (elTeams)    elTeams.textContent    = teams.length.toLocaleString();
     if (elColleges) elColleges.textContent = colleges.toLocaleString();
     if (elLive)     elLive.textContent     = teams.length.toLocaleString();
+  const elPill = document.getElementById('pillTeams');
+    if (elPill) elPill.textContent = teams.length.toLocaleString();
   } catch (e){
     const elPill = document.getElementById('pillTeams');
 if (elPill) elPill.textContent = teams.length.toLocaleString();
