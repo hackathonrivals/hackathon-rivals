@@ -3877,16 +3877,15 @@ async function loadMarquee(){
     if (elLive)     elLive.textContent     = teams.length.toLocaleString();
   const elPill = document.getElementById('pillTeams');
     if (elPill) elPill.textContent = teams.length.toLocaleString();
+    const elLbTotal = document.getElementById('lbTotalTeams');
+if (elLbTotal) elLbTotal.textContent = teams.length.toLocaleString();
   } catch (e){
-    const elPill = document.getElementById('pillTeams');
-if (elPill) elPill.textContent = teams.length.toLocaleString();
-    console.warn('Marquee load failed:', e);
+   console.warn('Marquee load failed:', e);
   }
 }
 
 loadMarquee();
-const elLbTotal = document.getElementById('lbTotalTeams');
-if (elLbTotal) elLbTotal.textContent = teams.length.toLocaleString();
+
 async function loadHeroMockup(){
   const container = document.getElementById('heroMockupRows');
   if (!container) return;
