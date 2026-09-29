@@ -2782,8 +2782,7 @@
       </div>
     </div>
   </section>
-
-  <!-- ADMIN DASHBOARD -->
+<!-- ADMIN DASHBOARD -->
   <section class="sec" id="admin" style="display:none">
     <div class="wrap">
       <div class="sec-head reveal">
@@ -2904,14 +2903,7 @@
         <button class="btn btn-primary" id="bulkDelete" type="button"
           style="background:linear-gradient(135deg,#ff6b6b,#ff4d9d)">🗑 Delete</button>
       </div>
-<div class="bulk-bar" id="teamBulkBar" style="margin-bottom:12px">
-  <span class="cnt"><b id="teamBulkCount">0</b> selected</span>
-  <div class="spacer"></div>
-  <button class="btn btn-ghost" id="teamBulkClear" type="button">Clear</button>
-  <button class="btn btn-ghost" id="teamBulkApprove" type="button">✓ Approve all</button>
-  <button class="btn btn-ghost" id="teamBulkReject" type="button">✕ Reject all</button>
-  <button class="btn btn-primary" id="teamBulkExport" type="button">⬇ Export</button>
-</div>
+
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
@@ -2934,7 +2926,7 @@
         </table>
       </div>
       <div class="admin-sentinel" id="adminSentinel">Scroll to load more…</div>
- 
+
       <div class="admin-analytics" id="adminAnalytics">
         <div class="ana-grid">
           <div class="ana-card">
@@ -2984,26 +2976,81 @@
 
   <div class="admin-filters">
     <input type="text" id="teamSearch" placeholder="🔍 Search by team, college, or email…" />
-<select id="teamSortBy">
-  <option value="created_desc">📅 Newest first</option>
-  <option value="created_asc">📅 Oldest first</option>
-  <option value="name_asc">🔤 Name (A-Z)</option>
-  <option value="name_desc">🔤 Name (Z-A)</option>
-  <option value="college_asc">🏫 College (A-Z)</option>
-  <option value="status_asc">🏷 Status</option>
-</select>
-<select id="teamFilterStatus">
-  <option value="">All statuses</option>
-  <option value="submitted">Submitted (pending)</option>
-  <option value="approved">Approved</option>
-  <option value="rejected">Rejected</option>
-</select>
+    <select id="teamSortBy">
+      <option value="created_desc">📅 Newest first</option>
+      <option value="created_asc">📅 Oldest first</option>
+      <option value="name_asc">🔤 Name (A-Z)</option>
+      <option value="name_desc">🔤 Name (Z-A)</option>
+      <option value="college_asc">🏫 College (A-Z)</option>
+      <option value="status_asc">🏷 Status</option>
+    </select>
+    <select id="teamFilterStatus">
+      <option value="">All statuses</option>
+      <option value="submitted">Submitted (pending)</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
     <div class="spacer"></div>
     <span class="count" id="teamCount">—</span>
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
     <button class="btn btn-ghost" id="teamExportCSV" type="button">⬇ CSV</button>
-   </div>
   </div>
+
+  <div class="bulk-bar" id="teamBulkBar" style="margin-bottom:12px">
+    <span class="cnt"><b id="teamBulkCount">0</b> selected</span>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" id="teamBulkClear" type="button">Clear</button>
+    <button class="btn btn-ghost" id="teamBulkApprove" type="button">✓ Approve all</button>
+    <button class="btn btn-ghost" id="teamBulkReject" type="button">✕ Reject all</button>
+    <button class="btn btn-primary" id="teamBulkExport" type="button">⬇ Export</button>
+  </div>
+
+  <!-- TEAM ANALYTICS -->
+  <div class="team-analytics" id="teamAnalytics">
+    <div class="ana-grid">
+      <div class="ana-card">
+        <h4>📊 Status Breakdown <span class="tag">all teams</span></h4>
+        <div class="status-chart" id="statusChart"></div>
+      </div>
+      <div class="ana-card">
+        <h4>🎯 Theme-wise Teams <span class="tag">top 6</span></h4>
+        <div class="ana-topic" id="themeChart"></div>
+      </div>
+      <div class="ana-card">
+        <h4>🏫 Top Colleges <span class="tag">by team count</span></h4>
+        <div class="ana-topic" id="collegeChart"></div>
+      </div>
+      <div class="ana-card">
+        <h4>📅 Daily Registrations <span class="tag">last 7 days</span></h4>
+        <div class="ana-hist" id="dailyChart"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-table-wrap" style="margin-top:22px">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th style="width:36px;text-align:center"><input type="checkbox" id="teamSelectAll" /></th>
+          <th>Team</th>
+          <th class="hide-sm">College</th>
+          <th class="hide-sm">Theme</th>
+          <th class="hide-sm">Members</th>
+          <th>Status</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="teamTbody">
+        <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
+      </tbody>
+    </table>
+    <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
+      <span style="font-size:12.5px;color:var(--muted)" id="teamPageInfo">—</span>
+      <div style="display:flex;gap:6px" id="teamPageBtns"></div>
+    </div>
+  </div>
+</div>
+<!-- /adminTeamsSection -->
 
 <!-- TESTIMONIALS SECTION -->
 <div id="adminTestimonialsSection" style="display:none">
@@ -3034,6 +3081,40 @@
   </div>
 </div>
 
+<!-- CONTACT MESSAGES SECTION -->
+<div id="adminMessagesSection" style="display:none">
+  <div class="admin-filters" style="margin-bottom:16px">
+    <select id="msgFilterStatus">
+      <option value="">All messages</option>
+      <option value="new">🆕 New</option>
+      <option value="read">👁 Read</option>
+      <option value="replied">✅ Replied</option>
+      <option value="archived">📦 Archived</option>
+    </select>
+    <input type="text" id="msgSearch" placeholder="🔍 Search by name, email, subject…" />
+    <div class="spacer"></div>
+    <span class="count" id="msgCount">—</span>
+    <button class="btn btn-ghost" id="msgRefresh" type="button">↻ Refresh</button>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>From</th>
+          <th class="hide-sm">Category</th>
+          <th>Subject</th>
+          <th class="hide-sm">Status</th>
+          <th class="hide-sm">When</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="msgTbody">
+        <tr><td colspan="6" class="admin-empty">Loading messages…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
       <div class="digest-panel">
         <h4>📬 Scheduled digest <span class="tag">pg_cron · daily 9 AM IST</span></h4>
@@ -3059,7 +3140,7 @@
       </div>
     </div>
   </section>
-
+ 
 </main>
 
 <footer>
@@ -3405,26 +3486,6 @@
   </div>
 </div>
 
-<!-- MESSAGE VIEW MODAL -->
-<div class="import-modal-bg" id="msgModal">
-  <div class="import-modal" style="max-width:680px">
-    <div class="im-head">
-      <div>
-        <h3 id="msgModalTitle">Message</h3>
-        <div class="sub" id="msgModalSub">—</div>
-      </div>
-      <button class="im-close" id="msgModalClose" type="button">✕</button>
-    </div>
-    <div class="im-body" id="msgModalBody"></div>
-    <div class="im-actions">
-      <span class="as-hint" id="msgModalNote"></span>
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-ghost" id="msgModalArchive" type="button">📦 Archive</button>
-        <button class="btn btn-primary" id="msgModalReply" type="button">✉️ Mark Replied</button>
-      </div>
-    </div>
-  </div>
-</div>
 <!-- CONTACT MESSAGES SECTION -->
 <div id="adminMessagesSection" style="display:none">
   <div class="admin-filters" style="margin-bottom:16px">
@@ -3459,53 +3520,24 @@
     </table>
   </div>
 </div>
-
-<!-- TESTIMONIAL EDIT MODAL -->
-
-   <!-- TEAM ANALYTICS -->
-<div class="team-analytics" id="teamAnalytics">
-  <div class="ana-grid">
-    <div class="ana-card">
-      <h4>📊 Status Breakdown <span class="tag">all teams</span></h4>
-      <div class="status-chart" id="statusChart"></div>
+<!-- MESSAGE VIEW MODAL -->
+<div class="import-modal-bg" id="msgModal">
+  <div class="import-modal" style="max-width:680px">
+    <div class="im-head">
+      <div>
+        <h3 id="msgModalTitle">Message</h3>
+        <div class="sub" id="msgModalSub">—</div>
+      </div>
+      <button class="im-close" id="msgModalClose" type="button">✕</button>
     </div>
-    <div class="ana-card">
-      <h4>🎯 Theme-wise Teams <span class="tag">top 6</span></h4>
-      <div class="ana-topic" id="themeChart"></div>
+    <div class="im-body" id="msgModalBody"></div>
+    <div class="im-actions">
+      <span class="as-hint" id="msgModalNote"></span>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" id="msgModalArchive" type="button">📦 Archive</button>
+        <button class="btn btn-primary" id="msgModalReply" type="button">✉️ Mark Replied</button>
+      </div>
     </div>
-    <div class="ana-card">
-      <h4>🏫 Top Colleges <span class="tag">by team count</span></h4>
-      <div class="ana-topic" id="collegeChart"></div>
-    </div>
-    <div class="ana-card">
-      <h4>📅 Daily Registrations <span class="tag">last 7 days</span></h4>
-      <div class="ana-hist" id="dailyChart"></div>
-    </div>
-  </div>
-</div>
-
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-     <thead>
-  <tr>
-    <th style="width:36px;text-align:center"><input type="checkbox" id="teamSelectAll" /></th>
-    <th>Team</th>
-    <th class="hide-sm">College</th>
-    <th class="hide-sm">Theme</th>
-    <th class="hide-sm">Members</th>
-    <th>Status</th>
-    <th style="text-align:right">Actions</th>
-  </tr>
-</thead>
-      <tbody id="teamTbody">
-
-        <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
-      </tbody>
-      <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
-  <span style="font-size:12.5px;color:var(--muted)" id="teamPageInfo">—</span>
-  <div style="display:flex;gap:6px" id="teamPageBtns"></div>
-</div>
-    </table>
   </div>
 </div>
 
