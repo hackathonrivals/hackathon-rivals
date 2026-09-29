@@ -3486,40 +3486,6 @@
   </div>
 </div>
 
-<!-- CONTACT MESSAGES SECTION -->
-<div id="adminMessagesSection" style="display:none">
-  <div class="admin-filters" style="margin-bottom:16px">
-    <select id="msgFilterStatus">
-      <option value="">All messages</option>
-      <option value="new">🆕 New</option>
-      <option value="read">👁 Read</option>
-      <option value="replied">✅ Replied</option>
-      <option value="archived">📦 Archived</option>
-    </select>
-    <input type="text" id="msgSearch" placeholder="🔍 Search by name, email, subject…" />
-    <div class="spacer"></div>
-    <span class="count" id="msgCount">—</span>
-    <button class="btn btn-ghost" id="msgRefresh" type="button">↻ Refresh</button>
-  </div>
-
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>From</th>
-          <th class="hide-sm">Category</th>
-          <th>Subject</th>
-          <th class="hide-sm">Status</th>
-          <th class="hide-sm">When</th>
-          <th style="text-align:right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="msgTbody">
-        <tr><td colspan="6" class="admin-empty">Loading messages…</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
 <!-- MESSAGE VIEW MODAL -->
 <div class="import-modal-bg" id="msgModal">
   <div class="import-modal" style="max-width:680px">
@@ -3541,26 +3507,7 @@
   </div>
 </div>
 
-<!-- MESSAGE VIEW MODAL -->
-<div class="import-modal-bg" id="msgModal">
-  <div class="import-modal" style="max-width:680px">
-    <div class="im-head">
-      <div>
-        <h3 id="msgModalTitle">Message</h3>
-        <div class="sub" id="msgModalSub">—</div>
-      </div>
-      <button class="im-close" id="msgModalClose" type="button">✕</button>
-    </div>
-    <div class="im-body" id="msgModalBody"></div>
-    <div class="im-actions">
-      <span class="as-hint" id="msgModalNote"></span>
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-ghost" id="msgModalArchive" type="button">📦 Archive</button>
-        <button class="btn btn-primary" id="msgModalReply" type="button">✉️ Mark Replied</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!-- CSV IMPORT MODAL -->
 <div class="import-modal-bg" id="importModal">
