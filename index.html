@@ -13,7 +13,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.hackathonrivals.in/" />
 <meta property="og:title" content="Hackathon Rivals — India's National Hackathon Arena" />
-<meta property="og:description" content="Hackathon Rivals is India's national hackathon arena. Season 2026 · 17 themes · announcement soon prize pool · 36-hour Grand Finale. Register your team for free!" />
+<meta property="og:description" content="Hackathon Rivals is India's national hackathon arena. Season 2026 · 17 themes · prize pool to be announced · 36-hour Grand Finale. Register your team for free!" />
 <meta property="og:image" content="https://www.hackathonrivals.in/og-image.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -23,16 +23,15 @@
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Hackathon Rivals — India's National Hackathon Arena" />
-<meta name="twitter:description" content="Season 2026 · 17 themes · ₹1.2 Cr prize pool · Register your team free today!" />
+<meta name="twitter:description" content="Season 2026 · 17 themes · 36-hour Grand Finale · Register your team free today!" />
 <meta name="twitter:image" content="https://www.hackathonrivals.in/og-image.png" />
 
 <!-- Additional SEO -->
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://www.hackathonrivals.in/" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%237c5cff'/%3E%3Cstop offset='100%25' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='system-ui,-apple-system,sans-serif' font-size='46' font-weight='700' text-anchor='middle' fill='%2308090d'%3EHR%3C/text%3E%3C/svg%3E" />
-<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="/favicon.svg" />
-<meta name="description" content="Hackathon Rivals is India's national hackathon arena for student innovators. Season 2026 with 17 themes, announcement soon prize pool, and a 36-hour Grand Finale. Register your team free today!" />
+<meta name="description" content="Hackathon Rivals is India's national hackathon arena for student innovators. Season 2026 with 17 themes, prize pool to be announced, and a 36-hour Grand Finale. Register your team free today!" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2063,6 +2062,103 @@
     .role-btn{font-size:10.5px;padding:8px 4px}
   }
 </style>
+<style id="hrplus-css">
+/* ===== HR+ ENHANCEMENTS ===== */
+:root{--accent:var(--violet);--fs:1}
+body{zoom:var(--fs)}
+html.hrp-contrast{--text:#fff;--muted:#d6d9e6;--border:rgba(255,255,255,.35);--border-strong:rgba(255,255,255,.6)}
+html[data-theme="light"].hrp-contrast{--text:#000;--muted:#222;--border:rgba(0,0,0,.4);--border-strong:rgba(0,0,0,.7)}
+html.hrp-dyslexia body,html.hrp-dyslexia button,html.hrp-dyslexia input,html.hrp-dyslexia textarea{font-family:Verdana,Tahoma,sans-serif!important;letter-spacing:.04em;word-spacing:.12em;line-height:1.8}
+html.hrp-nomotion *,html.hrp-nomotion *::before,html.hrp-nomotion *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+html.hrp-links a{text-decoration:underline!important}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.hrp-skip{position:fixed;left:12px;top:-60px;z-index:1000;background:var(--violet);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;transition:top .2s}
+.hrp-skip:focus{top:12px}
+#hrpProgress{position:fixed;top:0;left:0;height:3px;width:0;z-index:999;background:linear-gradient(90deg,var(--violet),var(--cyan),var(--pink));transition:width .1s}
+.hrp-fab{position:fixed;right:24px;z-index:149;width:46px;height:46px;border-radius:14px;border:1px solid var(--border-strong);
+  background:var(--surface-2);color:var(--text);cursor:pointer;font-size:20px;display:grid;place-items:center;
+  box-shadow:0 10px 30px -10px rgba(0,0,0,.6);transition:.2s}
+.hrp-fab:hover{transform:translateY(-2px);border-color:var(--violet)}
+#hrpHubBtn{bottom:92px}
+#hrpTopBtn{bottom:148px;opacity:0;pointer-events:none;transform:translateY(10px)}
+#hrpTopBtn.show{opacity:1;pointer-events:auto;transform:none}
+#hrpShareBtn{bottom:204px}
+@media (max-width:720px){.hrp-fab{right:14px;width:42px;height:42px}#hrpHubBtn{bottom:76px}#hrpTopBtn{bottom:126px}#hrpShareBtn{bottom:176px}}
+.hrp-bg{position:fixed;inset:0;z-index:400;background:rgba(4,5,10,.6);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;padding:6vh 14px;overflow:auto}
+.hrp-bg.open{display:flex}
+.hrp-modal{width:100%;max-width:760px;background:var(--surface);border:1px solid var(--border-strong);border-radius:18px;
+  box-shadow:0 40px 80px -30px rgba(0,0,0,.8);overflow:hidden}
+.hrp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.hrp-head h3{font-size:18px}
+.hrp-x{background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;border-radius:8px;width:34px;height:34px}
+.hrp-x:hover{background:var(--surface-3);color:var(--text)}
+.hrp-tabs{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none}
+.hrp-tab{background:var(--surface-2);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.hrp-tab.active{background:linear-gradient(135deg,var(--violet),#5b7cff);color:#fff;border-color:transparent}
+.hrp-body{padding:18px;max-height:68vh;overflow:auto}
+.hrp-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.hrp-in,.hrp-ta,.hrp-sel{width:100%;background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px}
+.hrp-ta{min-height:110px;resize:vertical;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px}
+.hrp-in.sm{width:auto;flex:1;min-width:110px}
+.hrp-btn{background:var(--surface-3);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.hrp-btn:hover{border-color:var(--violet);background:rgba(124,92,255,.15)}
+.hrp-btn.pri{background:linear-gradient(135deg,var(--violet),#5b7cff);border-color:transparent;color:#fff}
+.hrp-out{background:var(--surface-2);border:1px dashed var(--border-strong);border-radius:10px;padding:12px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;min-height:44px;margin-top:8px}
+.hrp-muted{color:var(--muted);font-size:12.5px}
+.hrp-h{font-size:14px;font-weight:700;margin:16px 0 6px;font-family:'Space Grotesk',sans-serif}
+.hrp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.hrp-card{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:13px}
+.hrp-card b{display:block;margin-bottom:4px}
+.hrp-check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;cursor:pointer}
+.hrp-check input{margin-top:3px;accent-color:var(--violet)}
+.hrp-check.done span{text-decoration:line-through;color:var(--muted)}
+.hrp-bar{height:8px;background:var(--surface-3);border-radius:8px;overflow:hidden;margin:8px 0}
+.hrp-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--cyan));transition:width .3s}
+.hrp-big{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;text-align:center;letter-spacing:.02em;margin:8px 0}
+.hrp-badge{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);font-size:13px}
+.hrp-badge .ic{font-size:24px;filter:grayscale(1);opacity:.4}
+.hrp-badge.got .ic{filter:none;opacity:1}
+.hrp-badge.got{border-color:var(--green)}
+.hrp-swatch{width:36px;height:36px;border-radius:10px;border:1px solid var(--border-strong);cursor:pointer}
+.hrp-table{width:100%;border-collapse:collapse;font-size:13px}
+.hrp-table td,.hrp-table th{padding:7px 8px;border-bottom:1px solid var(--border);text-align:left}
+.hrp-kbd{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface-3);border:1px solid var(--border-strong);border-radius:6px;padding:2px 7px}
+#hrpPalette .hrp-modal{max-width:560px;margin-top:8vh}
+.hrp-pi{display:flex;gap:10px;align-items:center;padding:10px 14px;cursor:pointer;font-size:14px}
+.hrp-pi.sel,.hrp-pi:hover{background:rgba(124,92,255,.18)}
+.hrp-pi small{margin-left:auto;color:var(--muted)}
+#hrpBanner{position:fixed;left:0;right:0;top:0;z-index:998;text-align:center;padding:8px;font-size:13px;font-weight:600;background:var(--orange);color:#111;transform:translateY(-100%);transition:transform .3s}
+#hrpBanner.show{transform:none}
+#hrpStick{position:fixed;left:50%;top:-70px;transform:translateX(-50%);z-index:120;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:999px;
+  padding:7px 16px;font-size:12.5px;font-weight:600;transition:top .3s;box-shadow:0 10px 30px -12px rgba(0,0,0,.7);white-space:nowrap}
+#hrpStick.show{top:76px}
+#hrpBell{position:relative}
+.hrp-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--pink);border-radius:50%;display:none}
+.hrp-dot.on{display:block}
+.hrp-pw{height:5px;border-radius:5px;background:var(--surface-3);margin-top:6px;overflow:hidden}
+.hrp-pw i{display:block;height:100%;width:0;transition:.25s}
+.hrp-warn{font-size:12px;color:var(--orange);margin-top:4px}
+.hrp-hl{background:rgba(255,213,79,.35);border-radius:3px;color:inherit}
+.hrp-count{font-size:11.5px;color:var(--muted);text-align:right;margin-top:3px}
+.hrp-conf{position:fixed;top:-12px;z-index:1200;width:9px;height:14px;pointer-events:none;animation:hrpFall linear forwards}
+@keyframes hrpFall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+.hrp-tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.hrp-mini{display:inline-flex;gap:6px;align-items:center;background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px;cursor:pointer}
+.hrp-mini:hover{border-color:var(--violet)}
+.hrp-anchor{opacity:0;margin-left:8px;font-size:.6em;color:var(--muted);cursor:pointer;transition:.2s;vertical-align:middle}
+h2:hover .hrp-anchor{opacity:1}
+@media print{header,.hrp-fab,#hrpProgress,.ai-fab,.ai-panel,.toast-wrap,footer .newsletter,.marquee,.glow{display:none!important}
+  body{background:#fff!important;color:#000!important}*{box-shadow:none!important}}
+/* mobile overflow fixes (pre-existing layout bugs: header buttons + filter tabs were wider than the phone screen) */
+body{overflow-x:clip}
+@media (max-width:720px){
+  .nav-cta{gap:6px;min-width:0}
+  .nav-cta .btn{padding:8px 12px;font-size:13px}
+  .tabs{max-width:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .tabs .tab{flex:0 0 auto;white-space:nowrap}
+}
+@media (max-width:480px){.nav-cta a.btn-primary{display:none}}
+</style>
 </head>
 <body>
 
@@ -2760,7 +2856,7 @@
         <div class="faq-item reveal"><div class="faq-q">What happens at Grand Finale? <span class="faq-icon">+</span></div><div class="faq-a"><div class="faq-a-inner">36-hour nonstop build sprint with blind judging on 5 criteria.</div></div></div>
         <div class="faq-item reveal"><div class="faq-q">Need working prototype? <span class="faq-icon">+</span></div><div class="faq-a"><div class="faq-a-inner">Only if shortlisted for the Grand Finale. At registration, an idea PPT is enough.</div></div></div>
         <div class="faq-item reveal"><div class="faq-q">How is judging done? <span class="faq-icon">+</span></div><div class="faq-a"><div class="faq-a-inner">Anonymized submissions, blind scoring by expert panel, algorithmic aggregation.</div></div></div>
-        <div class="faq-item reveal"><div class="faq-q">Prizes? <span class="faq-icon">+</span></div><div class="faq-a"><div class="faq-a-inner">₹1.5L for 1st place per track, certificates, trophy, incubation support. Total ₹1.2 Cr.</div></div></div>
+        <div class="faq-item reveal"><div class="faq-q">Prizes? <span class="faq-icon">+</span></div><div class="faq-a"><div class="faq-a-inner">Certificates, trophy and incubation support for winners. Prize pool will be announced soon.</div></div></div>
       </div>
     </div>
   </section>
@@ -2777,12 +2873,13 @@
         <div class="cta-badges">
           <span><span class="check">✓</span> Free registration</span>
           <span><span class="check">✓</span> Solo or team (1–6)</span>
-          <span><span class="check">✓</span> ₹1.2 Cr prize pool</span>
+          <span><span class="check">✓</span> Prize pool: announcing soon</span>
         </div>
       </div>
     </div>
   </section>
-<!-- ADMIN DASHBOARD -->
+
+  <!-- ADMIN DASHBOARD -->
   <section class="sec" id="admin" style="display:none">
     <div class="wrap">
       <div class="sec-head reveal">
@@ -2903,7 +3000,14 @@
         <button class="btn btn-primary" id="bulkDelete" type="button"
           style="background:linear-gradient(135deg,#ff6b6b,#ff4d9d)">🗑 Delete</button>
       </div>
-
+<div class="bulk-bar" id="teamBulkBar" style="margin-bottom:12px">
+  <span class="cnt"><b id="teamBulkCount">0</b> selected</span>
+  <div class="spacer"></div>
+  <button class="btn btn-ghost" id="teamBulkClear" type="button">Clear</button>
+  <button class="btn btn-ghost" id="teamBulkApprove" type="button">✓ Approve all</button>
+  <button class="btn btn-ghost" id="teamBulkReject" type="button">✕ Reject all</button>
+  <button class="btn btn-primary" id="teamBulkExport" type="button">⬇ Export</button>
+</div>
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
@@ -2926,7 +3030,7 @@
         </table>
       </div>
       <div class="admin-sentinel" id="adminSentinel">Scroll to load more…</div>
-
+ 
       <div class="admin-analytics" id="adminAnalytics">
         <div class="ana-grid">
           <div class="ana-card">
@@ -2976,81 +3080,26 @@
 
   <div class="admin-filters">
     <input type="text" id="teamSearch" placeholder="🔍 Search by team, college, or email…" />
-    <select id="teamSortBy">
-      <option value="created_desc">📅 Newest first</option>
-      <option value="created_asc">📅 Oldest first</option>
-      <option value="name_asc">🔤 Name (A-Z)</option>
-      <option value="name_desc">🔤 Name (Z-A)</option>
-      <option value="college_asc">🏫 College (A-Z)</option>
-      <option value="status_asc">🏷 Status</option>
-    </select>
-    <select id="teamFilterStatus">
-      <option value="">All statuses</option>
-      <option value="submitted">Submitted (pending)</option>
-      <option value="approved">Approved</option>
-      <option value="rejected">Rejected</option>
-    </select>
+<select id="teamSortBy">
+  <option value="created_desc">📅 Newest first</option>
+  <option value="created_asc">📅 Oldest first</option>
+  <option value="name_asc">🔤 Name (A-Z)</option>
+  <option value="name_desc">🔤 Name (Z-A)</option>
+  <option value="college_asc">🏫 College (A-Z)</option>
+  <option value="status_asc">🏷 Status</option>
+</select>
+<select id="teamFilterStatus">
+  <option value="">All statuses</option>
+  <option value="submitted">Submitted (pending)</option>
+  <option value="approved">Approved</option>
+  <option value="rejected">Rejected</option>
+</select>
     <div class="spacer"></div>
     <span class="count" id="teamCount">—</span>
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
     <button class="btn btn-ghost" id="teamExportCSV" type="button">⬇ CSV</button>
+   </div>
   </div>
-
-  <div class="bulk-bar" id="teamBulkBar" style="margin-bottom:12px">
-    <span class="cnt"><b id="teamBulkCount">0</b> selected</span>
-    <div class="spacer"></div>
-    <button class="btn btn-ghost" id="teamBulkClear" type="button">Clear</button>
-    <button class="btn btn-ghost" id="teamBulkApprove" type="button">✓ Approve all</button>
-    <button class="btn btn-ghost" id="teamBulkReject" type="button">✕ Reject all</button>
-    <button class="btn btn-primary" id="teamBulkExport" type="button">⬇ Export</button>
-  </div>
-
-  <!-- TEAM ANALYTICS -->
-  <div class="team-analytics" id="teamAnalytics">
-    <div class="ana-grid">
-      <div class="ana-card">
-        <h4>📊 Status Breakdown <span class="tag">all teams</span></h4>
-        <div class="status-chart" id="statusChart"></div>
-      </div>
-      <div class="ana-card">
-        <h4>🎯 Theme-wise Teams <span class="tag">top 6</span></h4>
-        <div class="ana-topic" id="themeChart"></div>
-      </div>
-      <div class="ana-card">
-        <h4>🏫 Top Colleges <span class="tag">by team count</span></h4>
-        <div class="ana-topic" id="collegeChart"></div>
-      </div>
-      <div class="ana-card">
-        <h4>📅 Daily Registrations <span class="tag">last 7 days</span></h4>
-        <div class="ana-hist" id="dailyChart"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="admin-table-wrap" style="margin-top:22px">
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th style="width:36px;text-align:center"><input type="checkbox" id="teamSelectAll" /></th>
-          <th>Team</th>
-          <th class="hide-sm">College</th>
-          <th class="hide-sm">Theme</th>
-          <th class="hide-sm">Members</th>
-          <th>Status</th>
-          <th style="text-align:right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="teamTbody">
-        <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
-      </tbody>
-    </table>
-    <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
-      <span style="font-size:12.5px;color:var(--muted)" id="teamPageInfo">—</span>
-      <div style="display:flex;gap:6px" id="teamPageBtns"></div>
-    </div>
-  </div>
-</div>
-<!-- /adminTeamsSection -->
 
 <!-- TESTIMONIALS SECTION -->
 <div id="adminTestimonialsSection" style="display:none">
@@ -3081,40 +3130,6 @@
   </div>
 </div>
 
-<!-- CONTACT MESSAGES SECTION -->
-<div id="adminMessagesSection" style="display:none">
-  <div class="admin-filters" style="margin-bottom:16px">
-    <select id="msgFilterStatus">
-      <option value="">All messages</option>
-      <option value="new">🆕 New</option>
-      <option value="read">👁 Read</option>
-      <option value="replied">✅ Replied</option>
-      <option value="archived">📦 Archived</option>
-    </select>
-    <input type="text" id="msgSearch" placeholder="🔍 Search by name, email, subject…" />
-    <div class="spacer"></div>
-    <span class="count" id="msgCount">—</span>
-    <button class="btn btn-ghost" id="msgRefresh" type="button">↻ Refresh</button>
-  </div>
-
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>From</th>
-          <th class="hide-sm">Category</th>
-          <th>Subject</th>
-          <th class="hide-sm">Status</th>
-          <th class="hide-sm">When</th>
-          <th style="text-align:right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="msgTbody">
-        <tr><td colspan="6" class="admin-empty">Loading messages…</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
 
       <div class="digest-panel">
         <h4>📬 Scheduled digest <span class="tag">pg_cron · daily 9 AM IST</span></h4>
@@ -3140,7 +3155,7 @@
       </div>
     </div>
   </section>
- 
+
 </main>
 
 <footer>
@@ -3230,7 +3245,7 @@
       <div class="login-field">
         <label>Password</label>
         <div class="input-wrap">
-          <input type="password" id="loginPassword" placeholder="••••••••" />
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
           <button class="pw-toggle" id="pwToggle" aria-label="Toggle password">👁️</button>
         </div>
       </div>
@@ -3486,6 +3501,40 @@
   </div>
 </div>
 
+<!-- CONTACT MESSAGES SECTION -->
+<div id="adminMessagesSection" style="display:none">
+  <div class="admin-filters" style="margin-bottom:16px">
+    <select id="msgFilterStatus">
+      <option value="">All messages</option>
+      <option value="new">🆕 New</option>
+      <option value="read">👁 Read</option>
+      <option value="replied">✅ Replied</option>
+      <option value="archived">📦 Archived</option>
+    </select>
+    <input type="text" id="msgSearch" placeholder="🔍 Search by name, email, subject…" />
+    <div class="spacer"></div>
+    <span class="count" id="msgCount">—</span>
+    <button class="btn btn-ghost" id="msgRefresh" type="button">↻ Refresh</button>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>From</th>
+          <th class="hide-sm">Category</th>
+          <th>Subject</th>
+          <th class="hide-sm">Status</th>
+          <th class="hide-sm">When</th>
+          <th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="msgTbody">
+        <tr><td colspan="6" class="admin-empty">Loading messages…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 <!-- MESSAGE VIEW MODAL -->
 <div class="import-modal-bg" id="msgModal">
   <div class="import-modal" style="max-width:680px">
@@ -3506,8 +3555,54 @@
     </div>
   </div>
 </div>
+<!-- TESTIMONIAL EDIT MODAL -->
 
+   <!-- TEAM ANALYTICS -->
+<div class="team-analytics" id="teamAnalytics">
+  <div class="ana-grid">
+    <div class="ana-card">
+      <h4>📊 Status Breakdown <span class="tag">all teams</span></h4>
+      <div class="status-chart" id="statusChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>🎯 Theme-wise Teams <span class="tag">top 6</span></h4>
+      <div class="ana-topic" id="themeChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>🏫 Top Colleges <span class="tag">by team count</span></h4>
+      <div class="ana-topic" id="collegeChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>📅 Daily Registrations <span class="tag">last 7 days</span></h4>
+      <div class="ana-hist" id="dailyChart"></div>
+    </div>
+  </div>
+</div>
 
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+     <thead>
+  <tr>
+    <th style="width:36px;text-align:center"><input type="checkbox" id="teamSelectAll" /></th>
+    <th>Team</th>
+    <th class="hide-sm">College</th>
+    <th class="hide-sm">Theme</th>
+    <th class="hide-sm">Members</th>
+    <th>Status</th>
+    <th style="text-align:right">Actions</th>
+  </tr>
+</thead>
+      <tbody id="teamTbody">
+
+        <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
+      </tbody>
+      <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
+  <span style="font-size:12.5px;color:var(--muted)" id="teamPageInfo">—</span>
+  <div style="display:flex;gap:6px" id="teamPageBtns"></div>
+</div>
+    </table>
+  </div>
+</div>
 
 <!-- CSV IMPORT MODAL -->
 <div class="import-modal-bg" id="importModal">
@@ -3641,7 +3736,9 @@
   function showToast(msg, type='info', icon='ℹ️'){
     const t = document.createElement('div');
     t.className = `toast ${type}`;
-    t.innerHTML = `<div class="icn">${icon}</div><div>${msg}</div>`;
+    const ic = document.createElement('div'); ic.className = 'icn'; ic.textContent = icon;
+    const tx = document.createElement('div'); tx.textContent = msg;
+    t.append(ic, tx);
     toastWrap.appendChild(t);
     setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 3200);
   }
@@ -3789,8 +3886,8 @@
     $('#mId').textContent = p.id;
     $('#mTitle').textContent = p.title;
     $('#mDesc').textContent = p.desc;
-    $('#mTags').innerHTML = `<span class="m-tag">${p.tag}</span><span class="m-tag hardware">${p.theme}</span><span class="m-tag ministry">${p.ministry}</span>`;
-    $('#mOutcomes').innerHTML = p.outcomes.map(o => `<li>${o}</li>`).join('');
+    $('#mTags').innerHTML = `<span class="m-tag">${esc(p.tag)}</span><span class="m-tag hardware">${esc(p.theme)}</span><span class="m-tag ministry">${esc(p.ministry)}</span>`;
+    $('#mOutcomes').innerHTML = p.outcomes.map(o => `<li>${esc(o)}</li>`).join('');
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
     $('#modalClose').focus();
@@ -3816,7 +3913,7 @@
 
   /* ============ LEADERBOARD — REAL DATA ============ */
 const rowsEl = $('#boardRows');
-const inits = n => (n || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
+const inits = n => escapeHtml((n || '?').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || '??');
 
 async function loadLeaderboard(period = 'live'){
   rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading leaderboard…</div>';
@@ -3934,7 +4031,7 @@ async function loadFullLeaderboard(period = 'all'){
     }
 
     const colors = ['#7c5cff','#22d3ee','#ff4d9d','#4ade80','#fbbf24'];
-    const initials = n => (n||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || '??';
+    const initials = n => escapeHtml((n||'?').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || '??');
 
     content.innerHTML = list.map((u, i) => {
       const rank = i + 1;
@@ -4114,7 +4211,7 @@ async function loadHeroMockup(){
     ];
     const maxScore = top3[0].total || 1;
 
-    const initials = n => (n || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
+    const initials = n => escapeHtml((n || '?').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || '??');
 
     container.innerHTML = top3.map((u, i) => {
       const pct = Math.round((u.total / maxScore) * 100);
@@ -4170,7 +4267,7 @@ async function loadTestimonials(){
       return;
     }
 
-    const initials = n => (n || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??';
+    const initials = n => escapeHtml((n || '?').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || '??');
     const colorFromIdx = i => ['#7c5cff','#22d3ee','#ff4d9d','#4ade80','#fbbf24','#ff9f43'][i % 6];
 
     grid.innerHTML = list.map((t, i) => {
@@ -4633,7 +4730,7 @@ async function getAIResponse(msg){
   function addAIMessage(text, isUser=false){
     const div = document.createElement('div');
     div.className = `ai-msg ${isUser?'user':''}`;
-    const safe = isUser ? escapeHtml(text) : text;
+    const safe = escapeHtml(String(text ?? '')).replace(/\n/g, '<br>');
     div.innerHTML = isUser
       ? `<div class="mini-avatar">You</div><div class="bubble">${safe}</div>`
       : `<div class="mini-avatar">🤖</div><div class="bubble">${safe}</div>`;
@@ -4719,7 +4816,9 @@ async function getAIResponse(msg){
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
     
     // Pehle profile table, fir auth metadata, fir fallback Student
-    const role = profile?.role || user.user_metadata?.role || 'Student';
+    const metaRole = user.user_metadata?.role;
+    const safeMetaRole = (metaRole === 'Admin' || metaRole === 'Judge') ? 'Student' : metaRole;
+    const role = profile?.role || safeMetaRole || 'Student';
     const name = profile?.full_name || user.user_metadata?.full_name || user.email.split('@')[0];
     const college = profile?.college || user.user_metadata?.college || '';
 
@@ -4747,7 +4846,7 @@ async function getAIResponse(msg){
 
     if (user){
       if (loginBtnEl) loginBtnEl.style.display = 'none';
-      const initials = (user.name || user.email).split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const initials = escapeHtml((user.name || user.email).split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase());
       const menuHTML = `
         <div class="user-menu" id="userMenu">
           <div class="user-avatar">${initials}</div>
@@ -4860,6 +4959,7 @@ async function getAIResponse(msg){
   });
 
   function updateFormFields(){
+    loginPassword.setAttribute('autocomplete', authMode === 'signup' ? 'new-password' : 'current-password');
     const isSignup = authMode === 'signup';
     Object.values(signupFields).forEach(el => {
       if (el) el.style.display = isSignup ? 'flex' : 'none';
@@ -5039,6 +5139,7 @@ async function getAIResponse(msg){
           options: { data: {
             full_name: signupInputs.name?.value.trim() || '',
             role: selectedRole,
+            invite_code: (selectedRole === 'Admin' || selectedRole === 'Judge') ? (signupInputs.invite?.value.trim() || '') : '',
             college: signupInputs.college?.value.trim() || ''
           }}
         });
@@ -5658,8 +5759,6 @@ fetch('/api/send-email', {
 .then(r => r.json())
 .then(d => {
   if (d && d.ok) {
-    console.log('✅ Admin email:', d.admin);
-    console.log('✅ User email:', d.user);
     if (!d.admin) console.warn('Admin err:', d.adminErr);
     if (!d.user)  console.warn('User err:', d.userErr);
   }
@@ -9044,8 +9143,8 @@ document.querySelectorAll('[data-admin-tab]').forEach(tab => {
       header.forEach((h, i) => {
         if (IM_COLUMNS.includes(h)) obj[h] = (cells[i] || '').trim();
       });
-      obj.role = obj.role || 'Student';
-      obj.lang = obj.lang || 'python';
+      obj.role = ['Student','SPOC','Judge','Admin'].includes(obj.role) ? obj.role : 'Student';
+      obj.lang = (obj.lang || 'python').toLowerCase();
       obj.score = obj.score ? parseInt(obj.score, 10) : 0;
       obj.hint_count = obj.hint_count ? parseInt(obj.hint_count, 10) : 0;
       obj.created_at = obj.created_at || new Date().toISOString();
@@ -9065,7 +9164,7 @@ document.querySelectorAll('[data-admin-tab]').forEach(tab => {
     }
     imPreview.style.display = '';
     imCount.textContent = `${rows.length} row${rows.length > 1 ? 's' : ''}`;
-    imThead.innerHTML = '<tr>' + IM_COLUMNS.map(c => `<th>${c}</th>`).join('') + '</tr>';
+    imThead.innerHTML = '<tr>' + IM_COLUMNS.map(c => `<th>${esc(c)}</th>`).join('') + '</tr>';
     imTbody.innerHTML = rows.slice(0, 30).map(r =>
       '<tr>' + IM_COLUMNS.map(c => {
         const v = r[c] == null ? '' : String(r[c]);
@@ -9278,6 +9377,1043 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(initCustomSelects, 100);
 }
+})();
+</script>
+<script id="hrplus-js">
+/* ===== HR+ ENHANCEMENTS (self-contained module) ===== */
+(function(){
+'use strict';
+try {
+const F = [];
+const TOOLS = {}, CHEATS = {}, PLAN = {}, LISTS = {};
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const store = {
+  get(k, d){ try { const v = localStorage.getItem('hrp:' + k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem('hrp:' + k, JSON.stringify(v)); } catch(e){} },
+  del(k){ try { localStorage.removeItem('hrp:' + k); } catch(e){} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function feat(name, fn){ try { fn(); F.push(name); } catch(e){ console.warn('[HR+] feature failed:', name, e); } }
+function toast(msg, type, icon){ if (window.showToast) window.showToast(msg, type || 'info', icon || 'ℹ️'); }
+async function copy(t, quiet){
+  try { await navigator.clipboard.writeText(t); }
+  catch(e){ const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch(_){} a.remove(); }
+  if (!quiet) toast('Copied to clipboard', 'success', '📋');
+}
+function download(name, text, mime){
+  const b = new Blob([text], { type: mime || 'text/plain' });
+  const u = URL.createObjectURL(b); const a = document.createElement('a');
+  a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 1500);
+}
+function el(tag, attrs, html){
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) { if (k === 'class') e.className = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  if (html != null) e.innerHTML = html;
+  return e;
+}
+const pad = n => String(n).padStart(2, '0');
+const rnd = n => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; };
+const pick = arr => arr[rnd(arr.length)];
+const csvCell = v => { v = String(v ?? ''); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+const toCSV = rows => rows.map(r => r.map(csvCell).join(',')).join('\n');
+const isTyping = t => t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+
+/* ---------- settings ---------- */
+const S = Object.assign({ fs: 1, contrast: false, dys: false, motion: false, links: false, accent: '#7c5cff', hi: false },
+  store.get('settings', {}));
+if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches && store.get('settings', null) === null) S.motion = true;
+const saveS = () => store.set('settings', S);
+function applySettings(){
+  const r = document.documentElement;
+  r.style.setProperty('--fs', S.fs);
+  r.classList.toggle('hrp-contrast', !!S.contrast);
+  r.classList.toggle('hrp-dyslexia', !!S.dys);
+  r.classList.toggle('hrp-nomotion', !!S.motion);
+  r.classList.toggle('hrp-links', !!S.links);
+  r.style.setProperty('--violet', S.accent);
+  const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute('content', S.accent);
+}
+applySettings();
+
+/* ---------- gamification core ---------- */
+const BADGES = {
+  early:['🐣','Early Bird','Opened the site'], explorer:['🧭','Explorer','Scrolled the whole page'],
+  tools3:['🛠️','Toolsmith','Used 3 different tools'], faq3:['📚','Curious Mind','Opened 3 FAQs'],
+  night:['🦉','Night Owl','Visited between 12am and 5am'], konami:['🎮','Konami Master','Found the secret code'],
+  streak3:['🔥','On Fire','3-day visit streak'], notes:['📝','Note Taker','Saved a note'],
+  planner:['🗓️','Planner','Generated a 36-hour plan'], star:['⭐','Bookmarker','Bookmarked a problem statement'],
+  share:['📣','Ambassador','Shared the site'], check5:['✅','Checklist Pro','Ticked 5 checklist items'],
+  theme:['🎨','Stylist','Changed the accent colour'], lang:['🇮🇳','Bilingual','Switched to Hindi'],
+  pitch:['🎤','Pitch Ready','Ran the pitch timer'], focus:['🍅','Deep Focus','Finished a focus session']
+};
+const G = { xp: store.get('xp', 0), badges: store.get('badges', {}), used: store.get('used', {}), days: store.get('days', []) };
+function addXP(n){ G.xp += n; store.set('xp', G.xp); }
+const level = () => Math.floor(Math.sqrt(G.xp / 25)) + 1;
+function award(id){
+  if (G.badges[id] || !BADGES[id]) return;
+  G.badges[id] = Date.now(); store.set('badges', G.badges); addXP(50);
+  toast('Badge unlocked: ' + BADGES[id][1], 'success', BADGES[id][0]); confetti(28);
+}
+function useTool(n){
+  if (G.used[n]) return; G.used[n] = 1; store.set('used', G.used); addXP(5);
+  if (Object.keys(G.used).length >= 3) award('tools3');
+}
+function streak(){
+  const set = new Set(G.days); let n = 0; const d = new Date();
+  while (set.has(ymd(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+/* ---------- confetti ---------- */
+function confetti(n){
+  if (S.motion) return;
+  const cols = ['#7c5cff','#22d3ee','#ff4d9d','#3ddc84','#ff9f43','#fbbf24'];
+  for (let i = 0; i < (n || 60); i++) {
+    const c = el('i', { class: 'hrp-conf' });
+    c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
+    c.style.animationDuration = (2 + Math.random() * 2.5) + 's'; c.style.animationDelay = Math.random() * .6 + 's';
+    document.body.appendChild(c); setTimeout(() => c.remove(), 5500);
+  }
+}
+
+/* ============ FEATURES: accessibility & display ============ */
+feat('Skip-to-content link', () => {
+  const m = $('main'); if (m) { m.id = m.id || 'main-content'; m.setAttribute('tabindex', '-1'); }
+  const a = el('a', { class: 'hrp-skip', href: '#' + (m ? m.id : 'themes') }, 'Skip to content');
+  document.body.prepend(a);
+});
+feat('Working A- / A / A+ text size buttons', () => {
+  const box = $$('.govt-bar .right a').find(a => /A-/.test(a.textContent)); if (!box) return;
+  const wrap = el('span', { style: 'display:inline-flex;gap:6px;align-items:center' },
+    '<button type="button" data-fs="-1" aria-label="Decrease text size" class="hrp-mini" style="padding:1px 8px">A-</button>' +
+    '<button type="button" data-fs="0" aria-label="Reset text size" class="hrp-mini" style="padding:1px 8px">A</button>' +
+    '<button type="button" data-fs="1" aria-label="Increase text size" class="hrp-mini" style="padding:1px 8px">A+</button>');
+  box.replaceWith(wrap);
+  wrap.addEventListener('click', e => {
+    const b = e.target.closest('[data-fs]'); if (!b) return;
+    const d = +b.dataset.fs; S.fs = d === 0 ? 1 : Math.min(1.3, Math.max(.85, +(S.fs + d * .05).toFixed(2)));
+    saveS(); applySettings();
+  });
+});
+feat('Text size persists across visits', () => {});
+feat('High-contrast mode', () => {});
+feat('Dyslexia-friendly text mode', () => {});
+feat('Reduce-motion mode (auto-detects OS setting)', () => {});
+feat('Underline-all-links mode', () => {});
+feat('Accent colour picker (5 palettes)', () => {});
+feat('Keyboard focus outlines', () => {});
+feat('Print-friendly stylesheet', () => {});
+feat('Scroll offset for sticky header', () => {
+  const st = el('style', null, 'section[id],h2[id]{scroll-margin-top:96px}');
+  document.head.appendChild(st);
+});
+
+/* ---------- Hindi / English ---------- */
+const I18N = [
+  ['#navLinks a:nth-child(1)','Home','होम'],['#navLinks a:nth-child(2)','Themes','थीम्स'],
+  ['#navLinks a:nth-child(3)','Problem Statements','समस्या कथन'],['#navLinks a:nth-child(4)','Code Lab','कोड लैब'],
+  ['#navLinks a:nth-child(5)','Code Arena','कोड एरीना'],['#navLinks a:nth-child(6)','Register','पंजीकरण'],
+  ['#navLinks a:nth-child(7)','Contact','संपर्क'],
+  ['.hero-sub',null,'हैकाथॉन राइवल्स कॉलेजों, मंत्रालयों और समस्या-समाधानकर्ताओं को 36 घंटे के ग्रैंड फिनाले के लिए एक साथ लाता है। टीम बनाइए, समस्या चुनिए और ऐसे समाधान बनाइए जो मायने रखते हैं।'],
+  ['.hero-actions a:nth-child(1)',null,'अपनी टीम रजिस्टर करें →'],['.hero-actions a:nth-child(2)',null,'समस्या कथन देखें'],
+  ['.hero-note',null,'🎓 सभी कॉलेजों के लिए खुला · निःशुल्क पंजीकरण'],
+  ['.countdown-info h2',null,'36 घंटे। एक मौका। नींद नहीं।'],
+  ['#problems .sec-head h2',null,'अपनी चुनौती चुनिए'],['#faq .sec-head h2',null,'अक्सर पूछे जाने वाले प्रश्न'],
+  ['.cta-box h2',null,'अपने प्रतिद्वंद्वियों का सामना करने को तैयार?']
+];
+feat('Hindi ⇄ English switch for main labels', () => {
+  const link = $$('.govt-bar .right a').find(a => /हिंदी|English/.test(a.textContent)); if (!link) return;
+  function apply(){
+    I18N.forEach(([sel, en, hi]) => { const e = $(sel); if (!e) return;
+      if (e.dataset.hrpEn == null) e.dataset.hrpEn = e.textContent;
+      e.textContent = S.hi ? hi : e.dataset.hrpEn; });
+    link.textContent = S.hi ? 'English' : 'हिंदी';
+    document.documentElement.lang = S.hi ? 'hi' : 'en';
+  }
+  link.addEventListener('click', e => { e.preventDefault(); S.hi = !S.hi; saveS(); apply(); if (S.hi) award('lang'); });
+  if (S.hi) apply();
+  window.__hrpLang = apply;
+});
+
+/* ============ FEATURES: navigation ============ */
+feat('Scroll-progress bar', () => {
+  const b = el('div', { id: 'hrpProgress', 'aria-hidden': 'true' }); document.body.appendChild(b);
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement; const max = h.scrollHeight - h.clientHeight;
+    b.style.width = (max > 0 ? Math.min(100, h.scrollTop / max * 100) : 0) + '%';
+    if (max > 0 && h.scrollTop / max > .97) award('explorer');
+  }, { passive: true });
+});
+feat('Back-to-top button', () => {
+  const b = el('button', { class: 'hrp-fab', id: 'hrpTopBtn', 'aria-label': 'Back to top', type: 'button' }, '↑');
+  document.body.appendChild(b);
+  b.addEventListener('click', () => window.scrollTo({ top: 0, behavior: S.motion ? 'auto' : 'smooth' }));
+  window.addEventListener('scroll', () => b.classList.toggle('show', window.scrollY > 700), { passive: true });
+});
+feat('Heading anchor links (copy section URL)', () => {
+  $$('section[id] h2').forEach(h => {
+    const sec = h.closest('section[id]'); const a = el('span', { class: 'hrp-anchor', role: 'button', tabindex: '0', title: 'Copy link to this section' }, '🔗');
+    const go = () => copy(location.origin + location.pathname + '#' + sec.id);
+    a.addEventListener('click', go); a.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    h.appendChild(a);
+  });
+});
+feat('Sticky mini countdown pill', () => {
+  const p = el('div', { id: 'hrpStick', role: 'button', tabindex: '0' }, ''); document.body.appendChild(p);
+  const upd = () => {
+    const g = id => { const e = document.getElementById(id); return e ? +e.textContent || 0 : 0; };
+    const d = g('cd-days'), h = g('cd-hours'), m = g('cd-mins'), s = g('cd-secs');
+    p.textContent = (d + h + m + s === 0) ? '🏁 Grand Finale countdown has ended' : `⏳ ${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s to Grand Finale`;
+    p.classList.toggle('show', window.scrollY > 800);
+  };
+  setInterval(upd, 1000); window.addEventListener('scroll', upd, { passive: true }); upd();
+  p.addEventListener('click', () => { const r = $('#register'); if (r) r.scrollIntoView({ behavior: 'smooth' }); });
+});
+feat('Page title follows current section', () => {
+  const base = document.title; const secs = $$('section[id]:not(#admin)');
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { const h = $('h2', e.target); document.title = (h ? h.textContent.replace('🔗', '').trim() + ' · ' : '') + 'Hackathon Rivals'; }
+  }), { rootMargin: '-40% 0px -50% 0px' });
+  secs.forEach(s => io.observe(s));
+  window.addEventListener('scroll', () => { if (window.scrollY < 300) document.title = base; }, { passive: true });
+});
+feat('"Come back" tab title when the tab is hidden', () => {
+  let keep = document.title;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { keep = document.title; document.title = '👋 Come back — Hackathon Rivals'; } else document.title = keep;
+  });
+});
+feat('Online / offline banner', () => {
+  const b = el('div', { id: 'hrpBanner', role: 'status' }, ''); document.body.appendChild(b);
+  const show = (t, ok) => { b.textContent = t; b.style.background = ok ? 'var(--green)' : 'var(--orange)'; b.classList.add('show'); if (ok) setTimeout(() => b.classList.remove('show'), 2500); };
+  window.addEventListener('offline', () => show('📡 You are offline — some features may not work', false));
+  window.addEventListener('online', () => show('✅ Back online', true));
+  if (!navigator.onLine) show('📡 You are offline — some features may not work', false);
+});
+feat('Toast: click to dismiss + max 4 stacked + notification log', () => {
+  const wrap = $('#toastWrap'); if (!wrap) return;
+  wrap.addEventListener('click', e => { const t = e.target.closest('.toast'); if (t) t.remove(); });
+  new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
+    if (!(n instanceof HTMLElement) || !n.classList.contains('toast')) return;
+    while (wrap.children.length > 4) wrap.firstChild.remove();
+    const txt = n.textContent.trim(); const log = store.get('notif', []);
+    log.unshift({ t: Date.now(), m: txt.replace(/^\W+/, '') }); store.set('notif', log.slice(0, 30));
+    const d = $('#hrpDot'); if (d) d.classList.add('on');
+    if (/Registration submitted successfully/i.test(txt)) confetti(90);
+  }))).observe(wrap, { childList: true });
+});
+feat('Confetti on successful registration', () => {});
+feat('Konami-code easter egg 🎮', () => {
+  const seq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']; let i = 0;
+  document.addEventListener('keydown', e => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    i = (k === seq[i]) ? i + 1 : (k === seq[0] ? 1 : 0);
+    if (i === seq.length) { i = 0; confetti(120); toast('Cheat code activated: +100 XP', 'success', '🎮'); addXP(100); award('konami'); }
+  });
+});
+
+/* ============ HUB MODAL ============ */
+const TABS = [];   // [id, label, render]
+let hubEl, hubTab = store.get('lastTab', 'home');
+function openHub(tab){
+  if (!hubEl) return;
+  if (tab) hubTab = tab;
+  hubEl.classList.add('open'); const d = $('#hrpDot'); if (d && hubTab === 'home') d.classList.remove('on');
+  renderHub();
+}
+function closeAll(){ $$('.hrp-bg.open').forEach(b => b.classList.remove('open')); }
+function renderHub(){
+  const tabs = $('.hrp-tabs', hubEl);
+  const oldBody = $('.hrp-body', hubEl), body = oldBody.cloneNode(false); oldBody.replaceWith(body); // fresh node = no stale listeners from earlier tabs
+  tabs.innerHTML = '';
+  TABS.forEach(([id, label]) => {
+    const b = el('button', { class: 'hrp-tab' + (id === hubTab ? ' active' : ''), type: 'button' }, label);
+    b.addEventListener('click', () => { hubTab = id; store.set('lastTab', id); renderHub(); });
+    tabs.appendChild(b);
+  });
+  body.innerHTML = '';
+  const t = TABS.find(x => x[0] === hubTab) || TABS[0];
+  try { t[2](body); } catch(e){ body.textContent = 'Something went wrong loading this tab.'; console.warn(e); }
+  body.scrollTop = 0;
+}
+function multi(c, registry, key){
+  const names = Object.keys(registry);
+  const sel = el('select', { class: 'hrp-sel', 'aria-label': 'Choose' }, names.map(n => `<option>${esc(n)}</option>`).join(''));
+  const saved = store.get(key, names[0]); if (names.includes(saved)) sel.value = saved;
+  let sub = el('div', { style: 'margin-top:14px' });
+  c.append(sel, sub);
+  const go = () => { store.set(key, sel.value); const fresh = el('div', { style: 'margin-top:14px' }); sub.replaceWith(fresh); sub = fresh; try { registry[sel.value](sub); } catch(e){ sub.textContent = 'Error: ' + e.message; } };
+  sel.addEventListener('change', go); go();
+}
+function reg(cat, name, fn){
+  const map = { tools: TOOLS, cheats: CHEATS, plan: PLAN, lists: LISTS }[cat];
+  feat(({ tools: 'Tool', cheats: 'Cheat sheet', plan: 'Planner', lists: 'List' }[cat]) + ': ' + name, () => { map[name] = c => { useTool(name); fn(c); }; });
+}
+
+feat('HR+ Hub (floating button + tabbed panel)', () => {
+  hubEl = el('div', { class: 'hrp-bg', id: 'hrpHub', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'HR+ Hub' },
+    '<div class="hrp-modal"><div class="hrp-head"><h3>⚡ HR+ Hub</h3><button class="hrp-x" type="button" aria-label="Close">✕</button></div><div class="hrp-tabs"></div><div class="hrp-body"></div></div>');
+  document.body.appendChild(hubEl);
+  hubEl.addEventListener('click', e => { if (e.target === hubEl || e.target.closest('.hrp-x')) hubEl.classList.remove('open'); });
+  const fab = el('button', { class: 'hrp-fab', id: 'hrpHubBtn', type: 'button', 'aria-label': 'Open HR+ Hub', title: 'HR+ Hub (Ctrl+K for commands)' }, '⚡<span class="hrp-dot" id="hrpDot"></span>');
+  fab.style.position = 'fixed'; document.body.appendChild(fab);
+  fab.addEventListener('click', () => openHub());
+});
+
+/* ============ COMMAND PALETTE ============ */
+feat('Command palette (Ctrl/⌘ + K)', () => {
+  const go = id => () => { const t = id ? document.getElementById(id) : null; if (t) t.scrollIntoView({ behavior: S.motion ? 'auto' : 'smooth' }); else window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const click = sel => () => { const e = $(sel); if (e) e.click(); };
+  const CMDS = [
+    ['🏠 Go to Home', 'g h', go(null)], ['🧩 Go to Themes', 'g t', go('themes')], ['📋 Go to Problem Statements', 'g p', go('problems')],
+    ['💻 Go to Code Lab', 'g l', go('playground')], ['⚔️ Go to Code Arena', 'g a', go('arena')], ['📝 Go to Register', 'g r', go('register')],
+    ['🏆 Go to Leaderboard', 'g b', go('leaderboard')], ['🏅 Go to Hall of Fame', '', go('fame')], ['✉️ Go to Contact', 'g c', go('contact')], ['❓ Go to FAQ', 'g f', go('faq')],
+    ['🌓 Toggle dark / light theme', 't', click('#themeToggle')], ['🤖 Open AI assistant', '', click('#aiFab')], ['🔐 Log in / Sign up', '', click('#loginBtn')],
+    ['🛠️ Open developer tools', '', () => openHub('tools')], ['📚 Open cheat sheets', '', () => openHub('cheats')], ['🗓️ Open planner & timers', '', () => openHub('plan')],
+    ['✅ Open checklists, notes & to-do', '', () => openHub('lists')], ['🏅 Open badges & XP', '', () => openHub('badges')], ['📣 Share Hackathon Rivals', '', () => openHub('share')],
+    ['⚙️ Open settings', '', () => openHub('settings')], ['❔ Keyboard shortcuts & help', '?', () => openHub('help')],
+    ['🎲 Random problem statement', '', () => window.__hrpRandomPS && window.__hrpRandomPS()], ['🔗 Copy page link', '', () => copy(location.href)],
+    ['🖨️ Print this page', '', () => window.print()], ['⬆️ Scroll to top', 'u', go(null)],
+    ['🎤 Open pitch timer', '', () => { store.set('planSel', 'Pitch timer'); openHub('plan'); }]
+  ];
+  const bg = el('div', { class: 'hrp-bg', id: 'hrpPalette', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Command palette' },
+    '<div class="hrp-modal"><div style="padding:12px"><input class="hrp-in" placeholder="Type a command…  (↑ ↓ Enter, Esc to close)" aria-label="Search commands"></div><div class="hrp-list" style="max-height:52vh;overflow:auto"></div></div>');
+  document.body.appendChild(bg);
+  const inp = $('input', bg), list = $('.hrp-list', bg); let sel = 0, shown = [];
+  function draw(){
+    const q = inp.value.trim().toLowerCase();
+    shown = CMDS.filter(c => !q || c[0].toLowerCase().includes(q));
+    sel = Math.min(sel, Math.max(0, shown.length - 1));
+    list.innerHTML = shown.map((c, i) => `<div class="hrp-pi${i === sel ? ' sel' : ''}" data-i="${i}">${esc(c[0])}<small>${esc(c[1])}</small></div>`).join('') || '<div class="hrp-pi">No matches</div>';
+  }
+  function run(i){ const c = shown[i]; if (!c) return; bg.classList.remove('open'); setTimeout(c[2], 30); }
+  inp.addEventListener('input', () => { sel = 0; draw(); });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { sel = Math.min(shown.length - 1, sel + 1); draw(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); draw(); e.preventDefault(); }
+    else if (e.key === 'Enter') { run(sel); }
+  });
+  list.addEventListener('click', e => { const p = e.target.closest('.hrp-pi[data-i]'); if (p) run(+p.dataset.i); });
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+  window.__hrpPalette = () => { closeAll(); bg.classList.add('open'); inp.value = ''; sel = 0; draw(); setTimeout(() => inp.focus(), 20); };
+});
+
+feat('Global keyboard shortcuts (t, ?, /, g + key, u, Esc)', () => {
+  let g = 0; const map = { h: null, t: 'themes', p: 'problems', l: 'playground', a: 'arena', r: 'register', b: 'leaderboard', c: 'contact', f: 'faq' };
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); window.__hrpPalette && window.__hrpPalette(); return; }
+    if (e.key === 'Escape') { closeAll(); return; }
+    if (isTyping(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (g && Date.now() - g < 1000) {
+      g = 0; const k = e.key.toLowerCase();
+      if (k in map) { e.preventDefault(); const t = map[k] ? document.getElementById(map[k]) : null; if (t) t.scrollIntoView({ behavior: 'smooth' }); else window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      return;
+    }
+    if (e.key === 'g') { g = Date.now(); return; }
+    if (e.key === '/') { e.preventDefault(); window.__hrpPalette && window.__hrpPalette(); }
+    else if (e.key === '?') { openHub('help'); }
+    else if (e.key === 't') { const b = $('#themeToggle'); if (b) b.click(); }
+    else if (e.key === 'u') { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  });
+});
+
+/* ============ TOOLS ============ */
+const nu = (c, s) => $(s, c);
+reg('tools', 'JSON formatter & validator', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder='{"paste":"your json"}' aria-label="JSON input"></textarea>
+  <div class="hrp-row"><button class="hrp-btn pri" data-a="fmt">Format</button><button class="hrp-btn" data-a="min">Minify</button><button class="hrp-btn" data-a="sort">Sort keys</button><button class="hrp-btn" data-a="copy">Copy result</button></div><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c); let last = '';
+  const sortK = v => Array.isArray(v) ? v.map(sortK) : (v && typeof v === 'object') ? Object.keys(v).sort().reduce((o, k) => (o[k] = sortK(v[k]), o), {}) : v;
+  c.addEventListener('click', e => {
+    const a = e.target.dataset.a; if (!a) return;
+    if (a === 'copy') return copy(last);
+    try { const v = JSON.parse(ta.value); last = a === 'min' ? JSON.stringify(v) : JSON.stringify(a === 'sort' ? sortK(v) : v, null, 2); out.textContent = last; }
+    catch(err){ last = ''; out.textContent = '❌ Invalid JSON: ' + err.message; }
+  });
+});
+reg('tools', 'Base64 encode / decode', c => {
+  c.innerHTML = `<textarea class="hrp-ta" aria-label="Text"></textarea><div class="hrp-row"><button class="hrp-btn pri" data-a="e">Encode</button><button class="hrp-btn" data-a="d">Decode</button><button class="hrp-btn" data-a="c">Copy</button></div><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c);
+  c.addEventListener('click', e => {
+    const a = e.target.dataset.a; if (!a) return;
+    try {
+      if (a === 'c') return copy(out.textContent);
+      if (a === 'e') { const b = new TextEncoder().encode(ta.value); let s = ''; b.forEach(x => s += String.fromCharCode(x)); out.textContent = btoa(s); }
+      else { const s = atob(ta.value.trim().replace(/-/g, '+').replace(/_/g, '/')); out.textContent = new TextDecoder().decode(Uint8Array.from(s, ch => ch.charCodeAt(0))); }
+    } catch(err){ out.textContent = '❌ ' + err.message; }
+  });
+});
+reg('tools', 'URL encode / decode & query parser', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder="Text or full URL" aria-label="Input"></textarea><div class="hrp-row"><button class="hrp-btn pri" data-a="e">Encode</button><button class="hrp-btn" data-a="d">Decode</button><button class="hrp-btn" data-a="p">Parse URL</button></div><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c);
+  c.addEventListener('click', e => {
+    const a = e.target.dataset.a; if (!a) return;
+    try {
+      if (a === 'e') out.textContent = encodeURIComponent(ta.value);
+      else if (a === 'd') out.textContent = decodeURIComponent(ta.value.replace(/\+/g, ' '));
+      else { const u = new URL(ta.value.trim()); let t = `Protocol: ${u.protocol}\nHost: ${u.host}\nPath: ${u.pathname}\nHash: ${u.hash || '-'}\nParams:`; u.searchParams.forEach((v, k) => t += `\n  ${k} = ${v}`); out.textContent = t; }
+    } catch(err){ out.textContent = '❌ ' + err.message; }
+  });
+});
+reg('tools', 'UUID generator', c => {
+  c.innerHTML = `<div class="hrp-row"><input class="hrp-in sm" type="number" min="1" max="50" value="5" aria-label="How many"><button class="hrp-btn pri">Generate</button><button class="hrp-btn" data-c="1">Copy</button></div><div class="hrp-out"></div>`;
+  const out = $('.hrp-out', c), n = $('input', c);
+  const uuid = () => { if (crypto.randomUUID) return crypto.randomUUID(); const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128; const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join(''); return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20); };
+  const gen = () => { out.textContent = Array.from({ length: Math.min(50, Math.max(1, +n.value || 1)) }, uuid).join('\n'); };
+  c.addEventListener('click', e => { if (e.target.dataset.c) copy(out.textContent); else if (e.target.classList.contains('pri')) gen(); }); gen();
+});
+reg('tools', 'Hash generator (SHA)', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder="Text to hash" aria-label="Text"></textarea><div class="hrp-row"><select class="hrp-sel sm hrp-in" style="max-width:150px"><option>SHA-256</option><option>SHA-1</option><option>SHA-384</option><option>SHA-512</option></select><button class="hrp-btn pri">Hash</button><button class="hrp-btn" data-c="1">Copy</button></div><div class="hrp-out"></div>`;
+  const out = $('.hrp-out', c);
+  c.addEventListener('click', async e => {
+    if (e.target.dataset.c) return copy(out.textContent);
+    if (!e.target.classList.contains('pri')) return;
+    try {
+      if (!(crypto && crypto.subtle)) throw new Error('Hashing needs a secure (https) page');
+      const buf = await crypto.subtle.digest($('select', c).value, new TextEncoder().encode($('textarea', c).value));
+      out.textContent = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch(err){ out.textContent = '❌ ' + err.message; }
+  });
+});
+reg('tools', 'Regex tester', c => {
+  c.innerHTML = `<div class="hrp-row"><input class="hrp-in sm" placeholder="pattern e.g. \\b\\w+@\\w+\\.\\w+" aria-label="Pattern"><input class="hrp-in sm" style="max-width:80px;flex:0" value="g" aria-label="Flags"></div><textarea class="hrp-ta" placeholder="Test text" aria-label="Test text"></textarea><div class="hrp-muted" id="rxCount"></div><div class="hrp-out"></div>`;
+  const [pi, fi] = $$('input', c), ta = $('textarea', c), out = $('.hrp-out', c), cnt = $('#rxCount', c);
+  function run(){
+    try {
+      if (!pi.value) { out.textContent = ''; cnt.textContent = ''; return; }
+      const flags = fi.value.includes('g') ? fi.value : fi.value + 'g'; const re = new RegExp(pi.value, flags); const t = ta.value.slice(0, 20000);
+      let html = '', last = 0, n = 0, m;
+      while ((m = re.exec(t)) && n < 500) { n++; html += esc(t.slice(last, m.index)) + '<mark class="hrp-hl">' + esc(m[0]) + '</mark>'; last = m.index + m[0].length; if (m[0] === '') re.lastIndex++; }
+      out.innerHTML = html + esc(t.slice(last)); cnt.textContent = n + ' match' + (n === 1 ? '' : 'es');
+    } catch(err){ out.textContent = '❌ ' + err.message; cnt.textContent = ''; }
+  }
+  [pi, fi, ta].forEach(x => x.addEventListener('input', run));
+});
+reg('tools', 'Timestamp / epoch converter', c => {
+  c.innerHTML = `<div class="hrp-row"><input class="hrp-in sm" placeholder="Epoch (s/ms) or date e.g. 2026-05-15 09:00" aria-label="Value"><button class="hrp-btn pri">Convert</button><button class="hrp-btn" data-n="1">Now</button></div><div class="hrp-out"></div>`;
+  const inp = $('input', c), out = $('.hrp-out', c);
+  const show = d => { out.textContent = isNaN(d) ? '❌ Could not parse' : `Epoch (s): ${Math.floor(d / 1000)}\nEpoch (ms): ${d.getTime()}\nISO (UTC): ${d.toISOString()}\nLocal: ${d.toString()}\nIST: ${d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`; };
+  c.addEventListener('click', e => {
+    if (e.target.dataset.n) { inp.value = Date.now(); show(new Date()); }
+    else if (e.target.classList.contains('pri')) { const v = inp.value.trim(); show(/^\d{9,13}$/.test(v) ? new Date(v.length <= 10 ? +v * 1000 : +v) : new Date(v)); }
+  });
+});
+reg('tools', 'Colour converter & contrast checker', c => {
+  c.innerHTML = `<div class="hrp-row"><label>Foreground <input type="color" value="#ffffff" data-k="f"></label><label>Background <input type="color" value="#0f1119" data-k="b"></label></div><div class="hrp-out" id="clOut"></div><div class="hrp-card" id="clPrev" style="margin-top:8px;font-size:18px;font-weight:600">Sample text — The quick brown fox</div>`;
+  const [f, b] = $$('input', c), out = $('#clOut', c), prev = $('#clPrev', c);
+  const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const lum = ([r, g, bl]) => { const x = [r, g, bl].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * x[0] + .7152 * x[1] + .0722 * x[2]; };
+  const hsl = ([r, g, bl]) => { r /= 255; g /= 255; bl /= 255; const mx = Math.max(r, g, bl), mn = Math.min(r, g, bl); let h = 0, s = 0; const l = (mx + mn) / 2; if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - bl) / d + (g < bl ? 6 : 0) : mx === g ? (bl - r) / d + 2 : (r - g) / d + 4; h *= 60; } return `hsl(${Math.round(h)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`; };
+  function upd(){
+    const A = rgb(f.value), B = rgb(b.value); const la = lum(A), lb = lum(B); const ratio = (Math.max(la, lb) + .05) / (Math.min(la, lb) + .05);
+    prev.style.color = f.value; prev.style.background = b.value;
+    out.textContent = `Foreground: ${f.value} · rgb(${A}) · ${hsl(A)}\nBackground: ${b.value} · rgb(${B}) · ${hsl(B)}\nContrast ratio: ${ratio.toFixed(2)}:1\nAA normal (4.5): ${ratio >= 4.5 ? '✅' : '❌'}   AA large (3): ${ratio >= 3 ? '✅' : '❌'}   AAA (7): ${ratio >= 7 ? '✅' : '❌'}`;
+  }
+  [f, b].forEach(x => x.addEventListener('input', upd)); upd();
+});
+reg('tools', 'Lorem ipsum generator', c => {
+  c.innerHTML = `<div class="hrp-row"><input class="hrp-in sm" type="number" min="1" max="10" value="2" aria-label="Paragraphs"><button class="hrp-btn pri">Generate</button><button class="hrp-btn" data-c="1">Copy</button></div><div class="hrp-out" style="font-family:inherit"></div>`;
+  const W = 'lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum fugiat nulla pariatur'.split(' ');
+  const out = $('.hrp-out', c);
+  const para = () => { const s = Array.from({ length: 4 + rnd(3) }, () => { const w = Array.from({ length: 8 + rnd(10) }, () => pick(W)); w[0] = w[0][0].toUpperCase() + w[0].slice(1); return w.join(' ') + '.'; }); return s.join(' '); };
+  const gen = () => { out.textContent = Array.from({ length: Math.min(10, Math.max(1, +$('input', c).value || 1)) }, para).join('\n\n'); };
+  c.addEventListener('click', e => { if (e.target.dataset.c) copy(out.textContent); else if (e.target.classList.contains('pri')) gen(); }); gen();
+});
+reg('tools', 'Secure password generator', c => {
+  c.innerHTML = `<div class="hrp-row"><label>Length <input type="range" min="8" max="64" value="16" id="pgLen"> <b id="pgLenV">16</b></label></div><div class="hrp-row"><label><input type="checkbox" checked data-o="u"> A-Z</label><label><input type="checkbox" checked data-o="l"> a-z</label><label><input type="checkbox" checked data-o="d"> 0-9</label><label><input type="checkbox" checked data-o="s"> Symbols</label></div><div class="hrp-row"><button class="hrp-btn pri">Generate</button><button class="hrp-btn" data-c="1">Copy</button></div><div class="hrp-out"></div><div class="hrp-muted" id="pgEnt"></div>`;
+  const out = $('.hrp-out', c), len = $('#pgLen', c);
+  const sets = { u: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', l: 'abcdefghijklmnopqrstuvwxyz', d: '0123456789', s: '!@#$%^&*()-_=+[]{};:,.?' };
+  function gen(){
+    $('#pgLenV', c).textContent = len.value;
+    let pool = ''; $$('[data-o]', c).forEach(x => { if (x.checked) pool += sets[x.dataset.o]; });
+    if (!pool) { out.textContent = 'Select at least one set'; return; }
+    let p = ''; for (let i = 0; i < +len.value; i++) p += pool[rnd(pool.length)];
+    out.textContent = p; $('#pgEnt', c).textContent = `≈ ${Math.round(len.value * Math.log2(pool.length))} bits of entropy`;
+  }
+  len.addEventListener('input', gen);
+  c.addEventListener('click', e => { if (e.target.dataset.c) copy(out.textContent); else if (e.target.classList.contains('pri')) gen(); }); gen();
+});
+reg('tools', 'Word & character counter', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder="Paste or type text…" aria-label="Text"></textarea><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c);
+  const upd = () => { const t = ta.value; const w = (t.trim().match(/\S+/g) || []).length; out.textContent = `Words: ${w}\nCharacters: ${t.length}\nCharacters (no spaces): ${t.replace(/\s/g, '').length}\nLines: ${t ? t.split('\n').length : 0}\nSentences: ${(t.match(/[.!?]+(\s|$)/g) || []).length}\nReading time: ${Math.max(w ? 1 : 0, Math.ceil(w / 200))} min · Speaking time: ${Math.max(w ? 1 : 0, Math.ceil(w / 130))} min`; };
+  ta.addEventListener('input', upd); upd();
+});
+reg('tools', 'Case converter & slugify', c => {
+  c.innerHTML = `<textarea class="hrp-ta" aria-label="Text"></textarea><div class="hrp-row">${['UPPER','lower','Title Case','camelCase','snake_case','kebab-case','slug','Reverse'].map(x => `<button class="hrp-btn" data-a="${x}">${x}</button>`).join('')}<button class="hrp-btn pri" data-c="1">Copy</button></div><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c);
+  const words = s => s.replace(/([a-z])([A-Z])/g, '$1 $2').split(/[^A-Za-z0-9]+/).filter(Boolean);
+  const F2 = { 'UPPER': s => s.toUpperCase(), 'lower': s => s.toLowerCase(), 'Title Case': s => s.toLowerCase().replace(/\b\w/g, m => m.toUpperCase()),
+    'camelCase': s => words(s).map((w, i) => i ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w.toLowerCase()).join(''),
+    'snake_case': s => words(s).map(w => w.toLowerCase()).join('_'), 'kebab-case': s => words(s).map(w => w.toLowerCase()).join('-'),
+    'slug': s => s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    'Reverse': s => Array.from(s).reverse().join('') };
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (a) out.textContent = F2[a](ta.value); else if (e.target.dataset.c) copy(out.textContent); });
+});
+function mdRender(src){
+  let t = esc(src); const blocks = [];
+  t = t.replace(/```([\s\S]*?)```/g, (m, code) => { blocks.push('<pre style="background:var(--surface-3);padding:10px;border-radius:8px;overflow:auto"><code>' + code.replace(/^\n/, '') + '</code></pre>'); return '\u0000' + (blocks.length - 1) + '\u0000'; });
+  t = t.split('\n').map(line => {
+    let m;
+    if ((m = line.match(/^(#{1,6})\s+(.*)$/))) return `<h${m[1].length} style="margin:10px 0 4px">${m[2]}</h${m[1].length}>`;
+    if (/^(-{3,}|\*{3,})$/.test(line.trim())) return '<hr>';
+    if ((m = line.match(/^&gt;\s?(.*)$/))) return `<blockquote style="border-left:3px solid var(--violet);margin:6px 0;padding-left:10px;color:var(--muted)">${m[1]}</blockquote>`;
+    if ((m = line.match(/^\s*[-*]\s+(.*)$/))) return `<li style="margin-left:20px">${m[1]}</li>`;
+    if ((m = line.match(/^\s*\d+\.\s+(.*)$/))) return `<li style="margin-left:20px;list-style:decimal">${m[1]}</li>`;
+    return line.trim() === '' ? '<br>' : line + '<br>';
+  }).join('');
+  t = t.replace(/`([^`]+)`/g, '<code style="background:var(--surface-3);padding:1px 5px;border-radius:5px">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*]+)\*/g, '<i>$1</i>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--cyan);text-decoration:underline">$1</a>');
+  return t.replace(/\u0000(\d+)\u0000/g, (m, i) => blocks[+i]);
+}
+reg('tools', 'Markdown live preview', c => {
+  c.innerHTML = `<textarea class="hrp-ta" aria-label="Markdown">${esc('# Hello\n\nWrite **markdown** here.\n\n- item one\n- item two\n\n[Hackathon Rivals](https://www.hackathonrivals.in/)')}</textarea><div class="hrp-out" style="font-family:inherit;white-space:normal"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c); const upd = () => { out.innerHTML = mdRender(ta.value); };
+  ta.addEventListener('input', upd); upd();
+});
+reg('tools', 'Line sorter & de-duplicator', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder="One item per line" aria-label="Lines"></textarea><div class="hrp-row">${['Sort A→Z','Sort Z→A','Remove duplicates','Reverse','Shuffle','Trim','Number'].map(x => `<button class="hrp-btn" data-a="${x}">${x}</button>`).join('')}<button class="hrp-btn pri" data-c="1">Copy</button></div><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c);
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const OPS = { 'Sort A→Z': a => a.sort((x, y) => x.localeCompare(y)), 'Sort Z→A': a => a.sort((x, y) => y.localeCompare(x)), 'Remove duplicates': a => [...new Set(a)],
+    'Reverse': a => a.reverse(), 'Shuffle': shuffle, 'Trim': a => a.map(s => s.trim()).filter(Boolean), 'Number': a => a.map((s, i) => (i + 1) + '. ' + s) };
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (a) out.textContent = OPS[a](ta.value.split('\n')).join('\n'); else if (e.target.dataset.c) copy(out.textContent); });
+});
+reg('tools', 'JWT decoder (no verification)', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder="Paste a JWT" aria-label="JWT"></textarea><div class="hrp-out"></div><div class="hrp-muted">⚠️ Decoding only — the signature is NOT verified. Never paste production secrets.</div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c);
+  const dec = p => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(p.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(p.length / 4) * 4, '=')), ch => ch.charCodeAt(0))));
+  ta.addEventListener('input', () => {
+    try { const [h, p] = ta.value.trim().split('.'); const H = dec(h), P = dec(p); let t = 'HEADER\n' + JSON.stringify(H, null, 2) + '\n\nPAYLOAD\n' + JSON.stringify(P, null, 2);
+      if (P.exp) t += '\n\nExpires: ' + new Date(P.exp * 1000).toLocaleString() + (P.exp * 1000 < Date.now() ? '  (EXPIRED)' : ''); out.textContent = t; }
+    catch(e){ out.textContent = ta.value.trim() ? '❌ Not a valid JWT' : ''; }
+  });
+});
+reg('tools', 'Number base converter', c => {
+  c.innerHTML = `<div class="hrp-row"><input class="hrp-in sm" placeholder="Enter a number" aria-label="Number"><select class="hrp-in sm" aria-label="Base"><option value="10">Decimal</option><option value="2">Binary</option><option value="8">Octal</option><option value="16">Hex</option></select></div><div class="hrp-out"></div>`;
+  const inp = $('input', c), sel = $('select', c), out = $('.hrp-out', c);
+  const upd = () => {
+    try { let v = inp.value.trim().replace(/^0[xbo]/i, '').replace(/[_\s]/g, ''); if (!v) { out.textContent = ''; return; }
+      const b = +sel.value; const pre = { 2: '0b', 8: '0o', 10: '', 16: '0x' }[b]; if (b === 10 && !/^\d+$/.test(v)) throw new Error('Digits only'); const n = BigInt(pre + v);
+      out.textContent = `Decimal: ${n.toString(10)}\nBinary:  ${n.toString(2)}\nOctal:   ${n.toString(8)}\nHex:     ${n.toString(16).toUpperCase()}`; }
+    catch(e){ out.textContent = '❌ Invalid number for this base'; }
+  };
+  inp.addEventListener('input', upd); sel.addEventListener('change', upd);
+});
+reg('tools', 'CSV → JSON converter', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder="name,age&#10;Asha,20" aria-label="CSV"></textarea><div class="hrp-row"><button class="hrp-btn pri">Convert</button><button class="hrp-btn" data-c="1">Copy</button></div><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c);
+  function parse(t){ const rows = []; let r = [], f = '', q = false; for (let i = 0; i < t.length; i++) { const ch = t[i];
+      if (q) { if (ch === '"' && t[i + 1] === '"') { f += '"'; i++; } else if (ch === '"') q = false; else f += ch; }
+      else if (ch === '"') q = true; else if (ch === ',') { r.push(f); f = ''; } else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; r.push(f); f = ''; rows.push(r); r = []; } else f += ch; }
+    if (f !== '' || r.length) { r.push(f); rows.push(r); } return rows.filter(x => x.length > 1 || x[0] !== ''); }
+  c.addEventListener('click', e => {
+    if (e.target.dataset.c) return copy(out.textContent);
+    if (!e.target.classList.contains('pri')) return;
+    const rows = parse(ta.value); if (rows.length < 2) { out.textContent = '❌ Need a header row and at least one data row'; return; }
+    const h = rows[0].map(x => x.trim()); out.textContent = JSON.stringify(rows.slice(1).map(r => h.reduce((o, k, i) => (o[k] = r[i] ?? '', o), {})), null, 2);
+  });
+});
+reg('tools', 'Random picker, dice & coin', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder="Names, one per line" aria-label="Names"></textarea><div class="hrp-row"><button class="hrp-btn pri" data-a="pick">🎯 Pick one</button><button class="hrp-btn" data-a="order">🔀 Shuffle order</button><button class="hrp-btn" data-a="coin">🪙 Coin</button><button class="hrp-btn" data-a="dice">🎲 Dice</button></div><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c); const names = () => ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return; const n = names();
+    if (a === 'coin') out.textContent = pick(['Heads 🪙', 'Tails 🪙']); else if (a === 'dice') out.textContent = '🎲 ' + (1 + rnd(6));
+    else if (!n.length) out.textContent = 'Add some names first'; else if (a === 'pick') out.textContent = '🎉 ' + pick(n);
+    else { const s = n.slice(); for (let i = s.length - 1; i > 0; i--) { const j = rnd(i + 1); [s[i], s[j]] = [s[j], s[i]]; } out.textContent = s.map((x, i) => (i + 1) + '. ' + x).join('\n'); } });
+});
+reg('tools', 'Team splitter', c => {
+  c.innerHTML = `<textarea class="hrp-ta" placeholder="Participant names, one per line" aria-label="Names"></textarea><div class="hrp-row"><label>Team size <input class="hrp-in sm" type="number" min="1" max="6" value="4" style="max-width:80px"></label><button class="hrp-btn pri">Split into teams</button><button class="hrp-btn" data-c="1">Copy</button></div><div class="hrp-out"></div>`;
+  const ta = $('textarea', c), out = $('.hrp-out', c);
+  c.addEventListener('click', e => {
+    if (e.target.dataset.c) return copy(out.textContent); if (!e.target.classList.contains('pri')) return;
+    const n = ta.value.split('\n').map(s => s.trim()).filter(Boolean); const size = Math.min(6, Math.max(1, +$('input[type=number]', c).value || 4));
+    if (!n.length) { out.textContent = 'Add some names first'; return; }
+    for (let i = n.length - 1; i > 0; i--) { const j = rnd(i + 1); [n[i], n[j]] = [n[j], n[i]]; }
+    const teams = Math.ceil(n.length / size); const T = Array.from({ length: teams }, () => []); n.forEach((x, i) => T[i % teams].push(x));
+    out.textContent = T.map((t, i) => `Team ${i + 1} (${t.length}): ${t.join(', ')}`).join('\n');
+  });
+});
+
+/* ============ CHEAT SHEETS ============ */
+function table(rows, head){
+  return `<table class="hrp-table">${head ? '<tr>' + head.map(h => `<th>${esc(h)}</th>`).join('') + '</tr>' : ''}${rows.map(r => '<tr>' + r.map((x, i) => `<td${i === 0 ? ' style="font-family:JetBrains Mono,monospace;white-space:nowrap"' : ''}>${esc(x)}</td>`).join('') + '</tr>').join('')}</table>`;
+}
+reg('cheats', 'Git commands', c => { c.innerHTML = table([
+  ['git init','Start a new repository'],['git clone <url>','Copy a remote repo'],['git status','See changed files'],['git add -A','Stage everything'],['git commit -m "msg"','Save a snapshot'],
+  ['git push origin main','Upload commits'],['git pull --rebase','Fetch and replay your commits on top'],['git switch -c feature','Create & switch branch'],['git merge feature','Merge a branch'],
+  ['git stash / stash pop','Shelve / restore changes'],['git log --oneline --graph','Compact history'],['git restore <file>','Discard local edits'],['git reset --soft HEAD~1','Undo last commit, keep changes'],['git diff --staged','Review what will be committed']], ['Command', 'What it does']); });
+reg('cheats', 'HTTP status codes (searchable)', c => {
+  const codes = [[200,'OK'],[201,'Created'],[204,'No Content'],[301,'Moved Permanently'],[302,'Found (temporary redirect)'],[304,'Not Modified'],[400,'Bad Request'],[401,'Unauthorized (not logged in)'],[403,'Forbidden (no permission)'],[404,'Not Found'],[405,'Method Not Allowed'],[408,'Request Timeout'],[409,'Conflict'],[410,'Gone'],[413,'Payload Too Large'],[418,"I'm a teapot"],[422,'Unprocessable Entity'],[429,'Too Many Requests'],[500,'Internal Server Error'],[501,'Not Implemented'],[502,'Bad Gateway'],[503,'Service Unavailable'],[504,'Gateway Timeout']];
+  c.innerHTML = '<input class="hrp-in" placeholder="Search code or meaning…" aria-label="Search"><div id="hcBox"></div>';
+  const box = $('#hcBox', c), inp = $('input', c); const draw = () => { const q = inp.value.toLowerCase(); box.innerHTML = table(codes.filter(x => !q || String(x[0]).includes(q) || x[1].toLowerCase().includes(q)).map(x => [String(x[0]), x[1]]), ['Code', 'Meaning']); };
+  inp.addEventListener('input', draw); draw();
+});
+reg('cheats', 'Big-O complexity', c => { c.innerHTML = table([
+  ['O(1)','Array index, hash lookup'],['O(log n)','Binary search, balanced BST'],['O(n)','Linear scan'],['O(n log n)','Merge sort, heap sort, quick sort (avg)'],['O(n²)','Nested loops, bubble sort'],['O(2ⁿ)','Naive recursive Fibonacci, subsets'],['O(n!)','Permutations, brute-force TSP']], ['Complexity', 'Typical example']) + '<p class="hrp-muted" style="margin-top:8px">Rule of thumb: ~10⁸ simple operations per second in most judges.</p>'; });
+reg('cheats', 'Regex quick reference', c => { c.innerHTML = table([
+  ['.','Any character'],['\\d \\w \\s','Digit / word char / whitespace'],['^  $','Start / end of line'],['*  +  ?','0+, 1+, 0 or 1'],['{n,m}','Between n and m times'],['[abc]  [^abc]','Any of / none of'],['(a|b)','Group / alternation'],['(?:…)','Non-capturing group'],['(?=…)  (?!…)','Look-ahead / negative'],['\\b','Word boundary'],['+? *?','Lazy quantifiers']], ['Token', 'Meaning']); });
+reg('cheats', 'SQL basics', c => { c.innerHTML = table([
+  ['SELECT a, b FROM t WHERE x > 5','Read rows'],['INSERT INTO t (a,b) VALUES (1,2)','Add a row'],['UPDATE t SET a=1 WHERE id=3','Change rows'],['DELETE FROM t WHERE id=3','Remove rows'],
+  ['ORDER BY a DESC LIMIT 10','Sort & limit'],['GROUP BY a HAVING COUNT(*)>1','Aggregate & filter groups'],['JOIN u ON u.id = t.uid','Combine tables'],['CREATE INDEX i ON t(a)','Speed up lookups']], ['Statement', 'Purpose']); });
+reg('cheats', 'Markdown syntax', c => { c.innerHTML = table([
+  ['# Heading','Heading (## smaller)'],['**bold**  *italic*','Emphasis'],['[text](url)','Link'],['![alt](img.png)','Image'],['- item','Bullet list'],['1. item','Numbered list'],['`code`','Inline code'],['```lang …```','Code block'],['> quote','Blockquote'],['---','Horizontal rule']], ['Write', 'Result']); });
+reg('cheats', 'Linux / terminal', c => { c.innerHTML = table([
+  ['ls -la','List files with details'],['cd <dir>','Change directory'],['pwd','Print current directory'],['grep -rn "text" .','Search in files'],['cat / less <file>','View a file'],['chmod +x file','Make executable'],['ps aux | grep x','Find a process'],['kill -9 <pid>','Force-stop a process'],['curl -I <url>','Fetch headers'],['tar -czf a.tgz dir/','Create archive']], ['Command', 'Purpose']); });
+
+/* ============ TIMER ENGINE ============ */
+const T = { end: 0, total: 0, label: '', kind: '', iv: null, w60: false, w10: false };
+const fmtT = s => { s = Math.max(0, Math.round(s)); return pad(Math.floor(s / 60)) + ':' + pad(s % 60); };
+function beep(n){
+  try { const ac = new (window.AudioContext || window.webkitAudioContext)(); for (let i = 0; i < n; i++) { const o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = 880; g.gain.value = .08; o.start(ac.currentTime + i * .35); o.stop(ac.currentTime + i * .35 + .2); } } catch(e){}
+  try { if (navigator.vibrate) navigator.vibrate(n === 1 ? 120 : [200, 100, 200]); } catch(e){}
+}
+function paintT(){
+  const left = T.iv ? (T.end - Date.now()) / 1000 : 0;
+  $$('.hrp-tv').forEach(e => { e.textContent = T.iv ? fmtT(left) : '00:00'; });
+  $$('.hrp-tl').forEach(e => { e.textContent = T.iv ? T.label : 'Not running'; });
+  $$('.hrp-tb i').forEach(b => { b.style.width = (T.iv && T.total ? (100 - left / T.total * 100) : 0) + '%'; });
+}
+function tickT(){
+  const left = (T.end - Date.now()) / 1000; paintT();
+  if (T.kind === 'pitch') {
+    if (left <= 60 && !T.w60 && T.total > 90) { T.w60 = true; toast('1 minute left in your pitch', 'warn', '⏱️'); beep(1); }
+    if (left <= 10 && !T.w10) { T.w10 = true; toast('10 seconds left!', 'warn', '⏱️'); beep(1); }
+  }
+  if (left <= 0) {
+    clearInterval(T.iv); T.iv = null; beep(3); toast(T.label + ' finished', 'success', '⏰'); paintT();
+    if (T.kind === 'pitch') award('pitch'); if (T.kind === 'focus' && /^Focus/.test(T.label)) { award('focus'); addXP(20); }
+  }
+}
+function startT(sec, label, kind){ clearInterval(T.iv); Object.assign(T, { total: sec, end: Date.now() + sec * 1000, label, kind, w60: false, w10: false }); T.iv = setInterval(tickT, 250); tickT(); }
+function stopT(){ clearInterval(T.iv); T.iv = null; paintT(); }
+function timerUI(c, presets, kind, note){
+  c.innerHTML = `<div class="hrp-big hrp-tv">00:00</div><div class="hrp-muted hrp-tl" style="text-align:center">Not running</div><div class="hrp-bar hrp-tb"><i></i></div>
+  <div class="hrp-row" style="justify-content:center">${presets.map(p => `<button class="hrp-btn" data-s="${p[1]}" data-l="${esc(p[0])}">${esc(p[0])}</button>`).join('')}<button class="hrp-btn" data-x="1">■ Stop</button></div>
+  <div class="hrp-row" style="justify-content:center"><input class="hrp-in sm" style="max-width:110px;flex:0" type="number" min="1" max="180" placeholder="Minutes"><button class="hrp-btn pri" data-cu="1">Start custom</button></div>${note ? `<p class="hrp-muted">${note}</p>` : ''}`;
+  c.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.x) return stopT();
+    if (b.dataset.s) return startT(+b.dataset.s, b.dataset.l, kind);
+    if (b.dataset.cu) { const m = +$('input', c).value; if (m > 0) startT(Math.min(180, m) * 60, m + ' min ' + kind, kind); }
+  }); paintT();
+}
+
+/* ============ PLANNER ============ */
+reg('plan', 'Pitch timer', c => timerUI(c, [['3 min', 180], ['5 min', 300], ['7 min', 420]], 'pitch', 'Warns at 1 minute and 10 seconds with a beep. Keeps running if you close this panel.'));
+reg('plan', 'Focus (Pomodoro) timer', c => timerUI(c, [['Focus 25', 1500], ['Break 5', 300], ['Long break 15', 900]], 'focus', 'Finish a 25-minute focus block to earn XP and the Deep Focus badge.'));
+
+const SW = { run: false, t0: 0, acc: 0, laps: [], iv: null };
+reg('plan', 'Stopwatch with laps', c => {
+  c.innerHTML = `<div class="hrp-big" id="swv">00:00.0</div><div class="hrp-row" style="justify-content:center"><button class="hrp-btn pri" data-a="ss">Start / Pause</button><button class="hrp-btn" data-a="lap">Lap</button><button class="hrp-btn" data-a="rs">Reset</button></div><div class="hrp-out" id="swl"></div>`;
+  const fmt = ms => { const t = Math.floor(ms / 100); return pad(Math.floor(t / 600)) + ':' + pad(Math.floor(t / 10) % 60) + '.' + (t % 10); };
+  const cur = () => SW.acc + (SW.run ? Date.now() - SW.t0 : 0);
+  const paint = () => { const v = $('#swv'); if (v) v.textContent = fmt(cur()); const l = $('#swl'); if (l) l.textContent = SW.laps.map((x, i) => `Lap ${i + 1}: ${fmt(x)}`).reverse().join('\n'); };
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return;
+    if (a === 'ss') { if (SW.run) { SW.acc += Date.now() - SW.t0; SW.run = false; clearInterval(SW.iv); } else { SW.t0 = Date.now(); SW.run = true; SW.iv = setInterval(paint, 100); } }
+    else if (a === 'lap') SW.laps.push(cur()); else { SW.run = false; SW.acc = 0; SW.laps = []; clearInterval(SW.iv); }
+    paint(); });
+  if (SW.run) { clearInterval(SW.iv); SW.iv = setInterval(paint, 100); } paint();
+});
+
+let brIv = null, brMin = 0;
+reg('plan', 'Break & hydration reminders', c => {
+  c.innerHTML = `<p class="hrp-muted">Get a gentle nudge while this tab stays open — great for a 36-hour sprint.</p><div class="hrp-row"><select class="hrp-sel" style="max-width:200px"><option value="0">Off</option><option value="30">Every 30 min</option><option value="45">Every 45 min</option><option value="60">Every hour</option><option value="90">Every 90 min</option></select></div><div class="hrp-out" id="brs"></div>`;
+  const sel = $('select', c), out = $('#brs', c); sel.value = String(brMin);
+  const msgs = ['💧 Drink some water', '🧍 Stand up and stretch', '👀 Look 20 feet away for 20 seconds', '🍎 Grab a healthy snack', '🚶 Take a 5-minute walk', '😮‍💨 Take 5 slow breaths'];
+  sel.addEventListener('change', () => { clearInterval(brIv); brMin = +sel.value; out.textContent = brMin ? `Reminders every ${brMin} minutes.` : 'Reminders off.'; if (brMin) { let i = 0; brIv = setInterval(() => { toast(msgs[i++ % msgs.length], 'info', '⏰'); beep(1); }, brMin * 60000); } });
+  out.textContent = brMin ? `Reminders every ${brMin} minutes.` : 'Reminders off.';
+});
+
+const icsEsc = s => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+const icsDate = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+function makeICS(events){
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Hackathon Rivals//HR+//EN', 'CALSCALE:GREGORIAN'].concat(...events.map((e, i) => [
+    'BEGIN:VEVENT', `UID:hrp-${Date.now()}-${i}@hackathonrivals.in`, 'DTSTAMP:' + icsDate(new Date()), 'DTSTART:' + icsDate(e.start), 'DTEND:' + icsDate(e.end),
+    'SUMMARY:' + icsEsc(e.title), 'DESCRIPTION:' + icsEsc(e.desc || ''),
+    ...(e.alarm ? ['BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(e.title), 'TRIGGER:-PT' + e.alarm + 'M', 'END:VALARM'] : []), 'END:VEVENT'])).concat('END:VCALENDAR').join('\r\n');
+}
+const localInput = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+reg('plan', '36-hour sprint plan generator', c => {
+  const now = new Date(); now.setMinutes(0, 0, 0); now.setHours(now.getHours() + 1);
+  c.innerHTML = `<div class="hrp-row"><label>Start time <input type="datetime-local" class="hrp-in" value="${localInput(now)}" style="width:auto"></label><button class="hrp-btn pri" data-a="g">Generate plan</button></div><div class="hrp-out" id="plo"></div><div class="hrp-row"><button class="hrp-btn" data-a="c">Copy</button><button class="hrp-btn" data-a="t">⬇ .txt</button><button class="hrp-btn" data-a="i">⬇ Calendar (.ics)</button></div>`;
+  const out = $('#plo', c); let plan = [];
+  const PH = [[2, '💡 Ideation & lock the problem statement'], [2, '🏗️ Architecture, repo, tooling & roles'], [10, '⚙️ Build the core MVP'], [4, '🔌 Integrations & data'], [4, '😴 Sleep in shifts (keep one person awake)'],
+    [6, '✨ Features & polish'], [3, '🧪 Testing & bug bash'], [2, '🎞️ Pitch deck + demo video'], [2, '🎤 Rehearse the 3-minute pitch'], [1, '📤 Submission buffer']];
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return;
+    if (a === 'g') { const st = new Date($('input', c).value); if (isNaN(st)) { out.textContent = 'Pick a valid start time'; return; }
+      let t = st.getTime(); plan = PH.map(([h, name]) => { const s = new Date(t), e2 = new Date(t + h * 3600000); t += h * 3600000; return { start: s, end: e2, title: name }; });
+      out.textContent = plan.map(p => `${p.start.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })} → ${p.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}  ${p.title}`).join('\n'); award('planner'); addXP(10); }
+    else if (!plan.length) toast('Generate a plan first', 'warn', '⚠️');
+    else if (a === 'c') copy(out.textContent); else if (a === 't') download('36h-sprint-plan.txt', out.textContent);
+    else if (a === 'i') download('36h-sprint-plan.ics', makeICS(plan.map(p => ({ ...p, alarm: 10 }))), 'text/calendar'); });
+});
+reg('plan', 'Calendar reminder (.ics) maker', c => {
+  const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(10, 0, 0, 0);
+  c.innerHTML = `<input class="hrp-in" placeholder="Event title" value="Hackathon Rivals — register my team" aria-label="Title"><div class="hrp-row"><input type="datetime-local" class="hrp-in sm" value="${localInput(d)}" aria-label="When"><input type="number" class="hrp-in sm" value="30" min="5" style="max-width:110px;flex:0" aria-label="Minutes"> <span class="hrp-muted">minutes</span></div><textarea class="hrp-ta" style="min-height:70px" placeholder="Notes (optional)"></textarea><div class="hrp-row"><button class="hrp-btn pri">⬇ Download .ics</button></div>`;
+  $('.pri', c).addEventListener('click', () => {
+    const [t, w, m] = $$('input', c); const s = new Date(w.value); if (isNaN(s)) return toast('Pick a valid date & time', 'warn', '⚠️');
+    download('reminder.ics', makeICS([{ title: t.value || 'Reminder', desc: $('textarea', c).value, start: s, end: new Date(s.getTime() + Math.max(5, +m.value || 30) * 60000), alarm: 15 }]), 'text/calendar');
+  });
+});
+reg('plan', 'Team name generator', c => {
+  const A = ['Quantum','Neon','Rogue','Silent','Turbo','Binary','Cosmic','Agile','Phantom','Stealth','Fusion','Pixel','Rapid','Cyber','Alpha','Zen','Hyper','Solar','Atomic','Nova'];
+  const N = ['Coders','Rivals','Hackers','Wolves','Titans','Ninjas','Pilots','Builders','Falcons','Sparks','Bytes','Circuits','Rockets','Wizards','Pandas','Tigers','Forge','Guild','Squad','Syndicate'];
+  c.innerHTML = '<div class="hrp-row"><button class="hrp-btn pri">🎲 Generate 8 names</button></div><div class="hrp-out"></div>';
+  const out = $('.hrp-out', c); const gen = () => { out.textContent = Array.from({ length: 8 }, () => pick(A) + ' ' + pick(N)).join('\n'); };
+  $('.pri', c).addEventListener('click', gen); out.addEventListener('click', () => copy(out.textContent, true)); gen();
+});
+reg('plan', 'Project idea generator', c => {
+  const D = ['healthcare','agriculture','education','smart cities','clean energy','disaster response','public transport','financial inclusion','accessibility','waste management','water conservation','cyber safety'];
+  const TE = ['an AI assistant','a mobile app','an IoT sensor network','a dashboard','a chatbot on WhatsApp','a browser extension','a computer-vision tool','a blockchain ledger','an offline-first PWA','a voice interface'];
+  const AU = ['rural communities','college students','small shopkeepers','senior citizens','first responders','farmers','teachers','daily commuters','differently-abled users','city officials'];
+  c.innerHTML = '<div class="hrp-row"><button class="hrp-btn pri">🎲 New idea</button><button class="hrp-btn" data-c="1">Copy</button></div><div class="hrp-out" style="font-family:inherit;font-size:15px"></div>';
+  const out = $('.hrp-out', c); const gen = () => { out.textContent = `Build ${pick(TE)} for ${pick(AU)} in the ${pick(D)} space.`; };
+  c.addEventListener('click', e => { if (e.target.dataset.c) copy(out.textContent); else if (e.target.classList.contains('pri')) gen(); }); gen();
+});
+reg('plan', 'Elevator pitch builder', c => {
+  const saved = store.get('pitch', {});
+  c.innerHTML = ['audience:Who is it for?', 'problem:What problem do they face?', 'solution:Your solution (one line)', 'diff:What makes it different?', 'impact:Impact / result'].map(x => { const [k, l] = x.split(':'); return `<label class="hrp-muted">${l}</label><input class="hrp-in" data-k="${k}" value="${esc(saved[k] || '')}" style="margin-bottom:8px">`; }).join('') + '<div class="hrp-out" id="epo" style="font-family:inherit;font-size:14px"></div><div class="hrp-muted" id="epm"></div><div class="hrp-row"><button class="hrp-btn" data-c="1">Copy pitch</button></div>';
+  const out = $('#epo', c), meta = $('#epm', c);
+  const upd = () => { const v = {}; $$('input[data-k]', c).forEach(i => v[i.dataset.k] = i.value.trim()); store.set('pitch', v);
+    const t = `For ${v.audience || '[audience]'} who struggle with ${v.problem || '[problem]'}, we built ${v.solution || '[solution]'}. Unlike existing options, ${v.diff || '[differentiator]'}. The result: ${v.impact || '[impact]'}.`;
+    out.textContent = t; const w = t.split(/\s+/).length; meta.textContent = `${w} words · about ${Math.max(1, Math.round(w / 130 * 60))} seconds to say aloud`; };
+  c.addEventListener('input', upd); c.addEventListener('click', e => { if (e.target.dataset.c) copy(out.textContent); }); upd();
+});
+reg('plan', 'README generator', c => {
+  c.innerHTML = `<input class="hrp-in" data-k="n" placeholder="Project name" style="margin-bottom:8px"><input class="hrp-in" data-k="t" placeholder="One-line tagline" style="margin-bottom:8px"><input class="hrp-in" data-k="ps" placeholder="Problem statement ID / title" style="margin-bottom:8px"><textarea class="hrp-ta" data-k="f" style="min-height:70px" placeholder="Key features (one per line)"></textarea><input class="hrp-in" data-k="s" placeholder="Tech stack (comma separated)" style="margin:8px 0"><textarea class="hrp-ta" data-k="m" style="min-height:70px" placeholder="Team members (one per line)"></textarea><div class="hrp-row"><button class="hrp-btn pri" data-a="g">Generate</button><button class="hrp-btn" data-a="c">Copy</button><button class="hrp-btn" data-a="d">⬇ README.md</button></div><div class="hrp-out" style="max-height:220px;overflow:auto"></div>`;
+  const out = $('.hrp-out', c); const v = k => ($('[data-k="' + k + '"]', c).value || '').trim(); const lines = k => v(k).split('\n').map(x => x.trim()).filter(Boolean);
+  const build = () => `# ${v('n') || 'Project Name'}\n\n> ${v('t') || 'One-line tagline'}\n\n**Hackathon Rivals — Season 2026** · Problem statement: ${v('ps') || '—'}\n\n## Features\n${lines('f').map(x => '- ' + x).join('\n') || '- …'}\n\n## Tech stack\n${v('s').split(',').map(x => x.trim()).filter(Boolean).map(x => '- ' + x).join('\n') || '- …'}\n\n## Getting started\n\`\`\`bash\ngit clone <repo-url>\ncd ${(v('n') || 'project').toLowerCase().replace(/[^a-z0-9]+/g, '-')}\n# install dependencies and run\n\`\`\`\n\n## Team\n${lines('m').map(x => '- ' + x).join('\n') || '- …'}\n`;
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return; if (a === 'g') out.textContent = build(); else { if (!out.textContent) out.textContent = build(); if (a === 'c') copy(out.textContent); else download('README.md', out.textContent, 'text/markdown'); } });
+});
+reg('plan', 'Tech stack suggester', c => {
+  const M = { 'Web app': ['React or Vue + Tailwind', 'Node.js (Express) or FastAPI', 'PostgreSQL / Supabase', 'Vercel / Netlify + Render'], 'Mobile app': ['Flutter or React Native', 'Firebase / Supabase', 'Firestore', 'Play Store internal testing / APK'],
+    'AI / ML': ['Streamlit or React', 'FastAPI + scikit-learn / PyTorch', 'SQLite / Postgres + vector store', 'Hugging Face Spaces / Render'], 'IoT / Hardware': ['ESP32 / Arduino + sensors', 'MQTT broker + Node-RED', 'InfluxDB / Firebase', 'Grafana dashboard'],
+    'Data dashboard': ['Plotly Dash / Streamlit', 'Pandas + FastAPI', 'DuckDB / Postgres', 'Streamlit Cloud'], 'Chatbot': ['Web chat widget or Telegram/WhatsApp', 'Python + LLM API', 'Redis / Postgres for memory', 'Render / Railway'],
+    'Game / AR-VR': ['Unity or Godot / three.js', 'Photon / WebSockets', 'Firebase', 'itch.io / WebGL build'] };
+  c.innerHTML = `<select class="hrp-sel">${Object.keys(M).map(k => `<option>${k}</option>`).join('')}</select><div class="hrp-out" style="font-family:inherit"></div>`;
+  const sel = $('select', c), out = $('.hrp-out', c);
+  const upd = () => { const m = M[sel.value]; out.textContent = `Frontend: ${m[0]}\nBackend: ${m[1]}\nData: ${m[2]}\nDeploy / demo: ${m[3]}\n\nTip: pick tools your team already knows — a 36-hour sprint is no time to learn a new framework.`; };
+  sel.addEventListener('change', upd); upd();
+});
+reg('plan', 'Track suggester (by your skills)', c => {
+  const SK = { 'Frontend / UI': ['dashboard', 'accessibility', 'citizen'], 'Backend / APIs': ['portal', 'platform', 'data'], 'AI / ML': ['prediction', 'detection', 'AI'], 'Embedded / IoT': ['sensor', 'monitoring', 'device'], 'Data & analytics': ['analytics', 'data', 'dashboard'], 'Design / UX': ['citizen', 'accessibility', 'app'], 'Domain: health': ['health', 'medical'], 'Domain: agriculture': ['agri', 'farm', 'crop'], 'Domain: education': ['education', 'learning', 'student'] };
+  c.innerHTML = '<div class="hrp-grid">' + Object.keys(SK).map(k => `<label class="hrp-card" style="cursor:pointer"><input type="checkbox" value="${esc(k)}"> ${esc(k)}</label>`).join('') + '</div><div class="hrp-row"><button class="hrp-btn pri">Find matching problem statements</button></div><div class="hrp-muted" id="tsr"></div>';
+  $('.pri', c).addEventListener('click', () => {
+    const kw = new Set(); $$('input:checked', c).forEach(i => SK[i.value].forEach(k => kw.add(k)));
+    if (!kw.size) return toast('Tick at least one skill', 'warn', '⚠️');
+    const first = [...kw][0]; hubEl.classList.remove('open'); const s = $('#hrpPsSearch'); const pr = $('#problems');
+    if (s) { s.value = first; s.dispatchEvent(new Event('input', { bubbles: true })); } if (pr) pr.scrollIntoView({ behavior: 'smooth' }); toast('Searching problem statements for "' + first + '"', 'info', '🔍');
+  });
+});
+reg('plan', 'Eligibility quick-check', c => {
+  c.innerHTML = `<label class="hrp-check"><input type="checkbox" data-q="enrolled"><span>I am currently enrolled at a college / university</span></label><label class="hrp-check"><input type="checkbox" data-q="india"><span>My college is in India</span></label><div class="hrp-row"><label>Team size <input type="number" class="hrp-in sm" min="1" max="20" value="4" style="max-width:90px;flex:0"></label></div><div class="hrp-row"><button class="hrp-btn pri">Check</button></div><div class="hrp-out" style="font-family:inherit"></div><p class="hrp-muted">Based only on the rules shown on this page (solo or team of 1–6, open to all colleges). The registration form is the final word.</p>`;
+  $('.pri', c).addEventListener('click', () => {
+    const q = k => $(`[data-q="${k}"]`, c).checked; const n = +$('input[type=number]', c).value; const notes = [];
+    if (!q('enrolled')) notes.push('❌ You need to be a currently enrolled student.'); if (!q('india')) notes.push('⚠️ The event is described as India\'s national hackathon — confirm with the organisers if your college is outside India.');
+    if (n < 1 || n > 6) notes.push('❌ Team size must be between 1 and 6.');
+    $('.hrp-out', c).textContent = notes.length ? notes.join('\n') : '✅ You look eligible based on the details on this page. Head to Register!';
+  });
+});
+
+/* ============ LISTS ============ */
+function ticks(){ return store.get('ticks', 0); }
+function checklist(c, key, base){
+  const st = store.get('cl:' + key, { done: {}, extra: [] });
+  const items = base.concat(st.extra);
+  c.innerHTML = `<div class="hrp-bar"><i></i></div><div class="hrp-muted" id="clp"></div><div id="cll"></div><div class="hrp-row"><input class="hrp-in sm" placeholder="Add your own item…" aria-label="New item"><button class="hrp-btn" data-a="add">Add</button><button class="hrp-btn" data-a="rs">Reset</button></div>`;
+  const list = $('#cll', c);
+  function draw(){
+    list.innerHTML = items.map((t, i) => `<label class="hrp-check${st.done[i] ? ' done' : ''}"><input type="checkbox" data-i="${i}" ${st.done[i] ? 'checked' : ''}><span>${esc(t)}</span></label>`).join('');
+    const n = items.filter((_, i) => st.done[i]).length; $('.hrp-bar i', c).style.width = (items.length ? n / items.length * 100 : 0) + '%'; $('#clp', c).textContent = `${n} of ${items.length} done`;
+  }
+  c.addEventListener('change', e => { const i = e.target.dataset.i; if (i == null) return; st.done[i] = e.target.checked; store.set('cl:' + key, st);
+    if (e.target.checked) { store.set('ticks', ticks() + 1); addXP(2); if (ticks() >= 5) award('check5'); } draw(); });
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (a === 'add') { const inp = $('input.hrp-in', c); if (inp.value.trim()) { st.extra.push(inp.value.trim().slice(0, 120)); items.push(inp.value.trim().slice(0, 120)); inp.value = ''; store.set('cl:' + key, st); draw(); } }
+    else if (a === 'rs') { st.done = {}; st.extra = []; store.set('cl:' + key, st); renderHub(); } });
+  draw();
+}
+reg('lists', 'Submission checklist', c => checklist(c, 'sub', ['Problem statement chosen and understood', 'Working prototype or demo ready', 'Source code pushed to the repo', 'README with setup steps', 'Demo video recorded (under 3 minutes)', 'Pitch deck finalised', 'Team member details verified', 'Screenshots added', 'Deployed link tested on a phone', 'Submission form filled before the deadline']));
+reg('lists', 'Preparation checklist', c => checklist(c, 'prep', ['Team formed (1–6 members)', 'Registered on the portal', 'Problem statement shortlisted', 'Roles assigned', 'Laptops, chargers & extension board packed', 'College ID and documents ready', 'Dev environment set up', 'Git repo created and shared', 'Rough UI wireframes drawn', 'Backup internet / hotspot arranged', 'Sleep well before the finale']));
+reg('lists', 'Notes scratchpad', c => {
+  c.innerHTML = `<textarea class="hrp-ta" style="min-height:220px;font-family:inherit" placeholder="Ideas, links, todos… saved automatically on this device" aria-label="Notes"></textarea><div class="hrp-count" id="nc"></div><div class="hrp-row"><button class="hrp-btn" data-a="c">Copy</button><button class="hrp-btn" data-a="d">⬇ .txt</button><button class="hrp-btn" data-a="x">Clear</button></div>`;
+  const ta = $('textarea', c), nc = $('#nc', c); ta.value = store.get('notes', ''); let tm;
+  const cnt = () => { nc.textContent = `${(ta.value.trim().match(/\S+/g) || []).length} words · ${ta.value.length} chars · autosaved`; }; cnt();
+  ta.addEventListener('input', () => { cnt(); clearTimeout(tm); tm = setTimeout(() => { store.set('notes', ta.value); if (ta.value.trim().length > 10) award('notes'); }, 400); });
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (a === 'c') copy(ta.value); else if (a === 'd') download('hackathon-notes.txt', ta.value); else if (a === 'x' && confirm('Clear all notes?')) { ta.value = ''; store.set('notes', ''); cnt(); } });
+});
+reg('lists', 'Team to-do list', c => {
+  let list = store.get('todo', []);
+  c.innerHTML = `<div class="hrp-row"><input class="hrp-in sm" placeholder="Add a task and press Enter" aria-label="Task"><button class="hrp-btn pri" data-a="add">Add</button></div><div id="tdl"></div><div class="hrp-row"><button class="hrp-btn" data-a="clr">Clear completed</button></div>`;
+  const box = $('#tdl', c), inp = $('input', c);
+  const draw = () => { box.innerHTML = list.map((t, i) => `<div class="hrp-check${t.d ? ' done' : ''}"><input type="checkbox" data-i="${i}" ${t.d ? 'checked' : ''}><span style="flex:1">${esc(t.t)}</span><button class="hrp-x" data-del="${i}" aria-label="Delete">✕</button></div>`).join('') || '<p class="hrp-muted">No tasks yet.</p>'; store.set('todo', list); };
+  const add = () => { const v = inp.value.trim(); if (v) { list.unshift({ t: v.slice(0, 140), d: false }); inp.value = ''; draw(); } };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+  c.addEventListener('click', e => { const a = e.target.dataset.a, d = e.target.dataset.del; if (a === 'add') add(); else if (a === 'clr') { list = list.filter(t => !t.d); draw(); } else if (d != null) { list.splice(+d, 1); draw(); } });
+  c.addEventListener('change', e => { const i = e.target.dataset.i; if (i != null) { list[+i].d = e.target.checked; draw(); } });
+  draw();
+});
+reg('lists', 'My starred problem statements', c => {
+  let ids = []; try { ids = JSON.parse(localStorage.getItem('hr-stars') || '[]'); } catch(e){}
+  c.innerHTML = `<p>${ids.length ? `You have <b>${ids.length}</b> starred problem statement${ids.length > 1 ? 's' : ''}:` : 'No starred problem statements yet. Tap ☆ on any problem statement to bookmark it.'}</p><div class="hrp-out">${esc(ids.join('\n'))}</div><div class="hrp-row"><button class="hrp-btn pri" data-a="show">Show them</button><button class="hrp-btn" data-a="c">Copy IDs</button></div>`;
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (a === 'c') copy(ids.join(', ')); else if (a === 'show') { hubEl.classList.remove('open'); const b = $('#problems [data-filter="starred"]'); if (b) b.click(); const p = $('#problems'); if (p) p.scrollIntoView({ behavior: 'smooth' }); } });
+});
+
+/* ============ TABS ============ */
+const TIPS = ['Read the whole problem statement twice before writing code.', 'Pick one core feature and make it flawless — judges remember a great demo.', 'Commit and push every hour. Future-you will say thanks.', 'Record your demo video early; last-minute recording always goes wrong.', 'Assign roles: builder, designer, presenter, tester.', 'Test on a real phone, not just the desktop browser.', 'Keep a fallback demo (video or screenshots) in case the Wi-Fi fails.', 'Write the README while the project is fresh.', 'Sleep in shifts — a rested teammate writes fewer bugs.', 'Use environment variables; never push secret keys to Git.', 'Practise your pitch out loud with a timer.', 'Show the problem first, then the solution, then the impact.', 'Use free tiers (Supabase, Vercel, Render) to deploy quickly.', 'Keep the UI simple; clarity beats decoration.', 'Prepare answers for "How does it scale?" and "Who are your users?".', 'Ask mentors early; ten minutes of advice can save five hours.', 'Add one number to your pitch: users reached, time saved or cost cut.', 'Have a backup plan for your riskiest integration.', 'Name your team something memorable and easy to pronounce.', 'Celebrate small wins — a working login page counts!'];
+const QUOTES = ['Ship a small thing that works before a big thing that doesn\'t.', 'A demo that runs beats a slide that promises.', 'Read the problem twice, code once.', 'Sleep is a feature. Schedule it.', 'Cut scope, not corners.', 'Talk to a user before you write a line.', 'Commit early, commit often, push before you sleep.', 'Good teams argue about ideas and agree about deadlines.', 'The best pitch is one problem, one solution, one demo.', 'Make it work, make it right, make it fast — in that order.', 'Done is a milestone; polished is a habit.', 'Small teams win by focus, not by size.'];
+const doy = () => Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+TABS.push(['home', '🏠 Home', c => {
+  const h = new Date().getHours(); const g = h < 5 ? 'Still up? Good night owl' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Good night';
+  const now = new Date(); const ist = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+  const lv = level(), nextXP = 25 * lv * lv, prevXP = 25 * (lv - 1) * (lv - 1); const prog = Math.min(100, (G.xp - prevXP) / (nextXP - prevXP) * 100);
+  const rec = store.get('recent', []); const notif = store.get('notif', []);
+  c.innerHTML = `<h3 style="font-size:20px">${g} 👋</h3><p class="hrp-muted">Local time ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · India (IST) ${ist}</p>
+  <div class="hrp-grid" style="margin:12px 0"><div class="hrp-card"><b>Level ${lv}</b>${G.xp} XP<div class="hrp-bar"><i style="width:${prog}%"></i></div></div><div class="hrp-card"><b>🔥 ${streak()}-day streak</b>${G.days.length} days visited</div><div class="hrp-card"><b>🏅 ${Object.keys(G.badges).length}/${Object.keys(BADGES).length} badges</b>Earn more in Badges</div></div>
+  <div class="hrp-h">💡 Tip of the day</div><div class="hrp-card">${esc(TIPS[doy() % TIPS.length])}</div>
+  <div class="hrp-h">💬 Hacker wisdom</div><div class="hrp-card" id="hq">${esc(QUOTES[doy() % QUOTES.length])}</div><div class="hrp-row"><button class="hrp-btn" data-a="q">Another one</button></div>
+  <div class="hrp-h">🕘 Recently viewed problem statements</div>${rec.length ? rec.map(r => `<div class="hrp-pi" data-ps="${esc(r.id)}"><span>${esc(r.id)} — ${esc(r.title)}</span></div>`).join('') : '<p class="hrp-muted">Nothing yet — open a problem statement to see it here.</p>'}
+  <div class="hrp-h">🔔 Recent notifications</div>${notif.length ? notif.slice(0, 6).map(n => `<div class="hrp-muted" style="padding:3px 0">${new Date(n.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${esc(n.m)}</div>`).join('') + '<div class="hrp-row"><button class="hrp-btn" data-a="cn">Clear</button></div>' : '<p class="hrp-muted">All quiet.</p>'}`;
+  c.addEventListener('click', e => {
+    const a = e.target.dataset.a; if (a === 'q') { $('#hq', c).textContent = pick(QUOTES); }
+    else if (a === 'cn') { store.set('notif', []); renderHub(); }
+    const p = e.target.closest('[data-ps]'); if (p) { hubEl.classList.remove('open'); const pr = $('#problems'); if (pr) pr.scrollIntoView({ behavior: 'smooth' }); setTimeout(() => { const r = $('.ps-row[data-id="' + CSS.escape(p.dataset.ps) + '"]'); if (r) r.click(); }, 500); }
+  });
+}]);
+feat('Home tab: greeting, IST clock, level, streak', () => {});
+feat('Tip of the day (20 rotating tips)', () => {});
+feat('Hacker-wisdom quote generator', () => {});
+feat('Recently viewed problem statements', () => {});
+feat('Notification centre with unread dot', () => {});
+TABS.push(['tools', '🛠️ Tools', c => multi(c, TOOLS, 'toolSel')]);
+TABS.push(['cheats', '📚 Cheats', c => multi(c, CHEATS, 'cheatSel')]);
+TABS.push(['plan', '🗓️ Plan', c => multi(c, PLAN, 'planSel')]);
+TABS.push(['lists', '✅ Lists', c => multi(c, LISTS, 'listSel')]);
+TABS.push(['badges', '🏅 Badges', c => {
+  const lv = level(); const nextXP = 25 * lv * lv, prevXP = 25 * (lv - 1) * (lv - 1);
+  c.innerHTML = `<div class="hrp-card"><b>Level ${lv} · ${G.xp} XP</b><div class="hrp-bar"><i style="width:${Math.min(100, (G.xp - prevXP) / (nextXP - prevXP) * 100)}%"></i></div><span class="hrp-muted">${nextXP - G.xp} XP to level ${lv + 1} · 🔥 ${streak()}-day streak</span></div><div class="hrp-h">Badges</div><div class="hrp-grid">${Object.entries(BADGES).map(([id, b]) => `<div class="hrp-badge${G.badges[id] ? ' got' : ''}"><span class="ic">${b[0]}</span><div><b>${esc(b[1])}</b><div class="hrp-muted">${esc(b[2])}</div></div></div>`).join('')}</div><div class="hrp-row"><button class="hrp-btn" data-a="rs">Reset progress</button></div>`;
+  c.addEventListener('click', e => { if (e.target.dataset.a === 'rs' && confirm('Reset XP, badges and streak?')) { ['xp', 'badges', 'used', 'days', 'ticks'].forEach(k => store.del(k)); location.reload(); } });
+}]);
+feat('XP, levels & progress bar', () => {});
+feat('Visit streak counter', () => {});
+feat('16 unlockable badges', () => {});
+
+/* ---------- Share tab ---------- */
+feat('Share panel (WhatsApp, LinkedIn, X, Telegram, email, Web Share)', () => {
+  let code = store.get('refcode', null); if (!code) { code = Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(36)).join('').slice(0, 6).toUpperCase(); store.set('refcode', code); }
+  TABS.push(['share', '📣 Share', c => {
+    const url = location.origin + location.pathname + '?ref=' + code; const inRef = store.get('ref_in', null);
+    const msg = 'Join me at Hackathon Rivals 2026 — India\'s national hackathon arena for student innovators. Free registration!';
+    c.innerHTML = `<label class="hrp-muted">Your message</label><textarea class="hrp-ta" style="min-height:70px;font-family:inherit">${esc(msg)}</textarea><label class="hrp-muted">Your personal link</label><input class="hrp-in" readonly value="${esc(url)}">
+    <div class="hrp-row">${navigator.share ? '<button class="hrp-btn pri" data-a="ws">📲 Share…</button>' : ''}<button class="hrp-btn" data-a="cp">📋 Copy link</button><button class="hrp-btn" data-a="wa">WhatsApp</button><button class="hrp-btn" data-a="li">LinkedIn</button><button class="hrp-btn" data-a="x">X</button><button class="hrp-btn" data-a="tg">Telegram</button><button class="hrp-btn" data-a="em">Email</button></div>${inRef ? `<p class="hrp-muted">You arrived through referral code <b>${esc(inRef)}</b>.</p>` : ''}`;
+    c.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return; const m = $('textarea', c).value; const eu = encodeURIComponent(url), em2 = encodeURIComponent(m);
+      const open = u => window.open(u, '_blank', 'noopener,noreferrer');
+      if (a === 'ws') navigator.share({ title: 'Hackathon Rivals', text: m, url }).catch(() => {}); else if (a === 'cp') copy(url);
+      else if (a === 'wa') open('https://wa.me/?text=' + encodeURIComponent(m + ' ' + url)); else if (a === 'li') open('https://www.linkedin.com/sharing/share-offsite/?url=' + eu);
+      else if (a === 'x') open('https://twitter.com/intent/tweet?text=' + em2 + '&url=' + eu); else if (a === 'tg') open('https://t.me/share/url?url=' + eu + '&text=' + em2);
+      else if (a === 'em') location.href = 'mailto:?subject=' + encodeURIComponent('Hackathon Rivals 2026') + '&body=' + encodeURIComponent(m + '\n\n' + url);
+      award('share'); addXP(5); });
+  }]);
+  const ref = new URLSearchParams(location.search).get('ref'); if (ref && /^[A-Za-z0-9]{3,12}$/.test(ref)) store.set('ref_in', ref);
+});
+feat('Personal referral link (?ref=) + inbound referral capture', () => {});
+
+/* ---------- Settings tab ---------- */
+TABS.push(['settings', '⚙️ Settings', c => {
+  const sw = ['#7c5cff', '#22d3ee', '#ff4d9d', '#3ddc84', '#ff9f43'];
+  c.innerHTML = `<div class="hrp-h">Display & accessibility</div>
+  <div class="hrp-row"><label>Text size <input type="range" min="85" max="130" step="5" value="${Math.round(S.fs * 100)}" data-k="fs"></label><span class="hrp-muted">${Math.round(S.fs * 100)}%</span></div>
+  ${[['contrast', 'High-contrast mode'], ['dys', 'Dyslexia-friendly text'], ['motion', 'Reduce motion & animations'], ['links', 'Underline all links']].map(([k, l]) => `<label class="hrp-check"><input type="checkbox" data-t="${k}" ${S[k] ? 'checked' : ''}><span>${l}</span></label>`).join('')}
+  <div class="hrp-h">Accent colour</div><div class="hrp-row">${sw.map(x => `<div class="hrp-swatch" role="button" tabindex="0" data-c="${x}" style="background:${x};${S.accent === x ? 'outline:2px solid var(--text)' : ''}" aria-label="Accent ${x}"></div>`).join('')}</div>
+  <div class="hrp-h">Theme & language</div><div class="hrp-row"><button class="hrp-btn" data-a="sys">🖥️ Match system theme</button><button class="hrp-btn" data-a="lang">${S.hi ? 'Switch to English' : 'हिंदी में देखें'}</button></div>
+  <div class="hrp-h">Your data (stored only on this device)</div><div class="hrp-muted" id="stu"></div><div class="hrp-row"><button class="hrp-btn" data-a="ex">⬇ Export</button><label class="hrp-btn" style="cursor:pointer">⬆ Import<input type="file" accept="application/json" hidden id="impF"></label><button class="hrp-btn" data-a="rst">🗑 Reset HR+ data</button></div>`;
+  let bytes = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); bytes += k.length + (localStorage.getItem(k) || '').length; } } catch(e){}
+  $('#stu', c).textContent = `Using about ${(bytes * 2 / 1024).toFixed(1)} KB of local storage.`;
+  c.addEventListener('input', e => { if (e.target.dataset.k === 'fs') { S.fs = +e.target.value / 100; saveS(); applySettings(); e.target.closest('.hrp-row').lastElementChild.textContent = e.target.value + '%'; } });
+  c.addEventListener('change', e => {
+    const t = e.target.dataset.t; if (t) { S[t] = e.target.checked; saveS(); applySettings(); }
+    if (e.target.id === 'impF' && e.target.files[0]) { const r = new FileReader(); r.onload = () => { try { const o = JSON.parse(r.result); let n = 0; Object.keys(o).forEach(k => { if (/^(hrp:|hr-)/.test(k) && typeof o[k] === 'string') { localStorage.setItem(k, o[k]); n++; } }); toast('Imported ' + n + ' items — reloading', 'success', '⬆'); setTimeout(() => location.reload(), 800); } catch(err){ toast('Not a valid export file', 'warn', '⚠️'); } }; r.readAsText(e.target.files[0]); }
+  });
+  c.addEventListener('click', e => {
+    const sw2 = e.target.closest('[data-c]'); if (sw2) { S.accent = sw2.dataset.c; saveS(); applySettings(); award('theme'); renderHub(); return; }
+    const a = e.target.dataset.a; if (!a) return;
+    if (a === 'sys') { const th = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', th); try { localStorage.setItem('hr-theme', th); } catch(_){} const tb = $('#themeToggle'); if (tb) tb.textContent = th === 'dark' ? '🌙' : '☀️'; toast('Theme set to ' + th, 'info', '🖥️'); }
+    else if (a === 'lang') { const l = $$('.govt-bar .right a').find(x => /हिंदी|English/.test(x.textContent)); if (l) l.click(); renderHub(); }
+    else if (a === 'ex') { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^(hrp:|hr-)/.test(k)) o[k] = localStorage.getItem(k); } download('hackathon-rivals-data.json', JSON.stringify(o, null, 2), 'application/json'); }
+    else if (a === 'rst' && confirm('Delete all HR+ data (notes, checklists, badges, settings)?')) { Object.keys(localStorage).filter(k => k.startsWith('hrp:')).forEach(k => localStorage.removeItem(k)); location.reload(); }
+  });
+}]);
+feat('Settings: text size, contrast, dyslexia, motion, links, accent', () => {});
+feat('Match-system-theme button', () => {});
+feat('Export / import / reset your HR+ data', () => {});
+feat('Local-storage usage meter', () => {});
+
+/* ---------- Help tab ---------- */
+TABS.push(['help', '❔ Help', c => {
+  const SH = [['Ctrl/⌘ + K  or  /', 'Command palette'], ['?', 'This help'], ['t', 'Toggle theme'], ['g then h/t/p/l/a/r/b/c/f', 'Jump to a section'], ['u', 'Scroll to top'], ['Esc', 'Close any panel'], ['Ctrl + Enter', 'Run code in Code Lab'], ['↑↑↓↓←→←→ B A', '🎮 ?']];
+  c.innerHTML = `<div class="hrp-h">Keyboard shortcuts</div>${table(SH)}
+  <div class="hrp-h">Send feedback to the team</div><select class="hrp-sel" id="fbr" style="max-width:140px"><option>5 ★</option><option>4 ★</option><option>3 ★</option><option>2 ★</option><option>1 ★</option></select><textarea class="hrp-ta" id="fbm" style="min-height:80px;font-family:inherit;margin-top:8px" placeholder="What can we improve?" maxlength="1000"></textarea><div class="hrp-row"><button class="hrp-btn pri" data-a="fb">Send feedback</button><a class="hrp-btn" data-a="bug" href="#">🐞 Report a bug (email)</a><button class="hrp-btn" data-a="dg">Copy diagnostics</button></div>
+  <div class="hrp-h">What's inside HR+ (${F.length} features)</div><details><summary class="hrp-muted" style="cursor:pointer">Show the full list</summary><ol class="hrp-muted" style="padding-left:20px;line-height:1.7">${F.map(x => `<li>${esc(x)}</li>`).join('')}</ol></details>`;
+  const diag = () => `URL: ${location.href}\nUA: ${navigator.userAgent}\nViewport: ${innerWidth}x${innerHeight} @${devicePixelRatio}x\nLang: ${navigator.language}\nTZ: ${Intl.DateTimeFormat().resolvedOptions().timeZone}\nOnline: ${navigator.onLine}\nTheme: ${document.documentElement.getAttribute('data-theme')}`;
+  c.addEventListener('click', async e => {
+    const a = e.target.dataset.a; if (!a) return;
+    if (a === 'dg') copy(diag()); else if (a === 'bug') { e.preventDefault(); location.href = 'mailto:tech@hackathonrivals.in?subject=' + encodeURIComponent('Bug report — Hackathon Rivals') + '&body=' + encodeURIComponent('What happened?\n\n\n---\n' + diag()); }
+    else if (a === 'fb') { const m = $('#fbm', c).value.trim(); if (m.length < 5) return toast('Please write a little more', 'warn', '⚠️'); const last = store.get('fbAt', 0); if (Date.now() - last < 60000) return toast('Please wait a minute before sending again', 'warn', '⏳');
+      try { const r = await fetch('https://formspree.io/f/mppwlbwq', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ _subject: 'Site feedback (HR+)', rating: $('#fbr', c).value, message: m, page: location.href }) });
+        if (!r.ok) throw new Error('bad'); store.set('fbAt', Date.now()); $('#fbm', c).value = ''; toast('Thanks for the feedback!', 'success', '💜'); addXP(5); } catch(err){ toast('Could not send — please try again later', 'warn', '⚠️'); } }
+  });
+}]);
+feat('Keyboard-shortcut help sheet', () => {});
+feat('In-app feedback form with rate limit', () => {});
+feat('Bug-report email with auto diagnostics', () => {});
+feat('Copy diagnostics for support', () => {});
+feat('Live feature list', () => {});
+
+/* ============ PAGE ENHANCERS ============ */
+feat('Problem statements: live search + result counter', () => {
+  const f = $('#problems .filters'), list = $('#psList'); if (!f || !list) return;
+  const bar = el('div', { class: 'hrp-tools' }, '<input id="hrpPsSearch" class="hrp-in" style="max-width:280px" placeholder="🔍 Search problem statements…" aria-label="Search problem statements"><button class="hrp-mini" data-a="rand" type="button">🎲 Random</button><button class="hrp-mini" data-a="az" type="button">A→Z</button><button class="hrp-mini" data-a="csv" type="button">⬇ CSV</button><button class="hrp-mini" data-a="copy" type="button">📋 Copy list</button><span class="hrp-muted" id="hrpPsCount"></span>');
+  f.insertAdjacentElement('afterend', bar);
+  const inp = $('#hrpPsSearch');
+  const rows = () => $$('.ps-row', list), visible = () => rows().filter(r => r.style.display !== 'none');
+  const apply = () => { const q = inp.value.trim().toLowerCase(); rows().forEach(r => { r.style.display = q && !r.textContent.toLowerCase().includes(q) ? 'none' : ''; }); const v = visible().length; $('#hrpPsCount').textContent = rows().length ? `${v} of ${rows().length} shown` : ''; };
+  inp.addEventListener('input', apply); new MutationObserver(apply).observe(list, { childList: true }); apply();
+  const data = () => visible().map(r => [$('.ps-id', r).textContent.trim(), $('.ps-title', r).textContent.trim(), $('.ps-meta', r).textContent.trim(), $('.ps-theme', r).textContent.trim()]);
+  window.__hrpRandomPS = () => { const v = visible(); if (!v.length) return toast('No problem statements to pick from', 'warn', '⚠️'); const r = pick(v); r.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => r.click(), 450); toast('Random pick: ' + $('.ps-title', r).textContent.trim(), 'info', '🎲'); };
+  bar.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return;
+    if (a === 'rand') window.__hrpRandomPS();
+    else if (a === 'az') { const s = rows().sort((x, y) => $('.ps-title', x).textContent.localeCompare($('.ps-title', y).textContent)); s.forEach(r => list.appendChild(r)); }
+    else if (a === 'csv') download('problem-statements.csv', toCSV([['ID', 'Title', 'Ministry · Theme', 'Category']].concat(data())), 'text/csv');
+    else if (a === 'copy') copy(data().map(d => `${d[0]} — ${d[1]} (${d[2]})`).join('\n')); });
+});
+feat('Problem statements: random pick', () => {});
+feat('Problem statements: sort A→Z', () => {});
+feat('Problem statements: export CSV', () => {});
+feat('Problem statements: copy visible list', () => {});
+feat('Track recently viewed problem statements + bookmark badge', () => {
+  document.addEventListener('click', e => {
+    const star = e.target.closest('.ps-star'); if (star) { setTimeout(() => { if (star.classList.contains('active')) award('star'); }, 80); return; }
+    const row = e.target.closest('.ps-row'); if (!row) return;
+    const id = row.dataset.id, title = ($('.ps-title', row) || {}).textContent || ''; let rec = store.get('recent', []).filter(r => r.id !== id); rec.unshift({ id, title: title.trim() }); store.set('recent', rec.slice(0, 8)); addXP(1);
+  });
+});
+
+feat('FAQ: live search', () => {
+  const g = $('#faq .faq-grid'); if (!g) return;
+  const bar = el('div', { class: 'hrp-tools' }, '<input class="hrp-in" style="max-width:280px" placeholder="🔍 Search FAQs…" aria-label="Search FAQs"><button class="hrp-mini" data-a="open" type="button">Expand all</button><button class="hrp-mini" data-a="close" type="button">Collapse all</button><span class="hrp-muted" id="hrpFaqCount"></span>');
+  g.insertAdjacentElement('beforebegin', bar);
+  const items = $$('.faq-item', g); const inp = $('input', bar);
+  inp.addEventListener('input', () => { const q = inp.value.trim().toLowerCase(); let n = 0; items.forEach(i => { const h = q && !i.textContent.toLowerCase().includes(q); i.style.display = h ? 'none' : ''; if (!h) n++; }); $('#hrpFaqCount').textContent = q ? n + ' match' + (n === 1 ? '' : 'es') : ''; });
+  bar.addEventListener('click', e => { const a = e.target.dataset.a; if (a) items.forEach(i => i.classList.toggle('open', a === 'open' && i.style.display !== 'none')); });
+});
+feat('FAQ: expand / collapse all', () => {});
+feat('FAQ: "Was this helpful?" votes', () => {
+  const votes = store.get('faqv', {});
+  $$('#faq .faq-item').forEach((it, idx) => { const inner = $('.faq-a-inner', it); if (!inner) return;
+    const b = el('div', { class: 'hrp-muted', style: 'margin-top:8px' }, 'Helpful? <button class="hrp-mini" data-v="up" type="button">👍</button> <button class="hrp-mini" data-v="down" type="button">👎</button> <span></span>');
+    const mark = () => { $('span', b).textContent = votes[idx] ? (votes[idx] === 'up' ? 'Thanks!' : 'Thanks — tell us more via Contact') : ''; }; mark();
+    b.addEventListener('click', e => { const v = e.target.dataset.v; if (v) { votes[idx] = v; store.set('faqv', votes); mark(); } }); inner.appendChild(b); });
+});
+feat('FAQ opens earn the "Curious Mind" badge', () => {
+  const seen = new Set(store.get('faqSeen', []));
+  $$('#faq .faq-q').forEach((q, i) => q.addEventListener('click', () => { seen.add(i); store.set('faqSeen', [...seen]); if (seen.size >= 3) award('faq3'); }));
+});
+
+feat('Leaderboard: search, CSV export, copy top 3', () => {
+  const rows = $('#boardRows'); if (!rows) return;
+  const bar = el('div', { class: 'hrp-tools' }, '<input class="hrp-in" style="max-width:240px" placeholder="🔍 Find a team…" aria-label="Search leaderboard"><button class="hrp-mini" data-a="csv" type="button">⬇ CSV</button><button class="hrp-mini" data-a="top" type="button">📋 Copy top 3</button><span class="hrp-muted" id="hrpLbTime"></span>');
+  rows.insertAdjacentElement('beforebegin', bar); const inp = $('input', bar);
+  const data = () => $$('.row', rows).map(r => { const d = $('.team > div', r); return [($('.rank', r) || {}).textContent, d && d.firstChild ? d.firstChild.textContent.trim() : '', ($('.team small', r) || {}).textContent || '', ($('.pts', r) || {}).textContent]; });
+  const apply = () => { const q = inp.value.trim().toLowerCase(); $$('.row', rows).forEach(r => { r.style.display = q && !r.textContent.toLowerCase().includes(q) ? 'none' : ''; }); };
+  inp.addEventListener('input', apply);
+  new MutationObserver(() => { apply(); $('#hrpLbTime').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }).observe(rows, { childList: true });
+  bar.addEventListener('click', e => { const a = e.target.dataset.a; if (a === 'csv') download('leaderboard.csv', toCSV([['Rank', 'Name', 'Email', 'Points']].concat(data())), 'text/csv'); else if (a === 'top') copy('🏆 Hackathon Rivals leaderboard\n' + data().slice(0, 3).map(d => `${d[0]} ${d[1]} — ${d[3]}`).join('\n')); });
+});
+feat('Leaderboard: "last updated" timestamp', () => {});
+
+/* ---------- forms ---------- */
+const TYPOS = { 'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gnail.com': 'gmail.com', 'gmail.co': 'gmail.com', 'gmail.con': 'gmail.com', 'hotmial.com': 'hotmail.com', 'hotmal.com': 'hotmail.com', 'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahoo.con': 'yahoo.com', 'outlok.com': 'outlook.com', 'outlook.co': 'outlook.com', 'iclod.com': 'icloud.com', 'icloud.co': 'icloud.com' };
+feat('Email typo suggestions (gmial.com → gmail.com)', () => {
+  ['#qEmail', '#newsletterEmail', '#loginEmail'].forEach(sel => { const i = $(sel); if (!i) return;
+    const hint = el('div', { class: 'hrp-warn', style: 'display:none;cursor:pointer' }); (i.closest('.input-wrap') || i).insertAdjacentElement('afterend', hint);
+    i.addEventListener('blur', () => { const v = i.value.trim(); const at = v.lastIndexOf('@'); if (at < 1) { hint.style.display = 'none'; return; } const dom = v.slice(at + 1).toLowerCase(); const fix = TYPOS[dom];
+      if (fix) { hint.textContent = `Did you mean ${v.slice(0, at)}@${fix}? (tap to fix)`; hint.style.display = 'block'; hint.onclick = () => { i.value = v.slice(0, at) + '@' + fix; hint.style.display = 'none'; i.dispatchEvent(new Event('input', { bubbles: true })); }; } else hint.style.display = 'none'; }); });
+});
+feat('Trim spaces & lowercase emails on blur', () => {
+  ['#qName', '#qOrg', '#qSubject', '#qEmail', '#newsletterEmail', '#loginEmail'].forEach(sel => { const i = $(sel); if (!i) return; i.addEventListener('blur', () => { let v = i.value.trim().replace(/\s{2,}/g, ' '); if (/mail/i.test(i.id)) v = v.toLowerCase(); if (v !== i.value) { i.value = v; i.dispatchEvent(new Event('input', { bubbles: true })); } }); });
+});
+feat('Name auto-capitalisation (contact form)', () => {
+  const i = $('#qName'); if (!i) return; i.addEventListener('blur', () => { const v = i.value; if (v && (v === v.toLowerCase() || v === v.toUpperCase())) i.value = v.toLowerCase().replace(/(^|\s)\S/g, m => m.toUpperCase()); });
+});
+feat('Phone field: strips letters, caps length', () => {
+  const i = $('#qPhone'); if (!i) return; i.setAttribute('inputmode', 'tel'); i.addEventListener('input', () => { const v = i.value.replace(/[^\d+\s-]/g, '').slice(0, 15); if (v !== i.value) i.value = v; });
+});
+feat('Message character counter', () => {
+  const m = $('#qMessage'); if (!m) return; const c = el('div', { class: 'hrp-count' }); m.insertAdjacentElement('afterend', c);
+  const u = () => { const max = m.maxLength > 0 ? m.maxLength : 0; c.textContent = m.value.length + (max ? ' / ' + max : ' characters'); }; m.addEventListener('input', u); u();
+});
+feat('Contact form draft autosave', () => {
+  const ids = ['#qName', '#qEmail', '#qPhone', '#qOrg', '#qSubject', '#qMessage']; const d = store.get('draft', {});
+  ids.forEach(sel => { const i = $(sel); if (!i) return; if (d[sel] && !i.value) i.value = d[sel]; i.addEventListener('input', () => { d[sel] = i.value; store.set('draft', d); }); });
+  const b = $('#qSubmit'); if (b) b.addEventListener('click', () => setTimeout(() => { const m = $('#qMessage'); if (m && m.value === '') store.del('draft'); }, 3000));
+});
+feat('Password strength meter (login / sign-up)', () => {
+  const p = $('#loginPassword'); if (!p) return; const m = el('div', null, '<div class="hrp-pw"><i></i></div><div class="hrp-muted" style="font-size:11.5px;margin-top:3px"></div>'); (p.closest('.input-wrap') || p).insertAdjacentElement('afterend', m);
+  p.addEventListener('input', () => { const v = p.value; let s = 0; if (v.length >= 8) s++; if (v.length >= 12) s++; if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++; if (/\d/.test(v)) s++; if (/[^A-Za-z0-9]/.test(v)) s++;
+    const L = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent']; const col = ['#ff6b6b', '#ff6b6b', '#ff9f43', '#fbbf24', '#3ddc84', '#22d3ee'];
+    const i = $('i', m); i.style.width = v ? (s / 5 * 100) + '%' : '0'; i.style.background = col[s]; $('.hrp-muted', m).textContent = v ? 'Strength: ' + L[s] : ''; });
+});
+feat('Caps-Lock warning on password field', () => {
+  const p = $('#loginPassword'); if (!p) return; const w = el('div', { class: 'hrp-warn', style: 'display:none' }, '⇪ Caps Lock is on'); (p.closest('.input-wrap') || p).insertAdjacentElement('afterend', w);
+  const chk = e => { if (e.getModifierState) w.style.display = e.getModifierState('CapsLock') ? 'block' : 'none'; }; p.addEventListener('keydown', chk); p.addEventListener('keyup', chk); p.addEventListener('blur', () => { w.style.display = 'none'; });
+});
+
+/* ---------- editors ---------- */
+feat('Code Lab: Ctrl/⌘ + Enter to run', () => {
+  const t = $('#pgCode'), r = $('#pgRun'); if (!t || !r) return; t.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); r.click(); } });
+});
+feat('Code Lab: live line / word / character counter', () => {
+  const t = $('#pgCode'); if (!t) return; const c = el('div', { class: 'hrp-count' }); t.insertAdjacentElement('afterend', c);
+  const u = () => { c.textContent = `${t.value ? t.value.split('\n').length : 0} lines · ${(t.value.trim().match(/\S+/g) || []).length} words · ${t.value.length} chars`; }; t.addEventListener('input', u); setInterval(u, 1500); u();
+});
+feat('Code Lab: download code file', () => {
+  const rs = $('#pgReset'); if (!rs) return; const b = el('button', { class: 'pg-icon-btn', title: 'Download code', type: 'button', 'aria-label': 'Download code' }, '⬇'); rs.insertAdjacentElement('afterend', b);
+  b.addEventListener('click', () => { const ext = ($('#pgExt') || {}).textContent || 'txt'; download('main.' + ext.trim(), $('#pgCode').value); });
+});
+feat('Code Lab: editor font-size buttons', () => {
+  const t = $('#pgCode'), rs = $('#pgReset'); if (!t || !rs) return; let fs = store.get('pgfs', 13); t.style.fontSize = fs + 'px';
+  [['A−', -1], ['A+', 1]].forEach(([l, d]) => { const b = el('button', { class: 'pg-icon-btn', type: 'button', title: 'Editor font size', 'aria-label': l === 'A+' ? 'Increase editor font size' : 'Decrease editor font size' }, l); rs.insertAdjacentElement('afterend', b); b.addEventListener('click', () => { fs = Math.min(24, Math.max(10, fs + d)); t.style.fontSize = fs + 'px'; store.set('pgfs', fs); }); });
+});
+feat('Code Lab: word-wrap toggle', () => {
+  const t = $('#pgCode'), rs = $('#pgReset'); if (!t || !rs) return; const b = el('button', { class: 'pg-icon-btn', type: 'button', title: 'Toggle word wrap', 'aria-label': 'Toggle word wrap' }, '↩'); rs.insertAdjacentElement('afterend', b);
+  let w = true; b.addEventListener('click', () => { w = !w; t.setAttribute('wrap', w ? 'soft' : 'off'); t.style.whiteSpace = w ? 'pre-wrap' : 'pre'; toast('Word wrap ' + (w ? 'on' : 'off'), 'info', '↩'); });
+});
+feat('Code Arena: export history (JSON / CSV)', () => {
+  const h = $('#arenaHistory'); if (!h) return; const bar = el('div', { class: 'hrp-tools', style: 'margin-top:8px' }, '<button class="hrp-mini" data-a="j" type="button">⬇ History JSON</button><button class="hrp-mini" data-a="c" type="button">⬇ History CSV</button>'); h.insertAdjacentElement('afterbegin', bar);
+  const get = () => { try { return JSON.parse(localStorage.getItem('hr-arena-history') || '[]'); } catch(e){ return []; } };
+  bar.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return; const l = get(); if (!l.length) return toast('No history to export yet', 'warn', '⚠️');
+    if (a === 'j') download('arena-history.json', JSON.stringify(l, null, 2), 'application/json'); else { const keys = [...new Set(l.flatMap(o => Object.keys(o)))].filter(k => typeof l[0][k] !== 'object'); download('arena-history.csv', toCSV([keys].concat(l.map(o => keys.map(k => o[k])))), 'text/csv'); } });
+});
+feat('Admin: one-click CSV export for every table', () => {
+  const adm = $('#admin'); if (!adm) return;
+  const scan = () => { if (adm.style.display === 'none') return; $$('table', adm).forEach(t => { if (t.dataset.hrp) return; t.dataset.hrp = '1'; const b = el('button', { class: 'hrp-mini', type: 'button', style: 'margin:0 0 8px' }, '⬇ Export table CSV');
+    t.insertAdjacentElement('beforebegin', b); b.addEventListener('click', () => { const rows = $$('tr', t).filter(r => r.style.display !== 'none' && !r.querySelector('.admin-empty')).map(r => $$('th,td', r).map(c => c.textContent.trim().replace(/\s+/g, ' '))); download('table-export.csv', toCSV(rows), 'text/csv'); }); }); };
+  setInterval(scan, 2000);
+});
+
+/* ============ INIT ============ */
+feat('Daily visit tracking (streak, night-owl & early-bird badges)', () => {
+  const today = ymd(new Date()); if (!G.days.includes(today)) { G.days.push(today); G.days = G.days.slice(-90); store.set('days', G.days); addXP(3); }
+  award('early'); if (new Date().getHours() < 5) award('night'); if (streak() >= 3) award('streak3');
+});
+window.HRPlus = { count: F.length, features: F.slice(), open: openHub };
+console.info('%cHR+ loaded: ' + F.length + ' features', 'color:#7c5cff;font-weight:bold');
+
+} catch (err) { console.error('[HR+] fatal', err); }
 })();
 </script>
 </body>
