@@ -27,7 +27,7 @@ export default async function handler(req, res) {
         </h1>
         <p style="font-size:15px;line-height:1.6">Hi <b>${esc(registration.spoc_name || 'there')}</b>,</p>
         <p style="font-size:15px;line-height:1.6">
-          Team <b style="color:#22d3ee">${esc(registration.team_name)}</b> ka status update ho gaya hai:
+          Team <b style="color:#22d3ee">${esc(registration.team_name)}</b>The team status has been updated:
         </p>
         <div style="background:${isApproved ? 'rgba(61,220,132,0.1)' : 'rgba(255,107,107,0.1)'};border-left:3px solid ${isApproved ? '#3ddc84' : '#ff6b6b'};padding:16px;border-radius:8px;margin:20px 0">
           <p style="margin:0;font-size:16px;font-weight:700;color:${isApproved ? '#3ddc84' : '#ff6b6b'}">
