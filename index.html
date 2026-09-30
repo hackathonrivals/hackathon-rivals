@@ -2158,6 +2158,9 @@ body{overflow-x:clip}
   .tabs .tab{flex:0 0 auto;white-space:nowrap}
 }
 @media (max-width:480px){.nav-cta a.btn-primary{display:none}}
+
+/* focus mode */
+html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp-focus #hrpTopBtn,html.hrp-focus #hrpShareBtn,html.hrp-focus #hrpStick{display:none!important}
 </style>
 </head>
 <body>
@@ -9385,7 +9388,7 @@ if (document.readyState === 'loading') {
 'use strict';
 try {
 const F = [];
-const TOOLS = {}, CHEATS = {}, PLAN = {}, LISTS = {};
+const TOOLS = {}, CHEATS = {}, PLAN = {}, LISTS = {}, CALCS = {}, FORMS = {}, STUDY = {}, DRILLS = {};
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const store = {
@@ -9649,8 +9652,8 @@ function multi(c, registry, key){
   sel.addEventListener('change', go); go();
 }
 function reg(cat, name, fn){
-  const map = { tools: TOOLS, cheats: CHEATS, plan: PLAN, lists: LISTS }[cat];
-  feat(({ tools: 'Tool', cheats: 'Cheat sheet', plan: 'Planner', lists: 'List' }[cat]) + ': ' + name, () => { map[name] = c => { useTool(name); fn(c); }; });
+  const map = { tools: TOOLS, cheats: CHEATS, plan: PLAN, lists: LISTS, calc: CALCS, forms: FORMS, study: STUDY, drills: DRILLS }[cat];
+  feat(({ tools: 'Tool', cheats: 'Cheat sheet', plan: 'Planner', lists: 'List', calc: 'Calculator', forms: 'Formula sheet', study: 'Study tool', drills: 'Drill' }[cat]) + ': ' + name, () => { map[name] = c => { useTool(name); fn(c); }; });
 }
 
 feat('HR+ Hub (floating button + tabbed panel)', () => {
@@ -9679,6 +9682,7 @@ feat('Command palette (Ctrl/⌘ + K)', () => {
     ['🖨️ Print this page', '', () => window.print()], ['⬆️ Scroll to top', 'u', go(null)],
     ['🎤 Open pitch timer', '', () => { store.set('planSel', 'Pitch timer'); openHub('plan'); }]
   ];
+  window.__hrpCmds = CMDS;
   const bg = el('div', { class: 'hrp-bg', id: 'hrpPalette', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Command palette' },
     '<div class="hrp-modal"><div style="padding:12px"><input class="hrp-in" placeholder="Type a command…  (↑ ↓ Enter, Esc to close)" aria-label="Search commands"></div><div class="hrp-list" style="max-height:52vh;overflow:auto"></div></div>');
   document.body.appendChild(bg);
@@ -9941,7 +9945,7 @@ reg('tools', 'Team splitter', c => {
 
 /* ============ CHEAT SHEETS ============ */
 function table(rows, head){
-  return `<table class="hrp-table">${head ? '<tr>' + head.map(h => `<th>${esc(h)}</th>`).join('') + '</tr>' : ''}${rows.map(r => '<tr>' + r.map((x, i) => `<td${i === 0 ? ' style="font-family:JetBrains Mono,monospace;white-space:nowrap"' : ''}>${esc(x)}</td>`).join('') + '</tr>').join('')}</table>`;
+  return `<table class="hrp-table">${head ? '<tr>' + head.map(h => `<th>${esc(h)}</th>`).join('') + '</tr>' : ''}${rows.map(r => '<tr>' + r.map((x, i) => `<td${i === 0 ? ' style="font-family:JetBrains Mono,monospace;word-break:break-word"' : ''}>${esc(x)}</td>`).join('') + '</tr>').join('')}</table>`;
 }
 reg('cheats', 'Git commands', c => { c.innerHTML = table([
   ['git init','Start a new repository'],['git clone <url>','Copy a remote repo'],['git status','See changed files'],['git add -A','Stage everything'],['git commit -m "msg"','Save a snapshot'],
@@ -10405,12 +10409,971 @@ feat('Admin: one-click CSV export for every table', () => {
   setInterval(scan, 2000);
 });
 
+/* ============ EXAM DATA ============ */
+const SUBJ = { dsa: 'DSA', dbms: 'DBMS', os: 'Operating Systems', cn: 'Networks', prog: 'Programming', web: 'Web & Git', apt: 'Aptitude', lr: 'Reasoning' };
+const QB = [];
+const QM = {};
+function Q(s, d, t, o, a, e){ const id = s + (QB.filter(x => x.s === s).length + 1); const item = { id, s, d, t, o, a, e }; QB.push(item); QM[id] = item; }
+
+/* --- DSA --- */
+Q('dsa',1,'What is the time complexity of binary search on a sorted array of n elements?',['O(n)','O(log n)','O(n log n)','O(1)'],1,'Each step halves the search range, so about log₂ n steps are needed.');
+Q('dsa',1,'Which data structure follows the LIFO principle?',['Queue','Stack','Heap','Linked list'],1,'A stack removes the most recently added element first (Last In, First Out).');
+Q('dsa',2,'What is the worst-case time complexity of Quick Sort?',['O(n log n)','O(n)','O(n²)','O(log n)'],2,'A consistently bad pivot (for example a sorted input with the first element as pivot) gives n levels of n work each.');
+Q('dsa',1,'Which traversal of a Binary Search Tree visits the keys in sorted order?',['Preorder','Inorder','Postorder','Level order'],1,'Inorder visits left subtree, node, then right subtree, which gives ascending order in a BST.');
+Q('dsa',1,'A tree with n nodes has how many edges?',['n','n − 1','n + 1','2n'],1,'Every node except the root has exactly one edge to its parent.');
+Q('dsa',1,'Which data structure is normally used to implement Breadth-First Search?',['Stack','Queue','Priority queue','Hash map'],1,'BFS explores level by level, which needs first-in-first-out order.');
+Q('dsa',2,'Which of these sorting algorithms is stable in its standard form?',['Quick sort','Heap sort','Merge sort','Selection sort'],2,'Merge sort keeps equal elements in their original order when merging.');
+Q('dsa',1,'Average time to look up a key in a well-designed hash table?',['O(1)','O(log n)','O(n)','O(n²)'],0,'With a good hash function and load factor, lookups take constant time on average.');
+Q('dsa',2,'Which algorithm finds shortest paths from one source when all edge weights are non-negative?',['Kruskal','Prim','Dijkstra','Topological sort'],2,'Dijkstra greedily settles the closest unvisited vertex; it fails with negative edges.');
+Q('dsa',2,'Maximum number of nodes in a binary tree of height h (root at height 0)?',['2ʰ','2ʰ⁺¹ − 1','2ʰ − 1','h²'],1,'Levels 0..h hold 1 + 2 + … + 2ʰ = 2ʰ⁺¹ − 1 nodes.');
+Q('dsa',2,'Which structure is most suitable for implementing a priority queue?',['Binary heap','Stack','Array of linked lists','Trie'],0,'A binary heap gives O(log n) insert and extract-min/max.');
+Q('dsa',1,'Inserting a node at the head of a singly linked list takes…',['O(1)','O(log n)','O(n)','O(n²)'],0,'Only the new node’s pointer and the head pointer change.');
+Q('dsa',2,'Floyd’s tortoise-and-hare technique is used to…',['Sort a list','Detect a cycle in a linked list','Find the median','Balance a BST'],1,'A fast and a slow pointer meet inside a cycle if one exists.');
+Q('dsa',2,'Minimum number of comparisons needed to find the maximum of n distinct numbers?',['n','n − 1','log n','n / 2'],1,'Every element except the maximum must lose at least one comparison.');
+Q('dsa',3,'What is the time complexity of building a binary heap from n elements with the bottom-up (heapify) method?',['O(n log n)','O(n)','O(log n)','O(n²)'],1,'Most nodes are near the leaves and sift down very little, so the total work sums to O(n).');
+
+/* --- DBMS --- */
+Q('dbms',1,'In ACID, what does the letter “A” stand for?',['Availability','Atomicity','Aggregation','Authorization'],1,'Atomicity means a transaction happens completely or not at all.');
+Q('dbms',1,'Which statement about a primary key is true?',['It can contain NULL','It uniquely identifies each row and cannot be NULL','It may have duplicates','It must be numeric'],1,'A primary key is unique and NOT NULL, and can be of any data type.');
+Q('dbms',2,'Which normal form removes transitive dependencies?',['1NF','2NF','3NF','BCNF only'],2,'3NF requires that non-key attributes depend only on the key, not on other non-key attributes.');
+Q('dbms',1,'Which command quickly removes all rows from a table while keeping its structure?',['DROP','TRUNCATE','ALTER','RENAME'],1,'TRUNCATE empties the table; DROP would delete the table itself.');
+Q('dbms',1,'Which join returns all rows from the left table and the matching rows from the right table?',['INNER JOIN','LEFT JOIN','CROSS JOIN','SELF JOIN'],1,'Unmatched right-side columns come back as NULL.');
+Q('dbms',1,'Which of these is a DDL command?',['INSERT','UPDATE','CREATE','SELECT'],2,'DDL defines structure (CREATE, ALTER, DROP). The others are DML/DQL.');
+Q('dbms',1,'A foreign key is mainly used to enforce…',['Referential integrity','Faster sorting','Data encryption','Row-level locking'],0,'It ensures a value in one table matches an existing key in another table.');
+Q('dbms',1,'GROUP BY is most commonly used together with…',['Aggregate functions','ORDER BY only','Triggers','Views only'],0,'Functions such as COUNT, SUM and AVG summarise each group.');
+Q('dbms',2,'How does HAVING differ from WHERE?',['HAVING filters groups after aggregation','HAVING is faster','WHERE works only on numbers','They are identical'],0,'WHERE filters rows before grouping; HAVING filters the resulting groups.');
+Q('dbms',2,'Reading data written by an uncommitted transaction is called a…',['Dirty read','Phantom read','Lost update','Deadlock'],0,'If that transaction later rolls back, the reader has seen data that never existed.');
+Q('dbms',2,'What is the typical effect of adding an index on a column?',['Faster reads, slower writes','Faster writes, slower reads','No effect','Faster reads and writes'],0,'Lookups improve, but every insert/update must also maintain the index.');
+Q('dbms',2,'A candidate key is…',['Any set of columns','A minimal set of attributes that uniquely identifies a row','Only a foreign key','A duplicate column'],1,'It is a minimal superkey; one candidate key is chosen as the primary key.');
+Q('dbms',1,'Which of the following is NOT an aggregate function?',['COUNT','SUM','AVG','ROUND'],3,'ROUND works on a single value (scalar function); the others combine many rows.');
+Q('dbms',2,'A table is in 2NF when it is in 1NF and has no…',['Transitive dependency','Partial dependency','Multivalued attribute','Foreign key'],1,'No non-key attribute may depend on only part of a composite key.');
+Q('dbms',3,'Why do databases commonly use B+ trees for indexes?',['They store no data in leaves','Leaves are linked, making range scans efficient','They need no balancing','They use hashing'],1,'Linked leaf nodes let a range query walk sequentially after one tree descent.');
+
+/* --- OS --- */
+Q('os',1,'Which CPU scheduling algorithm is non-preemptive?',['Round Robin','FCFS','Shortest Remaining Time First','Preemptive priority'],1,'First-Come-First-Served lets a process run until it finishes or blocks.');
+Q('os',2,'Which of these is NOT a necessary condition for deadlock?',['Mutual exclusion','Hold and wait','Starvation','Circular wait'],2,'The four Coffman conditions are mutual exclusion, hold and wait, no preemption and circular wait.');
+Q('os',2,'Belady’s anomaly can occur with which page replacement algorithm?',['LRU','FIFO','Optimal','None'],1,'With FIFO, giving a process more frames can sometimes increase page faults.');
+Q('os',1,'Thrashing in an operating system refers to…',['Excessive paging that slows the system','CPU overheating','Disk failure','Too many users logged in'],0,'The system spends more time swapping pages than executing.');
+Q('os',1,'What do threads of the same process share?',['Stack','Registers','Address space and open files','Program counter'],2,'Each thread has its own stack, registers and program counter, but shares memory and resources.');
+Q('os',1,'A semaphore is primarily used for…',['Process synchronization','Memory compaction','File compression','Disk scheduling'],0,'It controls access to shared resources between processes or threads.');
+Q('os',1,'What is the smallest unit of CPU utilisation?',['Process','Thread','Program','Job'],1,'A thread is the basic unit of CPU scheduling within a process.');
+Q('os',1,'Virtual memory allows…',['Running programs larger than physical RAM','Faster CPUs','Bigger disks','Unlimited cache'],0,'Parts of a program are kept on disk and paged into RAM as needed.');
+Q('os',1,'Performance of Round Robin scheduling depends heavily on…',['Time quantum','Disk size','Number of files','Network speed'],0,'Too small a quantum wastes time on context switches; too large behaves like FCFS.');
+Q('os',2,'A zombie process is one that…',['Uses 100% CPU','Has terminated but still has an entry in the process table','Is waiting for I/O','Is a child of init'],1,'It stays until its parent reads the exit status with wait().');
+Q('os',1,'Which mode allows execution of privileged instructions?',['User mode','Kernel mode','Safe mode','Guest mode'],1,'Only the kernel may access hardware and critical resources directly.');
+Q('os',2,'Non-preemptive Shortest Job First minimises…',['Average waiting time','Throughput','Context switches','Memory use'],0,'When all jobs arrive together, SJF gives the minimum average waiting time.');
+Q('os',2,'What does the TLB cache?',['Page table entries','Disk blocks','CPU registers','File names'],0,'The Translation Lookaside Buffer speeds up virtual-to-physical address translation.');
+Q('os',2,'During a context switch the OS saves the state of the outgoing process in its…',['PCB','TLB','Page table only','Heap'],0,'The Process Control Block stores registers, program counter and other state.');
+Q('os',2,'Which memory management scheme suffers from external fragmentation?',['Paging','Segmentation','Both use fixed blocks','None'],1,'Variable-sized segments leave scattered free holes; paging mainly wastes space inside the last page.');
+
+/* --- Networks --- */
+Q('cn',1,'How many layers are there in the OSI model?',['4','5','7','9'],2,'Physical, Data link, Network, Transport, Session, Presentation, Application.');
+Q('cn',1,'Class A IPv4 addresses have a first octet in the range…',['1–126','128–191','192–223','224–239'],0,'0 and 127 are reserved, so usable Class A networks start with 1 to 126.');
+Q('cn',1,'Which transport-layer protocol is connectionless?',['TCP','UDP','HTTP','FTP'],1,'UDP sends datagrams without setting up a connection or guaranteeing delivery.');
+Q('cn',1,'Default port number of HTTPS?',['80','21','443','8080'],2,'HTTP uses 80; HTTPS uses 443.');
+Q('cn',1,'DNS is used to…',['Translate domain names to IP addresses','Assign IP addresses','Encrypt traffic','Route packets'],0,'It works like the internet’s phone book.');
+Q('cn',1,'How long is a MAC address?',['32 bits','48 bits','64 bits','128 bits'],1,'MAC addresses are 48 bits, usually written as six hexadecimal pairs.');
+Q('cn',1,'Which device operates at the Network layer?',['Hub','Switch','Router','Repeater'],2,'Routers forward packets between networks using IP addresses.');
+Q('cn',1,'How does TCP establish a connection?',['Two-way handshake','Three-way handshake','Four-way handshake','No handshake'],1,'SYN, SYN-ACK, ACK.');
+Q('cn',1,'How long is an IPv6 address?',['32 bits','64 bits','128 bits','256 bits'],2,'IPv6 uses 128-bit addresses, giving a vastly larger address space than IPv4.');
+Q('cn',1,'Which protocol is used to send email?',['SMTP','FTP','SNMP','TFTP'],0,'SMTP sends mail; IMAP and POP3 retrieve it.');
+Q('cn',2,'The subnet mask /24 is equal to…',['255.0.0.0','255.255.0.0','255.255.255.0','255.255.255.255'],2,'24 network bits = three full octets of ones.');
+Q('cn',1,'ARP is used to map…',['IP address to MAC address','Domain to IP','MAC to domain','Port to service'],0,'It finds the hardware address that corresponds to an IPv4 address on the local network.');
+Q('cn',1,'Which port does SSH use by default?',['21','22','23','25'],1,'FTP is 21, Telnet is 23, SMTP is 25.');
+Q('cn',1,'Routing is a function of which OSI layer?',['Data link','Network','Transport','Session'],1,'The Network layer handles logical addressing and path selection.');
+Q('cn',3,'How many usable host addresses are there in a /30 subnet?',['2','4','6','8'],0,'A /30 has 4 addresses; subtract the network and broadcast addresses to get 2.');
+
+/* --- Programming --- */
+Q('prog',1,'Which of these is NOT a pillar of OOP?',['Encapsulation','Inheritance','Polymorphism','Compilation'],3,'The pillars are encapsulation, inheritance, polymorphism and abstraction.');
+Q('prog',1,'Method overloading is an example of…',['Compile-time polymorphism','Runtime polymorphism','Inheritance','Encapsulation'],0,'The compiler picks the method by its signature at compile time.');
+Q('prog',1,'What is the purpose of a constructor?',['Destroy an object','Initialise a newly created object','Copy files','Import modules'],1,'It runs when an object is created and sets its initial state.');
+Q('prog',1,'In Java, which keyword prevents a class from being inherited?',['static','final','abstract','private'],1,'A final class cannot be extended.');
+Q('prog',1,'Which Python type is immutable?',['list','dict','tuple','set'],2,'Tuples cannot be changed after creation.');
+Q('prog',1,'What does 7 // 2 evaluate to in Python?',['3.5','3','4','2'],1,'// is floor division.');
+Q('prog',2,'An abstract class can contain…',['Only abstract methods','Only concrete methods','Both abstract and concrete methods','Neither'],2,'It can mix implemented methods with abstract ones that subclasses must define.');
+Q('prog',1,'Accessing an array element by index takes…',['O(1)','O(log n)','O(n)','O(n²)'],0,'The address is computed directly from the index.');
+Q('prog',1,'Every correct recursive function needs a…',['Loop','Base case','Global variable','Pointer'],1,'Without a base case the recursion never stops.');
+Q('prog',2,'In Python, what does the “is” operator check?',['Value equality','Object identity','Type only','Length'],1,'“is” tests whether both names refer to the same object; “==” compares values.');
+Q('prog',1,'On most modern platforms the size of an int in C is typically…',['1 byte','2 bytes','4 bytes','16 bytes'],2,'It is implementation-defined, but 4 bytes (32 bits) is the common size.');
+Q('prog',1,'Which C operator gives the address of a variable?',['*','&','->','#'],1,'&x returns the address of x.');
+Q('prog',1,'Encapsulation means…',['Hiding data and bundling it with the methods that use it','Creating many objects','Reusing code through classes','Converting types'],0,'Data is kept private and accessed through controlled methods.');
+Q('prog',2,'What does garbage collection in Java reclaim?',['Unused files','Memory of unreachable objects','CPU cycles','Network sockets'],1,'Objects with no live references are freed automatically.');
+Q('prog',2,'In JavaScript, what does typeof null return?',['"null"','"undefined"','"object"','"number"'],2,'It is a long-standing quirk of the language.');
+
+/* --- Web & Git --- */
+Q('web',1,'What does HTML stand for?',['HyperText Markup Language','High Transfer Markup Language','HyperTool Multi Language','Home Text Markup Language'],0,'HTML describes the structure of web pages.');
+Q('web',2,'Which HTTP method is typically used to replace a whole resource and is idempotent?',['POST','PUT','PATCH','CONNECT'],1,'Repeating the same PUT leaves the resource in the same state.');
+Q('web',1,'Which Git command creates a new branch and switches to it?',['git branch new','git checkout -b new','git merge new','git stash new'],1,'“git switch -c new” does the same in newer Git versions.');
+Q('web',1,'Which CSS declaration turns an element into a flex container?',['display: flex','position: flex','flex: container','layout: flex'],0,'It enables the flexbox layout model for the element’s children.');
+Q('web',1,'HTTP status code 404 means…',['OK','Not Found','Server Error','Forbidden'],1,'The server cannot find the requested resource.');
+Q('web',1,'Data stored in localStorage…',['Is deleted when the tab closes','Persists until it is cleared','Is sent to the server on every request','Expires after one hour'],1,'Unlike sessionStorage, it survives browser restarts.');
+Q('web',1,'REST stands for…',['Representational State Transfer','Remote Execution Service Tool','Reliable Server Transfer','Resource State Template'],0,'An architectural style for designing networked APIs.');
+Q('web',2,'Which of these does standard JSON NOT support?',['Strings','Numbers','Comments','Arrays'],2,'JSON has no comment syntax.');
+Q('web',1,'Which HTML tag creates a hyperlink?',['<link>','<a>','<href>','<url>'],1,'The anchor element with an href attribute.');
+Q('web',1,'By default, “git pull” is equivalent to…',['git fetch + git merge','git push + git fetch','git clone + git merge','git add + git commit'],0,'It downloads remote changes and integrates them (or rebases, if configured).');
+Q('web',2,'CORS restrictions are enforced by…',['The web browser','The DNS server','The database','The operating system'],0,'Browsers block cross-origin responses unless the server allows them via CORS headers.');
+Q('web',1,'HTTP status code 500 indicates…',['Client error','Redirect','Internal server error','Success'],2,'The server hit an unexpected condition.');
+Q('web',1,'What does “npm install” do when run in a project folder?',['Publishes the package','Installs dependencies listed in package.json','Deletes node_modules','Starts the server'],1,'It downloads the packages the project depends on.');
+Q('web',2,'Which cookie attribute stops JavaScript from reading the cookie?',['Secure','HttpOnly','SameSite','Path'],1,'HttpOnly cookies are sent to the server but hidden from document.cookie.');
+Q('web',2,'The best defence against SQL injection is…',['Parameterised queries','Hiding the database','Longer passwords','Client-side validation only'],0,'Placeholders keep user input as data, never as SQL code.');
+
+/* --- Aptitude --- */
+Q('apt',1,'What is 20% of 250?',['25','40','50','60'],2,'250 × 20 / 100 = 50.');
+Q('apt',1,'Simple interest on ₹5,000 at 10% per annum for 2 years?',['₹500','₹1,000','₹1,050','₹1,200'],1,'SI = P × R × T / 100 = 5000 × 10 × 2 / 100 = 1000.');
+Q('apt',2,'A 120 m long train moving at 60 km/h crosses a pole in…',['6 s','7.2 s','8 s','12 s'],1,'60 km/h = 50/3 m/s, so time = 120 ÷ (50/3) = 7.2 s.');
+Q('apt',1,'A shopkeeper buys an article for ₹400 and sells it for ₹500. Profit percentage?',['20%','25%','30%','10%'],1,'Profit = 100; 100 / 400 × 100 = 25%.');
+Q('apt',2,'A can finish a job in 10 days and B in 15 days. Working together they finish in…',['5 days','6 days','7.5 days','12 days'],1,'Combined rate = 1/10 + 1/15 = 1/6 per day.');
+Q('apt',1,'₹160 is divided in the ratio 3 : 5. What is the larger share?',['₹60','₹80','₹100','₹120'],2,'160 ÷ 8 = 20 per part, and 5 × 20 = 100.');
+Q('apt',2,'Compound interest on ₹1,000 at 10% per annum for 2 years?',['₹200','₹210','₹220','₹121'],1,'Amount = 1000 × 1.1² = 1210, so CI = 210.');
+Q('apt',1,'LCM of 12 and 18 is…',['6','36','54','72'],1,'12 = 2²×3 and 18 = 2×3², so LCM = 2²×3² = 36.');
+Q('apt',1,'Find 15% of 40 + 40% of 15.',['6','12','15','24'],1,'6 + 6 = 12.');
+Q('apt',1,'How many different arrangements are possible for the letters of the word CAT?',['3','6','9','12'],1,'3! = 6.');
+Q('apt',1,'Probability of getting two heads in two tosses of a fair coin?',['1/2','1/4','1/3','3/4'],1,'(1/2) × (1/2) = 1/4.');
+Q('apt',1,'72 km/h expressed in m/s is…',['15','18','20','25'],2,'Multiply by 5/18: 72 × 5/18 = 20.');
+Q('apt',1,'The sum of the first 20 natural numbers is…',['190','200','210','220'],2,'n(n + 1)/2 = 20 × 21 / 2 = 210.');
+Q('apt',1,'A 20% discount is given on a marked price of ₹1,500. The selling price is…',['₹1,000','₹1,200','₹1,300','₹1,350'],1,'1500 − 300 = 1200.');
+Q('apt',3,'Two numbers are in the ratio 2 : 3 and the sum of their squares is 468. The larger number is…',['12','15','18','21'],2,'4k² + 9k² = 13k² = 468 gives k = 6, so the numbers are 12 and 18.');
+
+/* --- Reasoning --- */
+Q('lr',1,'Find the next number: 2, 6, 12, 20, 30, ?',['38','40','42','44'],2,'Differences are 4, 6, 8, 10, so the next difference is 12: 30 + 12 = 42.');
+Q('lr',1,'Find the next number: 1, 4, 9, 16, 25, ?',['30','32','36','49'],2,'These are perfect squares: 6² = 36.');
+Q('lr',1,'Odd one out: 2, 3, 5, 9, 11',['2','5','9','11'],2,'All the others are prime numbers.');
+Q('lr',1,'If A = 1, B = 2, C = 3 and so on, the sum of the letter values in BAD is…',['6','7','8','9'],1,'2 + 1 + 4 = 7.');
+Q('lr',2,'A is the sister of B, and B is the father of C. How is A related to C?',['Mother','Aunt','Grandmother','Cousin'],1,'A is the sister of C’s father, so she is C’s paternal aunt.');
+Q('lr',2,'A man walks 5 km north, then 5 km east, then 5 km south. How far is he from the start?',['0 km','5 km','10 km','15 km'],1,'The north and south legs cancel, leaving him 5 km east of the start.');
+Q('lr',1,'What is the angle between the hands of a clock at 3:00?',['60°','75°','90°','120°'],2,'Each hour mark is 30°, and 3 hours = 90°.');
+Q('lr',2,'Statements: All cats are animals. Some animals are black. Conclusion: Some cats are black.',['Definitely true','Definitely false','Cannot be determined','Partly true'],2,'The black animals might not include any cats, so the conclusion does not necessarily follow.');
+Q('lr',1,'Find the next number: 3, 6, 12, 24, ?',['30','36','48','60'],2,'Each term doubles.');
+Q('lr',2,'If today is Monday, what day will it be after 100 days?',['Tuesday','Wednesday','Thursday','Friday'],1,'100 = 14 × 7 + 2, so move 2 days ahead: Wednesday.');
+Q('lr',1,'Book : Reading :: Fork : ?',['Kitchen','Eating','Metal','Spoon'],1,'A book is used for reading; a fork is used for eating.');
+Q('lr',1,'Find the next number: 1, 1, 2, 3, 5, 8, ?',['11','12','13','15'],2,'Each term is the sum of the previous two.');
+Q('lr',2,'In a row of 20 people, Ravi is 8th from the left. What is his position from the right?',['11th','12th','13th','14th'],2,'20 − 8 + 1 = 13.');
+Q('lr',1,'Odd one out: Square, Triangle, Circle, Cube',['Square','Triangle','Circle','Cube'],3,'The cube is three-dimensional; the others are flat shapes.');
+Q('lr',2,'A father is three times as old as his son. The sum of their ages is 48. How old is the son?',['10','12','14','16'],1,'x + 3x = 48 gives x = 12.');
+
+/* --- Flashcard decks --- */
+const DECKS = {
+  'Tech acronyms': [['API','Application Programming Interface'],['CPU','Central Processing Unit'],['RAM','Random Access Memory'],['HTTP','HyperText Transfer Protocol'],['HTTPS','HTTP Secure (HTTP over TLS)'],['URL','Uniform Resource Locator'],['DNS','Domain Name System'],['IP','Internet Protocol'],['TCP','Transmission Control Protocol'],['UDP','User Datagram Protocol'],['SQL','Structured Query Language'],['CRUD','Create, Read, Update, Delete'],['IDE','Integrated Development Environment'],['OOP','Object-Oriented Programming'],['JSON','JavaScript Object Notation'],['XML','eXtensible Markup Language'],['CSS','Cascading Style Sheets'],['SDK','Software Development Kit'],['CI/CD','Continuous Integration / Continuous Delivery'],['VPN','Virtual Private Network'],['GUI','Graphical User Interface'],['ROM','Read-Only Memory'],['SSD','Solid State Drive'],['LAN','Local Area Network'],['MVP','Minimum Viable Product']],
+  'Data structures': [['Stack','LIFO collection. Push and pop happen at the same end. Used for undo, recursion and expression evaluation.'],['Queue','FIFO collection. Enqueue at the rear, dequeue at the front. Used in BFS and scheduling.'],['Linked list','Nodes connected by pointers. Fast insert/delete at a known node, slow random access.'],['Hash table','Maps keys to buckets using a hash function. Average O(1) lookup, collisions must be handled.'],['Binary tree','Tree in which each node has at most two children.'],['Binary search tree','Binary tree where left < node < right. Inorder traversal gives sorted order.'],['Heap','Complete binary tree with the heap property (parent ≥ or ≤ children). Backbone of priority queues.'],['Graph','Vertices connected by edges; may be directed/undirected and weighted/unweighted.'],['Trie','Tree that stores strings character by character. Great for prefix search and autocomplete.'],['Deque','Double-ended queue: insert and remove at both ends.'],['Array','Contiguous memory with O(1) index access; insertion in the middle costs O(n).'],['Set','Collection of unique elements with fast membership tests.']],
+  'OS & DBMS terms': [['Process','A program in execution, with its own address space and resources.'],['Thread','Lightweight unit of execution inside a process; threads share memory.'],['Deadlock','Processes wait forever for resources held by each other (mutual exclusion, hold & wait, no preemption, circular wait).'],['Semaphore','Integer variable used with wait/signal to synchronise access to shared resources.'],['Paging','Memory split into fixed-size pages/frames; removes external fragmentation.'],['Virtual memory','Technique that lets processes use more memory than physically available by swapping pages to disk.'],['Context switch','Saving one process’s state and loading another’s so the CPU can switch between them.'],['Primary key','Column(s) that uniquely identify each row; cannot be NULL.'],['Foreign key','Column referring to a key in another table; enforces referential integrity.'],['Normalisation','Organising tables to reduce redundancy and anomalies (1NF, 2NF, 3NF, BCNF).'],['Transaction','A logical unit of work that follows ACID properties.'],['Index','Auxiliary structure (often a B+ tree) that speeds up lookups at the cost of extra writes.'],['View','A stored query that behaves like a virtual table.'],['Join','Operation that combines rows from two or more tables based on a related column.']],
+  'Networking terms': [['Router','Forwards packets between networks using IP addresses (Layer 3).'],['Switch','Forwards frames inside a LAN using MAC addresses (Layer 2).'],['Firewall','Filters network traffic according to security rules.'],['DHCP','Automatically assigns IP addresses to devices on a network.'],['NAT','Translates private IP addresses to a public one at the router.'],['MAC address','48-bit hardware identifier of a network interface.'],['Bandwidth','Maximum amount of data that can be transferred per unit time.'],['Latency','Delay between sending a request and receiving the response.'],['Subnet','A logical subdivision of an IP network.'],['Gateway','Node that connects a local network to other networks, often the internet.']]
+};
+
+/* --- Syllabus topics --- */
+const SYL = {
+  'DSA': ['Arrays & strings','Linked lists','Stacks & queues','Recursion','Sorting & searching','Trees & BST','Heaps','Hashing','Graphs (BFS/DFS)','Dynamic programming','Complexity analysis'],
+  'DBMS': ['ER model','Relational algebra','SQL queries','Joins','Normalisation','Transactions & ACID','Indexing','Concurrency control'],
+  'Operating Systems': ['Processes & threads','CPU scheduling','Synchronisation','Deadlocks','Memory management','Virtual memory','File systems','I/O & disk scheduling'],
+  'Networks': ['OSI & TCP/IP','IP addressing & subnetting','Routing','TCP vs UDP','Application protocols','Network security'],
+  'Programming': ['OOP concepts','Inheritance & polymorphism','Exception handling','Pointers & memory','Python basics','Data types & operators'],
+  'Web & Git': ['HTML & CSS','JavaScript basics','HTTP & REST','Git workflow','Databases for web','Deployment'],
+  'Aptitude': ['Percentages','Profit & loss','Ratio & proportion','Time, speed & distance','Time & work','Interest','Permutations & probability'],
+  'Reasoning': ['Number series','Coding-decoding','Blood relations','Directions','Syllogisms','Seating arrangement','Analogies']
+};
+
+/* ============ B.TECH-LEVEL QUESTION BANK ============ */
+Object.assign(SUBJ, { coa: 'Computer Organization', dl: 'Digital Logic', toc: 'Theory of Computation', cd: 'Compiler Design', algo: 'Algorithms', dm: 'Discrete Maths', em: 'Engg Maths & Probability', se: 'Software Engineering' });
+function B(s, d, t, o, a, e){ Q(s, d, t, o, a, e); QB[QB.length - 1].b = 1; }
+
+/* --- Computer Organization & Architecture --- */
+B('coa',1,'How many bytes can a byte-addressable machine with a 32-bit address bus access?',['2 GB','4 GB','8 GB','16 GB'],1,'2³² bytes = 4 GB.');
+B('coa',2,'A direct-mapped cache has 256 lines with 16-byte blocks. For a 32-bit address, how many tag bits are needed?',['16','18','20','24'],2,'Offset = 4 bits (16 B), index = 8 bits (256 lines), so tag = 32 − 4 − 8 = 20 bits.');
+B('coa',2,'Cache hit time is 2 ns, miss rate 5% and miss penalty 100 ns. What is the average memory access time?',['5 ns','7 ns','9 ns','12 ns'],1,'AMAT = hit time + miss rate × miss penalty = 2 + 0.05 × 100 = 7 ns.');
+B('coa',1,'An ideal k-stage pipeline with no stalls processing a very large number of instructions gives a speedup of approximately…',['1','k','k²','log k'],1,'Each cycle completes one instruction instead of one per k cycles, so speedup → k.');
+B('coa',2,'A read-after-write (RAW) hazard is also called a…',['True (flow) dependency','Anti-dependency','Output dependency','Control dependency'],0,'The second instruction needs a value produced by the first, so it is a genuine data flow dependency.');
+B('coa',2,'A 2 GHz processor has an average CPI of 2.5. How long does it take to execute 10⁹ instructions?',['0.5 s','1.0 s','1.25 s','2.5 s'],2,'Time = instructions × CPI ÷ clock rate = 10⁹ × 2.5 ÷ 2×10⁹ = 1.25 s.');
+B('coa',1,'Booth’s algorithm is used for…',['Multiplying signed numbers in two’s complement','Dividing unsigned numbers','Floating-point addition','Cache replacement'],0,'It reduces the number of additions by encoding runs of 1s in the multiplier.');
+B('coa',1,'How many address lines are needed for a 64K × 8 memory?',['8','12','16','64'],2,'64K = 2¹⁶ locations, so 16 address lines.');
+B('coa',2,'The 8-bit two’s complement representation of −13 is…',['11110011','11110010','10001101','11110001'],0,'13 = 00001101 → invert = 11110010 → add 1 = 11110011.');
+B('coa',1,'Which technique lets an I/O device transfer blocks of data to memory without the CPU handling every word?',['Polling','DMA','Interrupt-driven I/O','Programmed I/O'],1,'A DMA controller moves the data directly and interrupts the CPU when the transfer completes.');
+B('coa',3,'40% of a program’s execution time can be sped up 10×. By Amdahl’s law, the overall speedup is about…',['1.56','2.5','4.0','10'],0,'Speedup = 1 ÷ (0.6 + 0.4/10) = 1 ÷ 0.64 ≈ 1.56.');
+B('coa',1,'Which addressing mode is most suitable for accessing array elements?',['Immediate','Indexed','Implied','Register direct'],1,'The base address plus an index register selects the element.');
+
+/* --- Digital Logic --- */
+B('dl',2,'What is the minimum number of 2-input NAND gates needed to implement an XOR gate?',['2','3','4','5'],2,'The standard construction uses four NAND gates.');
+B('dl',1,'How many flip-flops are needed to build a mod-10 counter?',['3','4','5','10'],1,'2³ = 8 < 10 ≤ 16 = 2⁴, so 4 flip-flops.');
+B('dl',1,'Simplify F = A + A′B.',['A','B','A + B','AB'],2,'A + A′B = (A + A′)(A + B) = A + B.');
+B('dl',2,'A full adder can be built from…',['1 half adder and 1 OR gate','2 half adders and 1 OR gate','2 half adders and 2 OR gates','3 half adders'],1,'The two half-adder carries are combined with an OR gate.');
+B('dl',3,'How many 2-to-4 decoders (with enable) are needed to construct a 4-to-16 decoder?',['2','4','5','8'],2,'Four decoders produce the 16 outputs and one more decodes the two upper bits to enable them.');
+B('dl',2,'The race-around condition in a JK flip-flop occurs when…',['J = K = 0','J = K = 1 and the clock pulse is longer than the propagation delay','J = 1, K = 0','The clock is edge-triggered'],1,'The output keeps toggling during the pulse; master-slave or edge-triggered designs prevent it.');
+B('dl',1,'How many minterms does a 4-variable Boolean function have (total possible)?',['4','8','16','32'],2,'2⁴ = 16 possible minterms.');
+B('dl',2,'The Gray code equivalent of binary 1011 is…',['1110','1010','1101','0111'],0,'MSB stays 1; then 1⊕0 = 1, 0⊕1 = 1, 1⊕1 = 0.');
+B('dl',1,'How many select lines does a 4:1 multiplexer have?',['1','2','3','4'],1,'log₂ 4 = 2.');
+B('dl',1,'Which single gate type is universal (can build any logic function)?',['AND','OR','NAND','XOR'],2,'NAND (and also NOR) can implement NOT, AND and OR.');
+B('dl',1,'Which flip-flop removes the invalid input condition of the SR flip-flop?',['D','T','JK','Latch only'],2,'For J = K = 1 the JK flip-flop simply toggles.');
+B('dl',3,'How many distinct states does a Johnson (twisted-ring) counter with n flip-flops have?',['n','2n','2ⁿ','2ⁿ − 1'],1,'A Johnson counter cycles through 2n states.');
+
+/* --- Theory of Computation --- */
+B('toc',1,'Which machine recognises exactly the regular languages?',['DFA','PDA','Linear bounded automaton','Turing machine'],0,'DFAs, NFAs and regular expressions have equal power.');
+B('toc',2,'The language { aⁿbⁿ | n ≥ 1 } is…',['Regular','Context-free but not regular','Context-sensitive only','Not recursive'],1,'A PDA can match the counts using its stack, but no finite automaton can.');
+B('toc',2,'The pumping lemma for regular languages is used to…',['Prove a language is regular','Prove a language is NOT regular','Minimise a DFA','Convert an NFA to a DFA'],1,'It gives a property every regular language has; violating it shows a language is not regular.');
+B('toc',2,'How many states does the minimal DFA have for strings over {a, b} that end with “ab”?',['2','3','4','5'],1,'States: no progress, seen “a”, seen “ab” (accepting).');
+B('toc',2,'An NFA with n states can be converted to an equivalent DFA with at most how many states?',['n','n²','2ⁿ','n!'],2,'Subset construction may create every subset of the NFA’s states.');
+B('toc',1,'The halting problem is…',['Decidable','Undecidable','Regular','Context-free'],1,'No algorithm can decide, for every program and input, whether it halts.');
+B('toc',1,'The regular expression (a|b)*abb generates…',['Strings that start with abb','Strings over {a, b} that end with abb','Strings that contain exactly one abb','Only the string abb'],1,'Any string of a’s and b’s followed by abb.');
+B('toc',2,'A context-free grammar is ambiguous if…',['It has left recursion','Some string has more than one parse tree','It has no start symbol','It generates an infinite language'],1,'Two different parse trees (equivalently leftmost derivations) exist for one string.');
+B('toc',1,'Nondeterministic pushdown automata accept exactly…',['Regular languages','Context-free languages','Recursive languages','Finite languages'],1,'PDA = finite automaton + stack = CFL recognisers.');
+B('toc',3,'Regular languages are NOT closed under…',['Union','Complement','Intersection','Arbitrary (infinite) union'],3,'An infinite union of finite (hence regular) languages can give a non-regular language such as { aⁿbⁿ }.');
+B('toc',2,'Type-0 grammars in the Chomsky hierarchy generate…',['Regular languages','Context-free languages','Context-sensitive languages','Recursively enumerable languages'],3,'They are recognised by Turing machines.');
+B('toc',3,'The language { ww | w ∈ {a, b}* } is…',['Regular','Context-free','Not context-free','Not decidable'],2,'A PDA cannot match the second half against the first because the stack reverses order.');
+
+/* --- Compiler Design --- */
+B('cd',1,'Which compiler phase converts the character stream into tokens?',['Syntax analysis','Lexical analysis','Semantic analysis','Code generation'],1,'The lexer groups characters into lexemes and tokens.');
+B('cd',1,'LL(1) parsers are…',['Top-down','Bottom-up','Operator-precedence only','Non-deterministic'],0,'They read Left-to-right and build a Leftmost derivation with 1 token of look-ahead.');
+B('cd',2,'LR parsers construct…',['A leftmost derivation','A rightmost derivation in reverse','A random derivation','No derivation'],1,'They shift and reduce, which yields a rightmost derivation in reverse.');
+B('cd',2,'Which of these LR parsers is the most powerful?',['LR(0)','SLR(1)','LALR(1)','Canonical LR(1)'],3,'CLR(1) uses full look-ahead sets and accepts the largest class of grammars.');
+B('cd',2,'For A → Aα | β, an equivalent grammar without left recursion is…',['A → βA′, A′ → αA′ | ε','A → αA′, A′ → βA′ | ε','A → Aβ | α','A → βα'],0,'β comes first, followed by zero or more α’s handled by the new non-terminal A′.');
+B('cd',1,'Which data structure is most commonly used to implement a symbol table for fast lookup?',['Stack','Hash table','Queue','Circular list'],1,'Hashing gives near-constant time insert and lookup of identifiers.');
+B('cd',2,'For the grammar S → aB | ε, what is FIRST(S)?',['{ a }','{ ε }','{ a, ε }','{ B }'],2,'S can begin with a or derive the empty string.');
+B('cd',2,'Representing a basic block as a DAG helps to eliminate…',['Syntax errors','Common subexpressions','Comments','Macros'],1,'Identical sub-computations map to the same DAG node and are evaluated once.');
+B('cd',2,'In bottom-up parsing, a handle is…',['The start symbol','A substring matching a production’s right side that can be reduced','A terminal symbol','An error token'],1,'Reducing the handle is the next step of the reverse rightmost derivation.');
+B('cd',1,'Yacc / Bison is used to generate…',['Lexical analysers','Parsers','Linkers','Debuggers'],1,'Lex/Flex generate scanners; Yacc/Bison generate parsers.');
+B('cd',2,'Peephole optimisation works on…',['The whole program at once','A small window of target instructions','Only source-code comments','The symbol table'],1,'It replaces short instruction sequences with faster or shorter ones.');
+B('cd',2,'Evaluating 2 * 3 at compile time and replacing it by 6 is called…',['Dead-code elimination','Constant folding','Loop unrolling','Strength reduction'],1,'Constant folding computes constant expressions during compilation.');
+
+/* --- Algorithms --- */
+B('algo',2,'Solve T(n) = 2T(n/2) + n.',['Θ(n)','Θ(n log n)','Θ(n²)','Θ(log n)'],1,'Master theorem case 2: n^(log₂2) = n matches f(n), giving Θ(n log n).');
+B('algo',2,'Solve T(n) = 4T(n/2) + n.',['Θ(n)','Θ(n log n)','Θ(n²)','Θ(n³)'],2,'n^(log₂4) = n² dominates f(n) = n, so Θ(n²).');
+B('algo',2,'Dijkstra’s algorithm with a binary heap runs in…',['O(V²)','O((V + E) log V)','O(VE)','O(E log E + V)'],1,'Each edge relaxation may do an O(log V) heap operation.');
+B('algo',2,'Bellman–Ford has a running time of…',['O(V + E)','O(V log V)','O(VE)','O(V³)'],2,'It relaxes all E edges V − 1 times and can detect negative cycles.');
+B('algo',1,'Floyd–Warshall computes all-pairs shortest paths in…',['O(V²)','O(V³)','O(V² log V)','O(VE log V)'],1,'Three nested loops over the vertices.');
+B('algo',2,'Kruskal’s algorithm normally uses which structure to detect cycles?',['Stack','Disjoint-set (union–find)','Queue','Trie'],1,'Union–find quickly checks whether two vertices are already connected.');
+B('algo',3,'The dynamic-programming solution of 0/1 knapsack runs in O(nW). This is…',['Polynomial in input size','Pseudo-polynomial','Exponential in n only','Linear'],1,'W is a numeric value, so the running time is exponential in the number of bits used to write W.');
+B('algo',3,'What is the length of the longest common subsequence of “ABCBDAB” and “BDCABA”?',['3','4','5','6'],1,'One LCS is BCBA (length 4).');
+B('algo',3,'Matrices A (10×30), B (30×5) and C (5×60) are multiplied. The minimum number of scalar multiplications is…',['1,500','4,500','9,000','27,000'],1,'(AB)C costs 10·30·5 + 10·5·60 = 4,500; A(BC) costs 27,000.');
+B('algo',2,'Which of these problems is NP-complete (decision version)?',['Shortest path','Minimum spanning tree','Travelling salesman','Sorting'],2,'TSP decision version is NP-complete; the others have polynomial-time solutions.');
+B('algo',2,'Appending to a dynamic array that doubles its capacity when full has an amortised cost of…',['O(1)','O(log n)','O(n)','O(n²)'],0,'Occasional O(n) copies are spread over many cheap appends.');
+B('algo',1,'Huffman coding is an example of a…',['Greedy algorithm','Backtracking algorithm','Divide and conquer algorithm','Branch and bound algorithm'],0,'It repeatedly merges the two least frequent nodes.');
+
+/* --- Discrete Mathematics --- */
+B('dm',1,'How many subsets does a set with n elements have?',['n²','2ⁿ','n!','2n'],1,'Each element is either in or out of a subset.');
+B('dm',1,'How many edges does the complete graph Kₙ have?',['n','n(n − 1)/2','n²','2ⁿ'],1,'Every unordered pair of vertices is joined.');
+B('dm',1,'A graph has 10 edges. What is the sum of the degrees of all its vertices?',['10','15','20','25'],2,'Handshaking lemma: sum of degrees = 2E = 20.');
+B('dm',3,'In how many distinct ways can the letters of MISSISSIPPI be arranged?',['39,916,800','34,650','5,040','69,300'],1,'11! ÷ (4! · 4! · 2!) = 34,650 (I×4, S×4, P×2).');
+B('dm',1,'The chromatic number of a bipartite graph with at least one edge is…',['1','2','3','4'],1,'Two colours suffice, and one is not enough because of an edge.');
+B('dm',2,'How many binary relations can be defined on a set with 3 elements?',['9','64','512','729'],2,'A relation is any subset of A × A, so 2⁹ = 512.');
+B('dm',1,'What is the minimum number of people needed to guarantee two share a birth month?',['12','13','24','365'],1,'By the pigeonhole principle, 12 months + 1 = 13.');
+B('dm',2,'A connected graph has an Euler circuit if and only if…',['All vertices have even degree','Exactly two vertices have odd degree','It is a tree','It is bipartite'],0,'Every vertex must be entered and left equally often.');
+B('dm',1,'The implication p → q is logically equivalent to…',['¬p ∨ q','p ∨ ¬q','¬p ∧ q','p ∧ q'],0,'It is false only when p is true and q is false.');
+B('dm',3,'How many labelled spanning trees does the complete graph K₄ have?',['4','8','16','24'],2,'Cayley’s formula: nⁿ⁻² = 4² = 16.');
+B('dm',1,'A relation that is reflexive, symmetric and transitive is called a(n)…',['Partial order','Equivalence relation','Function','Total order'],1,'It partitions the set into equivalence classes.');
+B('dm',2,'How many functions are there from a set of 3 elements to a set of 2 elements?',['6','8','9','16'],1,'Each of the 3 inputs has 2 choices: 2³ = 8.');
+B('dm',2,'For a connected planar graph, Euler’s formula states…',['V + E + F = 2','V − E + F = 2','V − E − F = 2','V + E − F = 2'],1,'V vertices, E edges and F faces satisfy V − E + F = 2.');
+
+/* --- Engineering Maths & Probability --- */
+B('em',2,'The eigenvalues of the matrix [[4, 1], [2, 3]] are…',['2 and 5','1 and 6','3 and 4','−2 and −5'],0,'Trace = 7, determinant = 10, so λ² − 7λ + 10 = 0 gives λ = 2, 5.');
+B('em',1,'The determinant of [[1, 2], [3, 4]] is…',['−2','2','10','−10'],0,'1·4 − 2·3 = −2.');
+B('em',2,'The rank of a 3×3 matrix in which all three rows are the same non-zero row is…',['0','1','2','3'],1,'Only one linearly independent row.');
+B('em',2,'∫ x eˣ dx =',['eˣ(x − 1) + C','eˣ(x + 1) + C','x eˣ + C','eˣ/x + C'],0,'Integration by parts: x eˣ − ∫ eˣ dx = eˣ(x − 1) + C.');
+B('em',1,'d/dx [ sin(x²) ] =',['cos(x²)','2x cos(x²)','2x sin(x²)','−2x cos(x²)'],1,'Chain rule: cos(x²) · 2x.');
+B('em',1,'lim (x → 0) of sin x ÷ x is…',['0','1','∞','Does not exist'],1,'A standard limit.');
+B('em',1,'Two fair dice are rolled. The probability that the sum is 7 is…',['1/12','1/9','1/6','7/36'],2,'6 favourable outcomes out of 36.');
+B('em',1,'The expected value of one roll of a fair six-sided die is…',['3','3.5','4','6'],1,'(1 + 2 + … + 6) ÷ 6 = 3.5.');
+B('em',3,'P(A) = 0.3, P(B | A) = 0.8, P(B | not A) = 0.2. Find P(A | B).',['0.24','0.63','0.80','0.30'],1,'P(A|B) = 0.24 ÷ (0.24 + 0.14) = 0.24 ÷ 0.38 ≈ 0.63.');
+B('em',2,'The variance of a Binomial(n = 10, p = 0.5) random variable is…',['2.5','5','0.25','10'],0,'np(1 − p) = 10 × 0.5 × 0.5 = 2.5.');
+B('em',2,'The Laplace transform of e^(at) is…',['1/(s + a)','1/(s − a)','a/s','s/(s − a)'],1,'L{e^(at)} = 1 ÷ (s − a) for s > a.');
+B('em',2,'For a Poisson distribution with mean 4, the variance is…',['2','4','8','16'],1,'For a Poisson distribution the mean and variance are both λ.');
+
+/* --- Software Engineering --- */
+B('se',1,'Which SDLC model is best suited when requirements are unclear and the project is high-risk?',['Waterfall','Spiral','V-model','Big bang'],1,'The spiral model repeats planning, risk analysis, engineering and evaluation.');
+B('se',2,'A control-flow graph has E = 9 edges and N = 7 nodes (one connected component). Its cyclomatic complexity is…',['2','3','4','5'],2,'V(G) = E − N + 2 = 9 − 7 + 2 = 4.');
+B('se',1,'Boundary value analysis is a…',['White-box technique','Black-box technique','Static analysis technique','Maintenance technique'],1,'Test cases are chosen at the edges of input ranges without looking at the code.');
+B('se',1,'COCOMO is used to estimate…',['Code coverage','Effort, schedule and cost','Network latency','Defect density only'],1,'The Constructive Cost Model predicts effort from size and cost drivers.');
+B('se',2,'Which type of coupling between modules is the most desirable?',['Content coupling','Common coupling','Control coupling','Data coupling'],3,'Passing only the needed data keeps modules loosely connected.');
+B('se',2,'Which type of cohesion is the best?',['Coincidental','Logical','Functional','Temporal'],2,'A functionally cohesive module performs a single well-defined task.');
+B('se',1,'In Scrum, who is responsible for maximising the value of the product and managing the backlog?',['Scrum Master','Product Owner','Developer','Stakeholder'],1,'The Product Owner orders the product backlog.');
+B('se',1,'Regression testing is done to…',['Find performance limits','Check that changes have not broken existing functionality','Test only new features','Measure usability'],1,'Previously passing tests are re-run after each change.');
+B('se',1,'Which UML diagram shows the time-ordered interaction between objects?',['Class diagram','Sequence diagram','Use-case diagram','Component diagram'],1,'Lifelines and messages are drawn in time order.');
+B('se',1,'Fixing bugs found after delivery is which kind of maintenance?',['Corrective','Adaptive','Perfective','Preventive'],0,'Corrective maintenance repairs defects.');
+B('se',2,'Validation asks the question…',['Are we building the product right?','Are we building the right product?','Is the code formatted?','Is the schedule met?'],1,'Verification checks conformance to specification; validation checks it meets user needs.');
+B('se',2,'Which coverage criterion is stronger?',['Statement coverage','Branch (decision) coverage','Function coverage','Line-count coverage'],1,'100% branch coverage guarantees 100% statement coverage, but not the reverse.');
+
+/* --- Advanced DSA --- */
+B('dsa',2,'Keys 10, 20 and 30 are inserted in this order into an empty AVL tree. What is the root?',['10','20','30','The tree is unbalanced'],1,'Inserting 30 makes the tree right-heavy at 10; a left rotation makes 20 the root.');
+B('dsa',3,'How many structurally different binary search trees can be built with 4 distinct keys?',['8','12','14','24'],2,'The Catalan number C₄ = 14.');
+B('dsa',2,'The height of a binary heap with n nodes is…',['⌊log₂ n⌋','n','⌈n/2⌉','√n'],0,'A heap is a complete binary tree.');
+B('dsa',2,'A binary tree has preorder 1 2 4 5 3 and inorder 4 2 5 1 3. Its postorder is…',['4 5 2 3 1','4 2 5 3 1','5 4 2 3 1','4 5 3 2 1'],0,'Root 1; left subtree {4,2,5} with root 2; right subtree {3}. Postorder: 4 5 2 3 1.');
+B('dsa',3,'Union–find with path compression and union by rank performs m operations in about…',['O(m log n)','O(m α(n))','O(m n)','O(m²)'],1,'The inverse Ackermann function α(n) grows so slowly that it is effectively constant.');
+B('dsa',2,'Building a trie from n strings of maximum length L takes…',['O(n)','O(L)','O(nL)','O(n²L)'],2,'Each character of each string is processed once.');
+B('dsa',2,'Prim’s algorithm on a graph stored as an adjacency matrix (simple array search for the minimum) runs in…',['O(V)','O(V²)','O(E log V)','O(V³)'],1,'Each of V iterations scans V vertices.');
+B('dsa',2,'A hash table of size 7 uses h(k) = k mod 7 with linear probing. Keys 10, 17 and 24 are inserted in this order. At which index does 24 end up?',['3','4','5','6'],2,'All three hash to 3, so they occupy indices 3, 4 and 5.');
+B('dsa',2,'A topological ordering of a directed graph exists if and only if the graph is…',['Connected','A DAG','A tree','Bipartite'],1,'A cycle would make it impossible to place all vertices before their successors.');
+B('dsa',3,'The average-case time of QuickSelect for finding the k-th smallest element is…',['O(log n)','O(n)','O(n log n)','O(n²)'],1,'Each partition shrinks the problem geometrically on average: n + n/2 + n/4 + … = O(n).');
+B('dsa',3,'How many different output permutations of 1, 2, 3 (pushed in that order) can be produced using a single stack?',['3','4','5','6'],2,'The count equals the Catalan number C₃ = 5 (only 3 1 2 is impossible).');
+
+/* --- Advanced DBMS --- */
+B('dbms',2,'A schedule is conflict-serialisable if and only if its precedence graph…',['Is complete','Has no cycle','Has a cycle','Has exactly one node'],1,'An acyclic graph gives an equivalent serial order.');
+B('dbms',2,'Strict two-phase locking guarantees…',['Conflict serialisability','Deadlock freedom','No aborts','Lower latency'],0,'2PL ensures conflict-serialisable schedules; deadlocks are still possible.');
+B('dbms',3,'R(A, B, C, D) has functional dependencies A → B, B → C and C → D. What is the highest normal form of R?',['1NF','2NF','3NF','BCNF'],1,'A is the only key, so there are no partial dependencies (2NF), but B → C and C → D are transitive, violating 3NF.');
+B('dbms',3,'R(A, B, C, D, E) has FDs A → B, BC → D and D → E. How many attributes are in the closure of { A, C }?',['2','3','4','5'],3,'A, C → B (from A) → D (BC → D) → E, so {A, B, C, D, E}.');
+B('dbms',2,'In a B+ tree where each node has at most m child pointers, the maximum number of keys in a node is…',['m − 1','m','m + 1','2m'],0,'A node with m pointers holds m − 1 keys.');
+B('dbms',2,'Table R has 1,000 rows, each with a non-null foreign key referencing the primary key of S. How many rows does R ⋈ S return?',['500','1,000','Exactly |S|','1,000 × |S|'],1,'Each R row matches exactly one S row.');
+B('dbms',2,'Deadlocks in a DBMS are typically detected by finding a cycle in the…',['Precedence graph','Wait-for graph','ER diagram','B+ tree'],1,'Nodes are transactions; an edge means one is waiting for another’s lock.');
+B('dbms',2,'Which isolation level prevents dirty reads, non-repeatable reads and phantom reads?',['Read uncommitted','Read committed','Repeatable read (in the SQL standard)','Serializable'],3,'Serializable is the strictest level.');
+B('dbms',2,'Write-ahead logging (WAL) means…',['Data pages are written before their log records','Log records are written to stable storage before the data pages','Only committed data is logged','Logs are never flushed'],1,'This lets the system undo or redo changes after a crash.');
+B('dbms',2,'R has 5 tuples and S has 7, with 3 tuples common to both. How many tuples are in R ∪ S?',['7','9','10','12'],1,'5 + 7 − 3 = 9 (duplicates are removed).');
+
+/* --- Advanced OS --- */
+B('os',3,'P1, P2, P3 arrive at time 0 with CPU bursts 5, 3 and 8 ms. Round Robin with a 2 ms quantum (order P1, P2, P3) gives an average waiting time of…',['5.0 ms','6.0 ms','7.0 ms','8.0 ms'],2,'Completion times are 12, 9 and 16; waiting times are 7, 6 and 8, so the average is 21 ÷ 3 = 7.0 ms.');
+B('os',2,'Banker’s algorithm is used for deadlock…',['Prevention by removing hold-and-wait','Avoidance','Detection only','Recovery'],1,'It grants a request only if the resulting state is safe.');
+B('os',3,'Reference string 1 2 3 4 1 2 5 1 2 3 4 5 with 3 frames and FIFO replacement produces how many page faults?',['7','9','10','12'],1,'FIFO gives 9 faults with 3 frames and 10 with 4 frames (Belady’s anomaly).');
+B('os',3,'For the same reference string and 3 frames, LRU replacement produces how many page faults?',['7','8','9','10'],3,'Simulating LRU with 3 frames gives 10 faults.');
+B('os',2,'A system has 32-bit virtual addresses and 4 KB pages. How many entries does a single-level page table have?',['2¹⁰','2¹²','2²⁰','2³²'],2,'The offset uses 12 bits, leaving 20 bits for the page number: 2²⁰ entries.');
+B('os',3,'The disk head is at cylinder 50 and requests arrive for 82, 170, 43, 140, 24, 16 and 190 (served in this order, FCFS). What is the total head movement?',['208','642','510','360'],1,'32 + 88 + 127 + 97 + 116 + 8 + 174 = 642 cylinders (SSTF would need only 208).');
+B('os',3,'Memory access takes 100 ns, the page-fault rate is 0.001 and servicing a fault takes 8 ms. The effective access time is about…',['100 ns','8.1 µs','80 µs','8 ms'],1,'EAT = 0.999 × 100 ns + 0.001 × 8,000,000 ns ≈ 8,100 ns.');
+B('os',2,'Priority inversion is commonly solved by…',['Priority inheritance','Round-robin scheduling','Disabling interrupts','Increasing the quantum'],0,'The low-priority lock holder temporarily inherits the higher priority of a waiter.');
+B('os',2,'Peterson’s solution for two processes satisfies…',['Mutual exclusion only','Mutual exclusion, progress and bounded waiting','Progress only','None of the critical-section requirements'],1,'It uses flag[] and turn to meet all three requirements.');
+
+/* --- Advanced Networks --- */
+B('cn',2,'How many usable host addresses does the subnet 192.168.10.0/26 have?',['30','62','64','126'],1,'6 host bits → 2⁶ − 2 = 62.');
+B('cn',2,'A class C network is subnetted with mask 255.255.255.224. How many subnets are created?',['4','6','8','16'],2,'/27 borrows 3 bits from the host part, so 2³ = 8 subnets.');
+B('cn',3,'With n-bit sequence numbers, the maximum sender window size for Go-Back-N is…',['2ⁿ','2ⁿ − 1','2ⁿ⁻¹','n'],1,'A window of 2ⁿ would make old and new frames indistinguishable.');
+B('cn',3,'In stop-and-wait, if propagation delay equals transmission time (a = Tp/Tt = 1), the link efficiency is…',['100%','50%','33%','25%'],2,'Efficiency = 1 ÷ (1 + 2a) = 1/3.');
+B('cn',2,'What is the minimum Ethernet frame size (needed for CSMA/CD collision detection)?',['46 bytes','64 bytes','512 bytes','1500 bytes'],1,'The 64-byte minimum ensures the sender is still transmitting when a collision signal returns.');
+B('cn',2,'During TCP slow start, the congestion window grows…',['Linearly each RTT','Exponentially each RTT','Only after a loss','Not at all'],1,'The window doubles each round-trip time until it reaches ssthresh.');
+B('cn',3,'To correct any 2-bit error, a code needs a minimum Hamming distance of…',['3','4','5','6'],2,'To correct t errors we need d ≥ 2t + 1 = 5.');
+B('cn',3,'Nyquist’s formula: the maximum data rate of a noiseless 4 kHz channel with 2 signal levels is…',['4 kbps','8 kbps','16 kbps','32 kbps'],1,'2 × B × log₂ L = 2 × 4000 × 1 = 8,000 bps.');
+B('cn',3,'Shannon’s capacity for B = 3 kHz and S/N = 1023 is…',['3 kbps','10 kbps','30 kbps','300 kbps'],2,'C = B log₂(1 + S/N) = 3000 × log₂ 1024 = 30,000 bps.');
+B('cn',2,'The maximum hop count in RIP is…',['15','16','255','Unlimited'],0,'A metric of 16 means “unreachable”, which limits count-to-infinity.');
+B('cn',2,'What is the minimum length of an IPv4 header?',['8 bytes','20 bytes','40 bytes','60 bytes'],1,'Five 32-bit words when no options are used.');
+B('cn',3,'Four contiguous /24 networks (200.1.0.0 to 200.1.3.0) can be aggregated into one prefix of…',['/21','/22','/23','/25'],1,'Four /24s = 2² blocks, so the prefix shortens by 2 bits to /22.');
+
+/* --- B.Tech key-formula flashcards --- */
+DECKS['B.Tech key formulas'] = [
+  ['Master theorem: T(n) = aT(n/b) + f(n)','Compare f(n) with n^(log_b a): smaller → Θ(n^(log_b a)); equal → Θ(n^(log_b a) log n); larger (with regularity) → Θ(f(n)).'],
+  ['Amdahl’s law','Speedup = 1 ÷ ((1 − f) + f/s), where f is the fraction improved and s its speedup.'],
+  ['AMAT (average memory access time)','Hit time + miss rate × miss penalty.'],
+  ['Direct-mapped cache address split','Address = tag | index | block offset; index bits = log₂(lines), offset bits = log₂(block size).'],
+  ['Cyclomatic complexity','V(G) = E − N + 2P (P = connected components), or number of decision points + 1.'],
+  ['Handshaking lemma','Sum of vertex degrees = 2 × number of edges.'],
+  ['Euler’s formula (planar graphs)','V − E + F = 2 for a connected planar graph.'],
+  ['Cayley’s formula','A complete graph Kₙ has nⁿ⁻² labelled spanning trees.'],
+  ['Catalan number','Cₙ = C(2n, n) ÷ (n + 1): counts BSTs with n keys, valid bracket sequences and stack permutations.'],
+  ['Bayes’ theorem','P(A|B) = P(B|A) P(A) ÷ P(B).'],
+  ['Binomial and Poisson','Binomial: mean np, variance np(1 − p). Poisson: mean = variance = λ.'],
+  ['Nyquist bit rate','Max rate (noiseless) = 2 B log₂ L.'],
+  ['Shannon capacity','C = B log₂(1 + S/N).'],
+  ['Stop-and-wait efficiency','1 ÷ (1 + 2a), where a = propagation delay ÷ transmission time.'],
+  ['Go-Back-N / Selective Repeat windows','Go-Back-N: 2ⁿ − 1. Selective Repeat: 2ⁿ⁻¹ (n-bit sequence numbers).'],
+  ['Hamming distance rules','Detect d errors: d_min ≥ d + 1. Correct t errors: d_min ≥ 2t + 1.'],
+  ['Effective access time (paging)','(1 − p) × memory time + p × page-fault service time.'],
+  ['Armstrong’s axioms','Reflexivity, augmentation, transitivity (plus union, decomposition and pseudo-transitivity as derived rules).'],
+  ['Pumping lemma (regular)','For long enough strings w = xyz with |xy| ≤ p and |y| ≥ 1, xyⁱz stays in the language for all i ≥ 0.'],
+  ['Chomsky hierarchy','Type 3 regular ⊂ Type 2 context-free ⊂ Type 1 context-sensitive ⊂ Type 0 recursively enumerable.'],
+  ['Little’s law (queues)','Average number in system L = arrival rate λ × average time in system W.'],
+  ['Shortest-path algorithms','Dijkstra O((V+E) log V) for non-negative weights; Bellman–Ford O(VE) handles negative edges; Floyd–Warshall O(V³) all pairs.']
+];
+Object.assign(SYL, {
+  'Computer Organization': ['Number representation','Instruction cycle & addressing modes','Pipelining & hazards','Cache & memory hierarchy','I/O & DMA','CPU performance & Amdahl’s law'],
+  'Digital Logic': ['Boolean algebra & K-maps','Combinational circuits','Flip-flops','Counters & registers','Number codes'],
+  'Theory of Computation': ['DFA / NFA','Regular expressions','Pumping lemma','CFG & PDA','Turing machines','Decidability'],
+  'Compiler Design': ['Lexical analysis','Parsing (LL / LR)','Syntax-directed translation','Intermediate code','Code optimisation'],
+  'Algorithms': ['Recurrences & master theorem','Greedy','Dynamic programming','Graph algorithms','NP-completeness','Amortised analysis'],
+  'Discrete Maths': ['Logic & proofs','Sets, relations & functions','Counting & pigeonhole','Graph theory','Recurrences'],
+  'Engineering Maths': ['Linear algebra','Calculus','Probability & distributions','Laplace transform','Numerical methods'],
+  'Software Engineering': ['SDLC models','Testing techniques','Coupling & cohesion','Estimation (COCOMO)','UML & design','Agile & Scrum']
+});
+
+/* balance answer positions so the correct option is spread evenly across A–D (matters when option shuffling is off) */
+QB.forEach((q, i) => { const t = (i * 7 + 3) % 4; if (q.a !== t) { const x = q.o[q.a]; q.o[q.a] = q.o[t]; q.o[t] = x; q.a = t; } });
+
+/* ============ EXAM CENTRE ============ */
+Object.assign(BADGES, {
+  quiz1: ['📝', 'First Test', 'Finished your first test'], ace: ['🏆', 'Ace', 'Scored 90%+ on a test of 10+ questions'],
+  perfect: ['💯', 'Perfectionist', '100% on a test of 5+ questions'], grind100: ['💪', 'Century', 'Answered 100 questions'],
+  daily3: ['📅', 'Daily Grinder', '3-day daily-challenge streak'], mock: ['⏱️', 'Exam Warrior', 'Finished a timed mock test'],
+  cards50: ['🃏', 'Card Shark', 'Reviewed 50 flashcards'], typist: ['⌨️', 'Speed Typist', 'Typed 40+ WPM'], math: ['➗', 'Mental Athlete', 'Scored 15+ in Mental Math Sprint']
+});
+const EXS = { view: 'home', T: null, res: null, c: null, iv: null, rf: 'all',
+  cfg: store.get('ex:cfg', { mode: 'practice', subj: 'all', diff: 0, n: 10, mins: 10, neg: true, shuf: true, lvl: 1 }) };
+if (EXS.cfg.lvl === undefined) EXS.cfg.lvl = 1;
+const XS = {
+  hist: () => store.get('ex:hist', []), mist: () => store.get('ex:mist', {}), bm: () => store.get('ex:bm', []),
+  sub: () => store.get('ex:sub', {}), pb: () => store.get('ex:pb', {}), daily: () => store.get('ex:daily', {})
+};
+const today = () => ymd(new Date());
+function seeded(seed){ let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function seededPick(n, seed){ const bt = QB.filter(q => q.b), src = bt.length >= n ? bt : QB, r = seeded(seed), idx = src.map((_, i) => i); for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; } return idx.slice(0, n).map(i => src[i].id); }
+const dateSeed = () => +today().replace(/-/g, '');
+function shuffled(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const dLabel = d => ['All levels', 'Easy', 'Medium', 'Hard'][d] || 'All levels';
+const fmtClock = s => { s = Math.max(0, Math.round(s)); return (s >= 3600 ? Math.floor(s / 3600) + ':' : '') + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); };
+const totalAnswered = () => Object.values(XS.sub()).reduce((a, s) => a + (s.a || 0), 0);
+const totalCorrect = () => Object.values(XS.sub()).reduce((a, s) => a + (s.c || 0), 0);
+function dailyStreak(){ const d = XS.daily(); let n = 0; const day = new Date(); if (!d[ymd(day)]) day.setDate(day.getDate() - 1); while (d[ymd(day)]) { n++; day.setDate(day.getDate() - 1); } return n; }
+function rankName(){ const c = totalCorrect(); return c >= 300 ? '👑 Master' : c >= 150 ? '🎓 Expert' : c >= 75 ? '📘 Scholar' : c >= 25 ? '📗 Learner' : '🌱 Novice'; }
+function sylPct(){ const d = store.get('syl:done', {}); let t = 0, n = 0; Object.keys(SYL).forEach(s => SYL[s].forEach(tp => { t++; if (d[s + '|' + tp]) n++; })); return t ? n / t : 0; }
+function readiness(){
+  const h = XS.hist().slice(-10); const acc = h.length ? h.reduce((a, x) => a + x.pct, 0) / h.length : 0;
+  const vol = Math.min(1, totalAnswered() / 200), str = Math.min(1, dailyStreak() / 7);
+  return Math.round(acc * .5 + vol * 20 + sylPct() * 20 + str * 10);
+}
+function pool(cfg){
+  if (cfg.ids) return cfg.ids.filter(id => QM[id]);
+  return QB.filter(q => (cfg.subj === 'all' || q.s === cfg.subj) && (!cfg.diff || q.d === cfg.diff) && (!cfg.lvl || q.b)).map(q => q.id);
+}
+function saveResume(){ const T = EXS.T; if (T && !T.fin) store.set('ex:resume', T); else store.del('ex:resume'); }
+function startTest(cfg, ids){
+  ids = ids || shuffled(pool(cfg)).slice(0, Math.max(1, +cfg.n || 10));
+  if (!ids.length) { toast('No questions match these filters', 'warn', '⚠️'); return; }
+  const n = ids.length;
+  EXS.T = { cfg: { ...cfg }, mode: cfg.mode, qids: ids, ord: ids.map(id => { const k = [0, 1, 2, 3]; return cfg.shuf ? shuffled(k) : k; }),
+    ans: ids.map(() => null), mark: ids.map(() => false), rev: ids.map(() => false), tq: ids.map(() => 0), idx: 0, qs: Date.now(), start: Date.now(),
+    deadline: cfg.mode === 'mock' ? Date.now() + Math.max(1, +cfg.mins || n) * 60000 : 0, neg: !!cfg.neg && cfg.mode === 'mock', tabSw: 0, fin: false, warned: 0 };
+  EXS.view = 'run'; saveResume(); startClock(); exDraw();
+  if (cfg.mode === 'mock' && document.fullscreenEnabled) toast('Tip: press F11 for a distraction-free test', 'info', '🖥️');
+}
+function leaveQ(){ const T = EXS.T; if (!T) return; T.tq[T.idx] += (Date.now() - T.qs) / 1000; T.qs = Date.now(); }
+function startClock(){ clearInterval(EXS.iv); EXS.iv = setInterval(tickEx, 500); }
+function tickEx(){
+  const T = EXS.T; if (!T || T.fin) { clearInterval(EXS.iv); return; }
+  const el2 = document.getElementById('exT');
+  if (T.deadline) {
+    const left = (T.deadline - Date.now()) / 1000; if (el2) { el2.textContent = '⏱ ' + fmtClock(left); el2.style.color = left < 60 ? 'var(--pink)' : ''; }
+    const total = (T.deadline - T.start) / 1000;
+    if (left <= 300 && total > 600 && T.warned < 1) { T.warned = 1; toast('5 minutes left', 'warn', '⏱️'); beep(1); }
+    if (left <= 60 && total > 120 && T.warned < 2) { T.warned = 2; toast('1 minute left!', 'warn', '⏱️'); beep(2); }
+    if (left <= 0) { toast('Time is up — test submitted', 'warn', '⏰'); beep(3); finishTest(); }
+  } else if (el2) el2.textContent = '⏱ ' + fmtClock((Date.now() - T.start) / 1000);
+}
+function isRight(T, i){ const q = QM[T.qids[i]]; return T.ans[i] !== null && T.ord[i][T.ans[i]] === q.a; }
+function finishTest(){
+  const T = EXS.T; if (!T || T.fin) return; leaveQ(); T.fin = true; clearInterval(EXS.iv);
+  const n = T.qids.length; let c = 0, w = 0, sk = 0; const sub = XS.sub(), mist = XS.mist(); const per = {};
+  T.qids.forEach((id, i) => { const q = QM[id]; per[q.s] = per[q.s] || { a: 0, c: 0, n: 0 }; per[q.s].n++;
+    if (T.ans[i] === null) { sk++; return; }
+    sub[q.s] = sub[q.s] || { a: 0, c: 0 }; sub[q.s].a++; per[q.s].a++;
+    if (isRight(T, i)) { c++; sub[q.s].c++; per[q.s].c++; delete mist[id]; } else { w++; mist[id] = (mist[id] || 0) + 1; } });
+  const raw = c - (T.neg ? w * .25 : 0); const pct = Math.round(c / n * 100); const secs = Math.round((Date.now() - T.start) / 1000);
+  const rec = { t: Date.now(), mode: T.mode, n, correct: c, wrong: w, skipped: sk, score: Math.round(raw * 100) / 100, pct, secs, subj: T.cfg.subj || 'all' };
+  const h = XS.hist(); h.push(rec); store.set('ex:hist', h.slice(-50)); store.set('ex:sub', sub); store.set('ex:mist', mist);
+  if (n >= 5 && T.cfg.subj && T.mode !== 'daily') { const pb = XS.pb(); if (!pb[T.cfg.subj] || pb[T.cfg.subj] < pct) { pb[T.cfg.subj] = pct; store.set('ex:pb', pb); } }
+  if (T.mode === 'daily') { const d = XS.daily(); d[today()] = { c, n }; store.set('ex:daily', d); if (dailyStreak() >= 3) award('daily3'); }
+  addXP(c * 2 + w + 10); award('quiz1'); if (T.mode === 'mock') award('mock'); if (pct >= 90 && n >= 10) award('ace'); if (pct === 100 && n >= 5) award('perfect'); if (totalAnswered() >= 100) award('grind100');
+  EXS.res = { ...rec, per, tabSw: T.tabSw, neg: T.neg }; EXS.view = 'result'; store.del('ex:resume');
+  if (pct >= 80) confetti(70); exDraw();
+}
+function xesc(s){ return esc(s).replace(/\n/g, '<br>'); }
+function optHTML(T, i, review){
+  const q = QM[T.qids[i]], ord = T.ord[i], correctPos = ord.indexOf(q.a);
+  return ord.map((oi, pos) => {
+    let cls = 'hrp-btn', st = 'display:block;width:100%;text-align:left;margin:7px 0;padding:11px 14px;font-weight:500;line-height:1.4';
+    const sel = T.ans[i] === pos; const showAns = review || T.rev[i];
+    if (showAns && pos === correctPos) st += ';border-color:var(--green);background:rgba(61,220,132,.15)';
+    else if (showAns && sel) st += ';border-color:var(--pink);background:rgba(255,77,157,.15)';
+    else if (sel) st += ';border-color:var(--violet);background:rgba(124,92,255,.22)';
+    return `<button type="button" class="${cls}" style="${st}" data-act="opt" data-i="${pos}"${review ? ' disabled' : ''}><b style="margin-right:8px;color:var(--muted)">${'ABCD'[pos]}</b>${esc(q.o[oi])}</button>`;
+  }).join('');
+}
+const VIEWS = {
+  home(){
+    const T = EXS.T, res = store.get('ex:resume', null); const bm = XS.bm(), mist = Object.keys(XS.mist()), dn = XS.daily()[today()];
+    const r = readiness(); const qid = seededPick(1, dateSeed() + 7)[0], qq = QM[qid]; const qd = store.get('ex:qotd', {});
+    const solved = qd.date === today();
+    const resumeCard = (T && !T.fin) ? `<div class="hrp-card" style="border-color:var(--orange)"><b>Test in progress</b>${T.mode} · ${T.qids.length} questions<div class="hrp-row"><button class="hrp-btn pri" data-act="view" data-v="run">▶ Continue</button></div></div>`
+      : res ? `<div class="hrp-card" style="border-color:var(--orange)"><b>Unfinished test found</b>${res.qids.length} questions · ${res.mode}<div class="hrp-row"><button class="hrp-btn pri" data-act="resume">▶ Resume</button><button class="hrp-btn" data-act="discard">Discard</button></div></div>` : '';
+    return `<div class="hrp-card"><b>Exam readiness: ${r}%</b><div class="hrp-bar"><i style="width:${r}%"></i></div><span class="hrp-muted">${rankName()} · ${totalAnswered()} answered · ${totalCorrect()} correct · 🔥 daily streak ${dailyStreak()}</span></div>${resumeCard}
+    <div class="hrp-h">Start</div><div class="hrp-grid"><button class="hrp-btn pri" data-act="setup" data-m="practice">📖 Practice<br><small>instant feedback</small></button><button class="hrp-btn pri" data-act="setup" data-m="mock">⏱ Mock test<br><small>timed · negative marking</small></button>
+    <button class="hrp-btn" data-act="daily">📅 Daily challenge<br><small>${dn ? 'done ✅ ' + dn.c + '/' + dn.n : '5 questions'}</small></button><button class="hrp-btn" data-act="mistakes">🧾 Mistake bank<br><small>${mist.length} to revise</small></button>
+    <button class="hrp-btn" data-act="bookmarks">🔖 Bookmarked<br><small>${bm.length} questions</small></button><button class="hrp-btn" data-act="view" data-v="stats">📊 My stats<br><small>history & subjects</small></button></div>
+    <div class="hrp-h">💡 Question of the day · ${esc(SUBJ[qq.s])}</div><div class="hrp-card"><div style="margin-bottom:6px">${esc(qq.t)}</div>${qq.o.map((o, i) => `<button type="button" class="hrp-btn" style="display:block;width:100%;text-align:left;margin:5px 0;${solved ? (i === qq.a ? 'border-color:var(--green);background:rgba(61,220,132,.15)' : (qd.pick === i ? 'border-color:var(--pink)' : '')) : ''}" data-act="qotd" data-i="${i}" ${solved ? 'disabled' : ''}>${'ABCD'[i]}. ${esc(o)}</button>`).join('')}${solved ? `<div class="hrp-muted" style="margin-top:6px">${qd.pick === qq.a ? '✅ Correct!' : '❌ Not quite.'} ${esc(qq.e)}</div>` : ''}</div>
+    <p class="hrp-muted">${QB.length} questions (${QB.filter(q => q.b).length} at B.Tech level) across ${Object.keys(SUBJ).length} subjects · progress is saved on this device only.</p>`;
+  },
+  setup(){
+    const c = EXS.cfg, m = c.mode, avail = pool(c).length;
+    return `<div class="hrp-row"><button class="hrp-tab" data-act="view" data-v="home">← Back</button><b>${m === 'mock' ? '⏱ Mock test' : '📖 Practice'} setup</b></div>
+    <label class="hrp-muted">Level</label><select class="hrp-sel" data-cfg="lvl"><option value="1"${c.lvl ? ' selected' : ''}>B.Tech level (semester / GATE-style)</option><option value="0"${c.lvl ? '' : ' selected'}>All levels (includes basics)</option></select>
+    <label class="hrp-muted">Subject</label><select class="hrp-sel" data-cfg="subj"><option value="all"${c.subj === 'all' ? ' selected' : ''}>All subjects (${QB.filter(q => !c.lvl || q.b).length})</option>${Object.keys(SUBJ).filter(k => QB.some(q => q.s === k && (!c.lvl || q.b))).map(k => `<option value="${k}"${c.subj === k ? ' selected' : ''}>${esc(SUBJ[k])} (${QB.filter(q => q.s === k && (!c.lvl || q.b)).length})</option>`).join('')}</select>
+    <label class="hrp-muted">Difficulty</label><select class="hrp-sel" data-cfg="diff">${[0, 1, 2, 3].map(d => `<option value="${d}"${c.diff === d ? ' selected' : ''}>${dLabel(d)}</option>`).join('')}</select>
+    <label class="hrp-muted">Number of questions (${avail} available)</label><select class="hrp-sel" data-cfg="n">${[5, 10, 15, 20, 30, 50, 65].map(n => `<option value="${n}"${c.n === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
+    ${m === 'mock' ? `<label class="hrp-muted">Time limit (minutes)</label><input class="hrp-in" type="number" min="1" max="180" value="${c.mins}" data-cfg="mins"><label class="hrp-check"><input type="checkbox" data-cfg="neg" ${c.neg ? 'checked' : ''}><span>Negative marking (−¼ per wrong answer)</span></label>` : ''}
+    <label class="hrp-check"><input type="checkbox" data-cfg="shuf" ${c.shuf ? 'checked' : ''}><span>Shuffle answer options</span></label>
+    <div class="hrp-row"><button class="hrp-btn pri" data-act="go" ${avail ? '' : 'disabled'}>Start ▶</button></div>`;
+  },
+  run(){
+    const T = EXS.T; if (!T) return VIEWS.home(); const i = T.idx, q = QM[T.qids[i]], n = T.qids.length; const bm = XS.bm().includes(q.id);
+    const answered = T.ans.filter(a => a !== null).length;
+    const pal = T.qids.map((_, k) => { const st = k === i ? 'outline:2px solid var(--text)' : ''; const bg = T.mark[k] ? 'var(--orange)' : T.ans[k] !== null ? 'var(--green)' : 'var(--surface-3)';
+      return `<button type="button" data-act="jump" data-i="${k}" aria-label="Question ${k + 1}" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border-strong);background:${bg};color:${T.ans[k] !== null || T.mark[k] ? '#111' : 'var(--text)'};font-weight:700;cursor:pointer;${st}">${k + 1}</button>`; }).join('');
+    const showExp = T.mode === 'practice' && T.rev[i];
+    return `<div class="hrp-row" style="justify-content:space-between"><b>Q ${i + 1} / ${n}</b><span id="exT" class="hrp-kbd">⏱ --:--</span><span class="hrp-muted">${answered} answered</span></div>
+    <div class="hrp-muted">${esc(SUBJ[q.s])} · ${dLabel(q.d)}</div>
+    <div style="font-size:16px;font-weight:600;margin:8px 0 6px;line-height:1.5">${xesc(q.t)}</div>${optHTML(T, i, false)}
+    ${showExp ? `<div class="hrp-card" style="margin-top:8px;border-color:${isRight(T, i) ? 'var(--green)' : 'var(--pink)'}"><b>${isRight(T, i) ? '✅ Correct' : '❌ Incorrect'}</b>${xesc(q.e)}</div>` : ''}
+    <div class="hrp-row"><button class="hrp-btn" data-act="prev" ${i ? '' : 'disabled'}>← Prev</button><button class="hrp-btn" data-act="next" ${i < n - 1 ? '' : 'disabled'}>Next →</button>
+    ${T.mode !== 'practice' ? `<button class="hrp-btn" data-act="mark">${T.mark[i] ? '★ Marked' : '☆ Mark'}</button><button class="hrp-btn" data-act="clear">Clear</button>` : ''}
+    <button class="hrp-btn" data-act="bm">${bm ? '🔖 Saved' : '🔖 Save'}</button><button class="hrp-btn" data-act="speak" aria-label="Read aloud">🔊</button></div>
+    <div class="hrp-h">Question palette</div><div style="display:flex;flex-wrap:wrap;gap:6px">${pal}</div>
+    <div class="hrp-muted" style="margin-top:6px">Keys: 1–4 choose · N next · P previous${T.mode !== 'practice' ? ' · M mark' : ''}</div>
+    <div class="hrp-row"><button class="hrp-btn pri" data-act="submit">Submit test</button><button class="hrp-btn" data-act="quit">Quit</button></div>`;
+  },
+  result(){
+    const r = EXS.res; if (!r) return VIEWS.home(); const grade = r.pct >= 90 ? 'Outstanding 🏆' : r.pct >= 75 ? 'Great job 🎉' : r.pct >= 60 ? 'Good — keep going 👍' : r.pct >= 40 ? 'Needs practice 📚' : 'Keep at it — review the answers 💪';
+    const avgT = r.n ? Math.round(r.secs / r.n) : 0;
+    const perRows = Object.keys(r.per).map(s => { const p = r.per[s]; const pc = p.n ? Math.round(p.c / p.n * 100) : 0; return `<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${esc(SUBJ[s])}</span><span>${p.c}/${p.n} · ${pc}%</span></div><div class="hrp-bar"><i style="width:${pc}%"></i></div></div>`; }).join('');
+    const weak = Object.keys(r.per).filter(s => r.per[s].n >= 2 && r.per[s].c / r.per[s].n < .6).map(s => SUBJ[s]);
+    return `<div class="hrp-card" style="text-align:center"><div class="hrp-big" style="margin:0">${r.pct}%</div><b>${grade}</b>${r.correct} correct · ${r.wrong} wrong · ${r.skipped} skipped<br>${r.neg ? 'Score with negative marking: <b>' + r.score + ' / ' + r.n + '</b><br>' : ''}Time ${fmtClock(r.secs)} · ~${avgT}s per question${r.tabSw ? '<br>⚠️ Tab switched ' + r.tabSw + ' time(s)' : ''}</div>
+    <div class="hrp-h">By subject</div>${perRows}${weak.length ? `<div class="hrp-card" style="margin-top:8px"><b>Focus next on</b>${esc(weak.join(', '))}</div>` : ''}
+    <div class="hrp-row"><button class="hrp-btn pri" data-act="review" data-f="all">🔍 Review answers</button><button class="hrp-btn" data-act="retry">🔁 Retry wrong & skipped</button><button class="hrp-btn" data-act="view" data-v="home">🏠 Exam home</button></div>
+    <div class="hrp-row"><button class="hrp-btn" data-act="share">📋 Copy score</button><button class="hrp-btn" data-act="csv">⬇ CSV</button><button class="hrp-btn" data-act="print">🖨 Print</button>${r.pct >= 60 && r.n >= 5 ? '<button class="hrp-btn" data-act="cert">🎓 Certificate</button>' : ''}</div>`;
+  },
+  review(){
+    const T = EXS.T; if (!T) return VIEWS.home(); const f = EXS.rf; const bm = XS.bm();
+    const st = i => T.ans[i] === null ? 'skipped' : isRight(T, i) ? 'right' : 'wrong';
+    const items = T.qids.map((_, i) => i).filter(i => f === 'all' || (f === 'marked' ? T.mark[i] : st(i) === f));
+    return `<div class="hrp-row"><button class="hrp-tab" data-act="view" data-v="result">← Result</button>${['all', 'wrong', 'skipped', 'right', 'marked'].map(x => `<button class="hrp-tab${f === x ? ' active' : ''}" data-act="review" data-f="${x}">${x}</button>`).join('')}</div>
+    ${items.map(i => { const q = QM[T.qids[i]]; const s = st(i); const cp = T.ord[i].indexOf(q.a);
+      return `<div class="hrp-card" style="margin:10px 0;border-color:${s === 'right' ? 'var(--green)' : s === 'wrong' ? 'var(--pink)' : 'var(--border)'}"><b>Q${i + 1}. ${xesc(q.t)}</b>
+      <div class="hrp-muted">Your answer: ${T.ans[i] === null ? '— skipped —' : esc(q.o[T.ord[i][T.ans[i]]])}${s === 'right' ? ' ✅' : ''}</div><div style="color:var(--green);font-size:13px">Correct: ${esc(q.o[q.a])}</div><div class="hrp-muted" style="margin-top:4px">${xesc(q.e)}</div>
+      <div class="hrp-row"><button class="hrp-mini" data-act="bmid" data-id="${q.id}">${bm.includes(q.id) ? '🔖 Saved' : '🔖 Save'}</button></div></div>`; }).join('') || '<p class="hrp-muted">Nothing in this filter.</p>'}`;
+  },
+  stats(){
+    const h = XS.hist(), sub = XS.sub(), pb = XS.pb(); const last = h.slice(-15);
+    const pts = last.map((x, i) => `${last.length > 1 ? i / (last.length - 1) * 280 : 140},${60 - x.pct * .56}`).join(' ');
+    const avgAll = h.length ? Math.round(h.reduce((a, x) => a + x.pct, 0) / h.length) : 0;
+    const rows = Object.keys(SUBJ).map(k => { const s = sub[k] || { a: 0, c: 0 }; const pc = s.a ? Math.round(s.c / s.a * 100) : 0; return `<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${esc(SUBJ[k])}</span><span>${s.c}/${s.a} · ${pc}%${pb[k] ? ' · best ' + pb[k] + '%' : ''}</span></div><div class="hrp-bar"><i style="width:${pc}%"></i></div></div>`; }).join('');
+    const weakest = Object.keys(SUBJ).filter(k => (sub[k] || {}).a >= 5).sort((a, b) => sub[a].c / sub[a].a - sub[b].c / sub[b].a)[0];
+    return `<div class="hrp-row"><button class="hrp-tab" data-act="view" data-v="home">← Back</button><b>My stats</b></div>
+    <div class="hrp-grid"><div class="hrp-card"><b>${h.length}</b>tests taken</div><div class="hrp-card"><b>${avgAll}%</b>average score</div><div class="hrp-card"><b>${totalAnswered()}</b>questions answered</div><div class="hrp-card"><b>${dailyStreak()}</b>daily streak</div></div>
+    <div class="hrp-h">Last ${last.length} tests</div>${last.length ? `<svg viewBox="0 0 280 64" style="width:100%;height:80px;background:var(--surface-2);border-radius:10px;padding:4px"><polyline fill="none" stroke="var(--violet)" stroke-width="2.5" points="${pts}"/></svg>` : '<p class="hrp-muted">Take a test to see your trend.</p>'}
+    <div class="hrp-h">Accuracy by subject</div>${rows}${weakest ? `<div class="hrp-card"><b>Suggested next topic</b>${esc(SUBJ[weakest])} — your lowest accuracy so far.</div>` : ''}
+    <div class="hrp-row"><button class="hrp-btn" data-act="hcsv">⬇ Export history CSV</button><button class="hrp-btn" data-act="wipe">🗑 Reset exam data</button></div>`;
+  }
+};
+function exDraw(){ const c = EXS.c; if (!c || !c.isConnected) return; c.innerHTML = VIEWS[EXS.view](); if (EXS.view === 'run') tickEx(); }
+function certificate(name){
+  const r = EXS.res, cv = document.createElement('canvas'); cv.width = 1200; cv.height = 850; const x = cv.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 1200, 850); g.addColorStop(0, '#12122a'); g.addColorStop(1, '#2b1f5c'); x.fillStyle = g; x.fillRect(0, 0, 1200, 850);
+  x.strokeStyle = '#fbbf24'; x.lineWidth = 6; x.strokeRect(30, 30, 1140, 790); x.strokeStyle = 'rgba(255,255,255,.25)'; x.lineWidth = 2; x.strokeRect(46, 46, 1108, 758);
+  x.fillStyle = '#fff'; x.textAlign = 'center'; x.font = 'bold 30px sans-serif'; x.fillText('HACKATHON RIVALS · PRACTICE EXAM CENTRE', 600, 130);
+  x.font = 'bold 72px serif'; x.fillStyle = '#fbbf24'; x.fillText('Certificate of Achievement', 600, 260);
+  x.fillStyle = '#ddd'; x.font = '28px sans-serif'; x.fillText('This is proudly presented to', 600, 340);
+  x.fillStyle = '#fff'; x.font = 'bold 64px serif'; x.fillText((name || 'Student').slice(0, 32), 600, 440);
+  x.fillStyle = '#ddd'; x.font = '28px sans-serif'; x.fillText('for scoring ' + r.pct + '% (' + r.correct + ' of ' + r.n + ') in a ' + r.mode + ' test', 600, 520);
+  x.fillText((r.subj === 'all' ? 'across all subjects' : 'in ' + (SUBJ[r.subj] || r.subj)) + ' on ' + new Date().toLocaleDateString(), 600, 570);
+  x.font = 'italic 22px sans-serif'; x.fillStyle = '#aaa'; x.fillText('Self-practice certificate generated on this device — not an official credential.', 600, 760);
+  cv.toBlob(b => { const u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = 'certificate.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1500); });
+}
+const EXACT = {
+  view(b){ EXS.view = b.dataset.v; exDraw(); },
+  setup(b){ EXS.cfg.mode = b.dataset.m; if (b.dataset.m === 'mock') { EXS.cfg.n = Math.max(EXS.cfg.n, 10); EXS.cfg.mins = Math.max(1, Math.round(EXS.cfg.n * (EXS.cfg.lvl ? 1.5 : 1))); } EXS.view = 'setup'; exDraw(); },
+  go(){ const c = EXS.cfg; store.set('ex:cfg', c); if (c.mode === 'mock') c.mins = Math.max(1, +c.mins || c.n); startTest(c); },
+  opt(b){ const T = EXS.T; if (!T || T.fin) return; const i = T.idx, pos = +b.dataset.i;
+    if (T.mode === 'practice') { if (T.rev[i]) return; T.ans[i] = pos; T.rev[i] = true; } else T.ans[i] = pos;
+    saveResume(); exDraw(); },
+  next(){ const T = EXS.T; if (T && T.idx < T.qids.length - 1) { leaveQ(); T.idx++; saveResume(); exDraw(); } },
+  prev(){ const T = EXS.T; if (T && T.idx > 0) { leaveQ(); T.idx--; saveResume(); exDraw(); } },
+  jump(b){ const T = EXS.T; if (T) { leaveQ(); T.idx = +b.dataset.i; saveResume(); exDraw(); } },
+  mark(){ const T = EXS.T; if (T) { T.mark[T.idx] = !T.mark[T.idx]; saveResume(); exDraw(); } },
+  clear(){ const T = EXS.T; if (T && T.mode !== 'practice') { T.ans[T.idx] = null; saveResume(); exDraw(); } },
+  bm(){ const T = EXS.T; if (!T) return; const id = T.qids[T.idx]; let bm = XS.bm(); bm = bm.includes(id) ? bm.filter(x => x !== id) : bm.concat(id); store.set('ex:bm', bm); exDraw(); },
+  bmid(b){ const id = b.dataset.id; let bm = XS.bm(); bm = bm.includes(id) ? bm.filter(x => x !== id) : bm.concat(id); store.set('ex:bm', bm); exDraw(); },
+  speak(){ const T = EXS.T; if (!T || !window.speechSynthesis) return toast('Read-aloud is not supported here', 'warn', '🔇'); const q = QM[T.qids[T.idx]];
+    speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(q.t + '. ' + T.ord[T.idx].map((o, p) => 'Option ' + 'ABCD'[p] + ': ' + q.o[o]).join('. '))); },
+  submit(){ const T = EXS.T; if (!T) return; const un = T.ans.filter(a => a === null).length, mk = T.mark.filter(Boolean).length;
+    if (confirm(`Submit now?\n${T.qids.length - un} answered · ${un} unanswered${mk ? ' · ' + mk + ' marked for review' : ''}`)) finishTest(); },
+  quit(){ if (confirm('Quit this test? Your progress will not be scored.')) { EXS.T = null; clearInterval(EXS.iv); store.del('ex:resume'); EXS.view = 'home'; exDraw(); } },
+  resume(){ const r = store.get('ex:resume', null); if (!r) return; EXS.T = r; EXS.view = 'run'; EXS.T.qs = Date.now(); startClock(); exDraw(); },
+  discard(){ store.del('ex:resume'); exDraw(); },
+  daily(){ if (XS.daily()[today()] && !confirm('You already completed today’s challenge. Play again (won’t change your streak)?')) return; startTest({ mode: 'daily', subj: 'all', diff: 0, n: 5, mins: 0, neg: false, shuf: true }, seededPick(5, dateSeed())); },
+  mistakes(){ const ids = Object.keys(XS.mist()); if (!ids.length) return toast('No mistakes saved yet — great!', 'success', '✨'); startTest({ mode: 'practice', subj: 'all', diff: 0, n: ids.length, shuf: true, ids }, shuffled(ids).slice(0, 20)); },
+  bookmarks(){ const ids = XS.bm().filter(id => QM[id]); if (!ids.length) return toast('Save questions with 🔖 to practise them here', 'info', '🔖'); startTest({ mode: 'practice', subj: 'all', diff: 0, n: ids.length, shuf: true, ids }, shuffled(ids).slice(0, 30)); },
+  review(b){ EXS.rf = b.dataset.f || 'all'; EXS.view = 'review'; exDraw(); },
+  retry(){ const T = EXS.T; if (!T) return; const ids = T.qids.filter((_, i) => !isRight(T, i)); if (!ids.length) return toast('Nothing to retry — perfect score!', 'success', '💯'); startTest({ mode: 'practice', subj: 'all', diff: 0, n: ids.length, shuf: true, ids }, ids); },
+  share(){ const r = EXS.res; copy(`📝 I scored ${r.pct}% (${r.correct}/${r.n}) on a ${r.mode} test at Hackathon Rivals Exam Centre! ${location.origin}${location.pathname}`); award('share'); },
+  csv(){ const T = EXS.T; if (!T) return; download('test-result.csv', toCSV([['#', 'Subject', 'Question', 'Your answer', 'Correct answer', 'Result', 'Seconds']].concat(T.qids.map((id, i) => { const q = QM[id]; return [i + 1, SUBJ[q.s], q.t, T.ans[i] === null ? '' : q.o[T.ord[i][T.ans[i]]], q.o[q.a], T.ans[i] === null ? 'skipped' : isRight(T, i) ? 'correct' : 'wrong', Math.round(T.tq[i])]; }))), 'text/csv'); },
+  hcsv(){ const h = XS.hist(); if (!h.length) return toast('No tests yet', 'warn', '⚠️'); download('exam-history.csv', toCSV([['Date', 'Mode', 'Subject', 'Questions', 'Correct', 'Wrong', 'Skipped', 'Score', 'Percent', 'Seconds']].concat(h.map(x => [new Date(x.t).toLocaleString(), x.mode, x.subj, x.n, x.correct, x.wrong, x.skipped, x.score, x.pct, x.secs]))), 'text/csv'); },
+  print(){ window.print(); },
+  cert(){ const nm = prompt('Name to print on the certificate:', store.get('certName', '')); if (nm === null) return; store.set('certName', nm.slice(0, 32)); certificate(nm); },
+  wipe(){ if (confirm('Delete all test history, stats, bookmarks and mistakes?')) { ['ex:hist', 'ex:mist', 'ex:bm', 'ex:sub', 'ex:pb', 'ex:daily', 'ex:resume', 'ex:qotd'].forEach(k => store.del(k)); EXS.view = 'home'; exDraw(); } },
+  qotd(b){ const qid = seededPick(1, dateSeed() + 7)[0], q = QM[qid], pick2 = +b.dataset.i; store.set('ex:qotd', { date: today(), pick: pick2 }); const sub = XS.sub(); sub[q.s] = sub[q.s] || { a: 0, c: 0 }; sub[q.s].a++; if (pick2 === q.a) { sub[q.s].c++; addXP(3); } else { const m = XS.mist(); m[qid] = 1; store.set('ex:mist', m); } store.set('ex:sub', sub); exDraw(); }
+};
+TABS.push(['exam', '🎓 Exam', c => {
+  EXS.c = c;
+  if (EXS.view === 'run' && (!EXS.T || EXS.T.fin)) EXS.view = 'home';
+  if ((EXS.view === 'result' || EXS.view === 'review') && !EXS.res) EXS.view = 'home';
+  exDraw();
+  c.onclick = e => { const b = e.target.closest('[data-act]'); if (!b || b.disabled) return; const f = EXACT[b.dataset.act]; if (f) f(b, e); };
+  c.onchange = c.oninput = e => { const k = e.target.dataset.cfg; if (!k) return; const t = e.target; const v = t.type === 'checkbox' ? t.checked : (k === 'subj' ? t.value : +t.value); EXS.cfg[k] = v; if (k === 'lvl' && EXS.cfg.subj !== 'all' && !QB.some(q => q.s === EXS.cfg.subj && (!v || q.b))) EXS.cfg.subj = 'all';
+    if (t.tagName === 'SELECT' && e.type === 'change') exDraw(); };
+}]);
+document.addEventListener('keydown', e => {
+  if (!hubEl || !hubEl.classList.contains('open') || EXS.view !== 'run' || !EXS.T || EXS.T.fin || isTyping(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (['1', '2', '3', '4'].includes(k)) { EXACT.opt({ dataset: { i: String(+k - 1) } }); e.stopPropagation(); }
+  else if (k === 'n' || k === 'arrowright') EXACT.next(); else if (k === 'p' || k === 'arrowleft') EXACT.prev(); else if (k === 'm') EXACT.mark();
+}, true);
+document.addEventListener('visibilitychange', () => { const T = EXS.T; if (T && !T.fin && T.mode === 'mock' && document.hidden) { T.tabSw++; saveResume(); } });
+window.addEventListener('beforeunload', e => { const T = EXS.T; if (T && !T.fin && T.mode === 'mock') { e.preventDefault(); e.returnValue = ''; } });
+['Practice mode with instant explanations', 'Timed mock test with auto-submit', 'Negative-marking toggle (−¼)', Object.keys(SUBJ).length + '-subject question bank (' + QB.length + ' questions, ' + QB.filter(q => q.b).length + ' at B.Tech level)', 'B.Tech-level filter (semester / GATE-style questions)', 'Difficulty filter (easy / medium / hard)', 'Choose 5–50 questions per test',
+  'Shuffle answer options', 'Question palette (answered / marked colours)', 'Mark-for-review and clear-answer', 'Keyboard control during tests (1–4, N, P, M)', 'Time-left warnings at 5 min and 1 min with beep', 'Submit summary before final submission',
+  'Score, accuracy and time-per-question report', 'Subject-wise result breakdown with weak-area hints', 'Answer review with explanations and filters', 'Retry only wrong & skipped questions', 'Bookmark questions and practise them later',
+  'Mistake bank that empties as you master questions', 'Daily challenge (same 5 questions for everyone each day) with streak', 'Question of the day', 'Personal best per subject', 'Score-history trend chart', 'Exam readiness score', 'Rank titles (Novice → Master)',
+  'Resume an interrupted test after refresh', 'Refresh-protection warning during mock tests', 'Tab-switch counter during mock tests', 'Read-aloud for questions (speech)', 'Result CSV export', 'History CSV export', 'Print-friendly result page',
+  'Copy-to-share score text', 'Downloadable PNG certificate (≥60%)', '9 new exam badges'].forEach(n => feat('Exam: ' + n, () => {}));
+
+/* ============ FLASHCARDS (Leitner spaced repetition) ============ */
+const DAYS = [0, 1, 2, 4, 8, 16];
+const FCS = { deck: store.get('fc:deck', 'Tech acronyms'), q: [], cur: null, flip: false, c: null };
+const deckCards = d => d === 'My cards' ? store.get('fc:mine', []) : (DECKS[d] || []);
+const deckProg = d => store.get('fc:p:' + d, {});
+function fcQueue(d){
+  const cards = deckCards(d), p = deckProg(d), now = Date.now();
+  return shuffled(cards.map((_, i) => i).filter(i => !p[i] || p[i].due <= now)).slice(0, 25);
+}
+function fcDraw(){
+  const c = FCS.c; if (!c || !c.isConnected) return; const d = FCS.deck, cards = deckCards(d), p = deckProg(d), now = Date.now();
+  const nNew = cards.filter((_, i) => !p[i]).length, nDue = cards.filter((_, i) => p[i] && p[i].due <= now).length, nMas = cards.filter((_, i) => p[i] && p[i].b >= 5).length;
+  const decks = Object.keys(DECKS).concat('My cards');
+  const cur = FCS.q[0]; const card = cur != null ? cards[cur] : null;
+  c.innerHTML = `<select class="hrp-sel" data-fc="deck">${decks.map(k => `<option${k === d ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select>
+  <div class="hrp-muted" style="margin:8px 0">${cards.length} cards · 🆕 ${nNew} new · ⏰ ${nDue} due · ⭐ ${nMas} mastered · ${FCS.q.length} left in this session</div>
+  ${card ? `<div class="hrp-card" data-fcact="flip" style="min-height:150px;display:grid;place-items:center;text-align:center;cursor:pointer;font-size:${FCS.flip ? 15 : 20}px;padding:20px;border-color:${FCS.flip ? 'var(--cyan)' : 'var(--violet)'}"><div>${FCS.flip ? xesc(card[1]) : '<b>' + esc(card[0]) + '</b><div class="hrp-muted" style="margin-top:10px">tap to reveal</div>'}</div></div>
+  ${FCS.flip ? '<div class="hrp-row" style="justify-content:center"><button class="hrp-btn" data-fcact="again">❌ Again</button><button class="hrp-btn" data-fcact="good">👍 Good</button><button class="hrp-btn" data-fcact="easy">⚡ Easy</button></div>' : ''}`
+    : `<div class="hrp-card" style="text-align:center"><b>${cards.length ? '🎉 Session complete!' : 'This deck is empty'}</b>${cards.length ? 'No cards are due right now. Come back later — or study ahead.' : 'Add your own cards below.'}<div class="hrp-row" style="justify-content:center">${cards.length ? '<button class="hrp-btn pri" data-fcact="ahead">Study ahead (10 cards)</button>' : ''}</div></div>`}
+  <div class="hrp-row"><button class="hrp-btn" data-fcact="shuffle">🔀 Restart session</button><button class="hrp-btn" data-fcact="reset">↺ Reset progress</button></div>
+  <details><summary class="hrp-muted" style="cursor:pointer">➕ Add / manage my cards</summary><input class="hrp-in" id="fcF" placeholder="Front (question / term)" maxlength="200" style="margin:8px 0"><textarea class="hrp-ta" id="fcB" style="min-height:70px;font-family:inherit" placeholder="Back (answer / definition)" maxlength="400"></textarea>
+  <div class="hrp-row"><button class="hrp-btn pri" data-fcact="add">Add to “My cards”</button><button class="hrp-btn" data-fcact="exp">⬇ Export</button><label class="hrp-btn" style="cursor:pointer">⬆ Import<input type="file" accept="application/json" hidden data-fc="imp"></label></div></details>`;
+}
+function fcNext(){ FCS.q.shift(); FCS.flip = false; fcDraw(); }
+function fcRate(kind){
+  const d = FCS.deck, i = FCS.q[0]; if (i == null) return; const p = deckProg(d), old = p[i] ? p[i].b : 0;
+  let b = kind === 'again' ? 1 : Math.min(5, old + (kind === 'easy' ? 2 : 1)); if (kind === 'again') { p[i] = { b, due: Date.now() + 10 * 60000 }; FCS.q.push(i); }
+  else p[i] = { b, due: Date.now() + DAYS[b] * 86400000 };
+  store.set('fc:p:' + d, p); const n = store.get('fc:n', 0) + 1; store.set('fc:n', n); addXP(1); if (n >= 50) award('cards50'); fcNext();
+}
+TABS.push(['cards', '🃏 Cards', c => {
+  FCS.c = c; FCS.q = fcQueue(FCS.deck); FCS.flip = false; fcDraw();
+  c.onclick = e => { const b = e.target.closest('[data-fcact]'); if (!b) return; const a = b.dataset.fcact;
+    if (a === 'flip') { FCS.flip = true; fcDraw(); } else if (a === 'again' || a === 'good' || a === 'easy') fcRate(a);
+    else if (a === 'shuffle') { FCS.q = fcQueue(FCS.deck); FCS.flip = false; fcDraw(); }
+    else if (a === 'ahead') { FCS.q = shuffled(deckCards(FCS.deck).map((_, i) => i)).slice(0, 10); FCS.flip = false; fcDraw(); }
+    else if (a === 'reset') { if (confirm('Reset progress for this deck?')) { store.del('fc:p:' + FCS.deck); FCS.q = fcQueue(FCS.deck); fcDraw(); } }
+    else if (a === 'add') { const f = $('#fcF', c).value.trim(), bk = $('#fcB', c).value.trim(); if (!f || !bk) return toast('Fill both sides of the card', 'warn', '⚠️'); const m = store.get('fc:mine', []); if (m.length >= 500) return toast('Card limit reached (500)', 'warn', '⚠️');
+      m.push([f.slice(0, 200), bk.slice(0, 400)]); store.set('fc:mine', m); FCS.deck = 'My cards'; store.set('fc:deck', 'My cards'); FCS.q = fcQueue('My cards'); toast('Card added to “My cards”', 'success', '🃏'); fcDraw(); }
+    else if (a === 'exp') download('my-flashcards.json', JSON.stringify(store.get('fc:mine', []), null, 2), 'application/json'); };
+  c.onchange = e => { if (e.target.dataset.fc === 'deck') { FCS.deck = e.target.value; store.set('fc:deck', FCS.deck); FCS.q = fcQueue(FCS.deck); FCS.flip = false; fcDraw(); }
+    else if (e.target.dataset.fc === 'imp' && e.target.files[0]) { const r = new FileReader(); r.onload = () => { try { const a = JSON.parse(r.result); if (!Array.isArray(a)) throw 0; const ok = a.filter(x => Array.isArray(x) && typeof x[0] === 'string' && typeof x[1] === 'string').map(x => [x[0].slice(0, 200), x[1].slice(0, 400)]);
+      const m = store.get('fc:mine', []).concat(ok).slice(0, 500); store.set('fc:mine', m); toast('Imported ' + ok.length + ' cards', 'success', '⬆'); FCS.deck = 'My cards'; FCS.q = fcQueue('My cards'); fcDraw(); } catch(err){ toast('Not a valid card file', 'warn', '⚠️'); } }; r.readAsText(e.target.files[0]); } };
+}]);
+['Flashcards with Leitner spaced repetition (5 boxes)', Object.keys(DECKS).length + ' ready-made decks (' + Object.values(DECKS).reduce((a, d) => a + d.length, 0) + ' cards)', 'Tap-to-flip cards with Again / Good / Easy grading', 'Due, new and mastered counters', 'Create your own flashcards (up to 500)', 'Import / export flashcards as JSON', 'Study-ahead mode and session restart'].forEach(n => feat('Cards: ' + n, () => {}));
+
+/* ============ CALCULATORS ============ */
+const nf = x => Number.isFinite(x) ? String(+x.toFixed(6)) : '—';
+function need(...v){ v.forEach(x => { if (!Number.isFinite(x)) throw new Error('Please fill every field with a number'); }); }
+function mk(c, fields, run, note){
+  c.innerHTML = fields.map(f => `<label class="hrp-muted">${esc(f[1])}</label>` + (f[3] === 'textarea' ? `<textarea class="hrp-ta" data-f="${f[0]}" style="min-height:90px;margin-bottom:8px">${esc(f[2] ?? '')}</textarea>` : `<input class="hrp-in" data-f="${f[0]}" type="${f[3] || 'number'}" step="any" value="${esc(f[2] ?? '')}" style="margin-bottom:8px">`)).join('') +
+    '<div class="hrp-row"><button class="hrp-btn pri" data-go="1">Calculate</button><button class="hrp-btn" data-cp="1">Copy</button></div><div class="hrp-out"></div>' + (note ? `<p class="hrp-muted">${note}</p>` : '');
+  const out = $('.hrp-out', c);
+  const get = () => { const o = {}; $$('[data-f]', c).forEach(i => { o[i.dataset.f] = i.type === 'number' ? (i.value === '' ? NaN : parseFloat(i.value)) : i.value; }); return o; };
+  const go = () => { try { out.textContent = run(get()); } catch(e){ out.textContent = '❌ ' + e.message; } };
+  c.addEventListener('click', e => { if (e.target.dataset.go) go(); else if (e.target.dataset.cp) copy(out.textContent); });
+  c.addEventListener('input', go); go();
+}
+const gcd2 = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
+function factorize(n){ const f = []; let d = 2; while (n > 1 && d * d <= n) { while (n % d === 0) { f.push(d); n /= d; } d++; } if (n > 1) f.push(n); return f; }
+const isPrime = n => { if (n < 2 || !Number.isInteger(n)) return false; for (let i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; };
+const big = n => { let r = 1n; for (let i = 2n; i <= BigInt(n); i++) r *= i; return r; };
+
+function calcEval(src, deg){
+  if (src.length > 200) throw new Error('Expression too long');
+  const s = src.replace(/\s+/g, '').replace(/×/g, '*').replace(/÷/g, '/').replace(/π/g, 'pi').replace(/√/g, 'sqrt'); let i = 0;
+  const T = x => deg ? x * Math.PI / 180 : x, U = x => deg ? x * 180 / Math.PI : x;
+  const fact = n => { if (n < 0 || !Number.isInteger(n) || n > 170) throw new Error('Factorial needs an integer from 0 to 170'); let r = 1; for (let k = 2; k <= n; k++) r *= k; return r; };
+  const F1 = { sin: x => Math.sin(T(x)), cos: x => Math.cos(T(x)), tan: x => Math.tan(T(x)), asin: x => U(Math.asin(x)), acos: x => U(Math.acos(x)), atan: x => U(Math.atan(x)), sqrt: Math.sqrt, cbrt: Math.cbrt, log: Math.log10, ln: Math.log, abs: Math.abs, exp: Math.exp, floor: Math.floor, ceil: Math.ceil, round: Math.round, fact };
+  const F2 = { pow: Math.pow, mod: (a, b) => a % b, max: Math.max, min: Math.min, gcd: gcd2, lcm: (a, b) => a && b ? Math.abs(a * b) / gcd2(a, b) : 0, npr: (n, r) => fact(n) / fact(n - r), ncr: (n, r) => fact(n) / (fact(r) * fact(n - r)) };
+  function expr(){ let v = term(); while (s[i] === '+' || s[i] === '-') { const op = s[i++]; const r = term(); v = op === '+' ? v + r : v - r; } return v; }
+  function term(){ let v = unary(); while (s[i] === '*' || s[i] === '/') { const op = s[i++]; const r = unary(); v = op === '*' ? v * r : v / r; } return v; }
+  function unary(){ if (s[i] === '-') { i++; return -unary(); } if (s[i] === '+') { i++; return unary(); } return power(); }
+  function power(){ let b = post(); if (s[i] === '^') { i++; return Math.pow(b, unary()); } return b; }
+  function post(){ let v = primary(); while (s[i] === '!' || s[i] === '%') { v = s[i++] === '!' ? fact(v) : v / 100; } return v; }
+  function primary(){
+    if (s[i] === '(') { i++; const v = expr(); if (s[i] !== ')') throw new Error('Missing )'); i++; return v; }
+    const m = /^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(s.slice(i)); if (m) { i += m[0].length; return parseFloat(m[0]); }
+    const id = /^[a-z]+/i.exec(s.slice(i)); if (!id) throw new Error('Unexpected “' + (s[i] || 'end') + '”'); const name = id[0].toLowerCase(); i += name.length;
+    if (name === 'pi') return Math.PI; if (name === 'e') return Math.E;
+    if (s[i] !== '(') throw new Error('Unknown name “' + name + '”'); i++; const args = [expr()]; while (s[i] === ',') { i++; args.push(expr()); } if (s[i] !== ')') throw new Error('Missing )'); i++;
+    if (F1[name] && args.length === 1) return F1[name](args[0]); if (F2[name] && args.length === 2) return F2[name](args[0], args[1]);
+    throw new Error('Bad function “' + name + '”');
+  }
+  const v = expr(); if (i < s.length) throw new Error('Unexpected “' + s[i] + '”'); return v;
+}
+reg('calc', 'Scientific calculator', c => {
+  c.innerHTML = `<input class="hrp-in" id="scI" placeholder="e.g. sqrt(16) + 2^3 * (5 - 1) / 4" autocomplete="off" aria-label="Expression"><div class="hrp-row"><select class="hrp-sel hrp-in sm" id="scD" style="max-width:120px"><option value="1">Degrees</option><option value="0">Radians</option></select><button class="hrp-btn pri" data-a="eq">=</button><button class="hrp-btn" data-a="clr">C</button></div>
+  <div class="hrp-row">${['sin(', 'cos(', 'tan(', 'sqrt(', 'log(', 'ln(', '(', ')', '^', '!', '%', 'pi', 'e', 'abs(', 'pow(', 'mod('].map(x => `<button class="hrp-mini" data-i="${x}">${x}</button>`).join('')}</div><div class="hrp-out" id="scO" style="font-size:20px">0</div><div class="hrp-muted" id="scH"></div>`;
+  const inp = $('#scI', c), out = $('#scO', c), his = $('#scH', c); let hist = store.get('sch', []);
+  const run = commit => { if (!inp.value.trim()) { out.textContent = '0'; return; } try { const v = calcEval(inp.value, $('#scD', c).value === '1'); out.textContent = nf(v); if (commit) { hist.unshift(inp.value + ' = ' + nf(v)); hist = hist.slice(0, 8); store.set('sch', hist); his.innerHTML = hist.map(esc).join('<br>'); } } catch(e){ out.textContent = '❌ ' + e.message; } };
+  inp.addEventListener('input', () => run(false)); inp.addEventListener('keydown', e => { if (e.key === 'Enter') run(true); }); his.innerHTML = hist.map(esc).join('<br>');
+  c.addEventListener('click', e => { const t = e.target; if (t.dataset.i) { inp.value += t.dataset.i; inp.focus(); run(false); } else if (t.dataset.a === 'eq') run(true); else if (t.dataset.a === 'clr') { inp.value = ''; out.textContent = '0'; } });
+});
+reg('calc', 'Percentage calculator', c => mk(c, [['x', 'X (percent or first value)', 20], ['y', 'Y (second value)', 250]], v => { need(v.x, v.y);
+  return `${nf(v.x)}% of ${nf(v.y)} = ${nf(v.x / 100 * v.y)}\n${nf(v.x)} is ${nf(v.x / v.y * 100)}% of ${nf(v.y)}\nChange from ${nf(v.x)} to ${nf(v.y)} = ${nf((v.y - v.x) / v.x * 100)}%\n${nf(v.y)} increased by ${nf(v.x)}% = ${nf(v.y * (1 + v.x / 100))}\n${nf(v.y)} decreased by ${nf(v.x)}% = ${nf(v.y * (1 - v.x / 100))}`; }));
+reg('calc', 'Simple & compound interest', c => mk(c, [['p', 'Principal (₹)', 10000], ['r', 'Rate (% per year)', 8], ['t', 'Time (years)', 3], ['n', 'Compounds per year', 1]], v => { need(v.p, v.r, v.t, v.n);
+  const si = v.p * v.r * v.t / 100, amt = v.p * Math.pow(1 + v.r / (100 * v.n), v.n * v.t); return `Simple interest: ${nf(si)}  (amount ${nf(v.p + si)})\nCompound amount: ${nf(amt)}\nCompound interest: ${nf(amt - v.p)}\nCI − SI: ${nf(amt - v.p - si)}`; }));
+reg('calc', 'Profit, loss & discount', c => mk(c, [['cp', 'Cost price', 400], ['sp', 'Selling price', 500], ['mp', 'Marked price (optional)', 600], ['d', 'Discount % (optional)', '']], v => { need(v.cp, v.sp);
+  const d = v.sp - v.cp; let t = d >= 0 ? `Profit: ${nf(d)} (${nf(d / v.cp * 100)}%)` : `Loss: ${nf(-d)} (${nf(-d / v.cp * 100)}%)`;
+  if (Number.isFinite(v.mp)) t += `\nDiscount given: ${nf(v.mp - v.sp)} (${nf((v.mp - v.sp) / v.mp * 100)}% of marked price)`; if (Number.isFinite(v.mp) && Number.isFinite(v.d)) t += `\nSelling price after ${nf(v.d)}% discount: ${nf(v.mp * (1 - v.d / 100))}`; return t; }));
+reg('calc', 'Speed, distance & time', c => mk(c, [['d', 'Distance (km)', 120], ['t', 'Time (hours)', ''], ['s', 'Speed (km/h)', 60]], v => { const k = [v.d, v.t, v.s].filter(Number.isFinite).length; if (k !== 2) throw new Error('Fill exactly two fields and leave one blank');
+  let d = v.d, t = v.t, s = v.s; if (!Number.isFinite(d)) d = s * t; else if (!Number.isFinite(t)) t = d / s; else s = d / t; return `Distance: ${nf(d)} km\nTime: ${nf(t)} h (${nf(t * 60)} min)\nSpeed: ${nf(s)} km/h = ${nf(s * 5 / 18)} m/s`; }, 'Leave the field you want to find blank.'));
+reg('calc', 'Time & work', c => mk(c, [['a', 'A alone takes (days)', 10], ['b', 'B alone takes (days)', 15], ['t', 'A and B together take (days, optional)', '']], v => { need(v.a);
+  let t = ''; if (Number.isFinite(v.b)) t += `Together: ${nf(1 / (1 / v.a + 1 / v.b))} days\n`; if (Number.isFinite(v.t)) { const r = 1 / v.t - 1 / v.a; t += r > 0 ? `B alone would take: ${nf(1 / r)} days` : 'Inconsistent: together must be faster than A alone'; } return t.trim(); }));
+reg('calc', 'Permutations & combinations', c => mk(c, [['n', 'n', 10], ['r', 'r', 3]], v => { need(v.n, v.r); if (!Number.isInteger(v.n) || !Number.isInteger(v.r) || v.n < 0 || v.r < 0 || v.r > v.n || v.n > 200) throw new Error('Use whole numbers with 0 ≤ r ≤ n ≤ 200');
+  const f = big(v.n), pr = f / big(v.n - v.r); return `n! = ${f.toString().length > 60 ? f.toString().slice(0, 30) + '…' : f}\nP(n,r) = ${pr}\nC(n,r) = ${pr / big(v.r)}`; }));
+reg('calc', 'GCD, LCM & prime factors', c => mk(c, [['a', 'First number', 36], ['b', 'Second number', 48]], v => { need(v.a, v.b); if (!Number.isInteger(v.a) || !Number.isInteger(v.b) || v.a < 1 || v.b < 1) throw new Error('Use positive whole numbers');
+  const g = gcd2(v.a, v.b); const fa = a => factorize(a).join(' × ') || '1'; return `HCF (GCD): ${g}\nLCM: ${v.a / g * v.b}\n${v.a} = ${fa(v.a)}\n${v.b} = ${fa(v.b)}`; }));
+reg('calc', 'Prime checker & sieve', c => mk(c, [['n', 'Number to test', 97], ['m', 'List all primes up to (max 2000)', 50]], v => { need(v.n); let t = `${v.n} is ${isPrime(v.n) ? 'PRIME ✅' : 'not prime'}`; if (!isPrime(v.n) && v.n > 1) t += ` (= ${factorize(v.n).join(' × ')})`; let nx = Math.floor(v.n) + 1; while (!isPrime(nx) && nx < 1e9) nx++; t += `\nNext prime: ${nx}`;
+  if (Number.isFinite(v.m) && v.m >= 2) { const lim = Math.min(2000, Math.floor(v.m)); const p = []; for (let k = 2; k <= lim; k++) if (isPrime(k)) p.push(k); t += `\n\nPrimes ≤ ${lim} (${p.length}):\n${p.join(', ')}`; } return t; }));
+reg('calc', 'Quadratic equation solver', c => mk(c, [['a', 'a (x² coefficient)', 1], ['b', 'b (x coefficient)', -5], ['c', 'c (constant)', 6]], v => { need(v.a, v.b, v.c); if (v.a === 0) throw new Error('a cannot be 0'); const D = v.b * v.b - 4 * v.a * v.c;
+  if (D > 0) return `Discriminant: ${nf(D)} → two real roots\nx₁ = ${nf((-v.b + Math.sqrt(D)) / (2 * v.a))}\nx₂ = ${nf((-v.b - Math.sqrt(D)) / (2 * v.a))}\nSum = ${nf(-v.b / v.a)}, product = ${nf(v.c / v.a)}`;
+  if (D === 0) return `Discriminant: 0 → one repeated root\nx = ${nf(-v.b / (2 * v.a))}`; return `Discriminant: ${nf(D)} → complex roots\nx = ${nf(-v.b / (2 * v.a))} ± ${nf(Math.sqrt(-D) / (2 * v.a))}i`; }));
+reg('calc', 'Statistics (mean, median, mode, σ)', c => mk(c, [['v', 'Numbers (comma or space separated)', '4, 8, 15, 16, 23, 42, 8', 'text']], v => {
+  const a = v.v.split(/[\s,;]+/).filter(Boolean).map(Number); if (!a.length || a.some(x => !Number.isFinite(x))) throw new Error('Enter numbers only'); const n = a.length, s = a.reduce((x, y) => x + y, 0), m = s / n, so = a.slice().sort((x, y) => x - y);
+  const med = n % 2 ? so[(n - 1) / 2] : (so[n / 2 - 1] + so[n / 2]) / 2; const cnt = {}; a.forEach(x => cnt[x] = (cnt[x] || 0) + 1); const mx = Math.max(...Object.values(cnt)); const mode = mx === 1 ? 'no repeated value' : Object.keys(cnt).filter(k => cnt[k] === mx).join(', ');
+  const ss = a.reduce((x, y) => x + (y - m) ** 2, 0); return `Count: ${n}   Sum: ${nf(s)}\nMean: ${nf(m)}\nMedian: ${nf(med)}\nMode: ${mode}\nMin: ${so[0]}   Max: ${so[n - 1]}   Range: ${nf(so[n - 1] - so[0])}\nVariance (population): ${nf(ss / n)}\nStd dev (population): ${nf(Math.sqrt(ss / n))}${n > 1 ? `\nStd dev (sample): ${nf(Math.sqrt(ss / (n - 1)))}` : ''}`; }));
+const UNITS = { Length: { m: 1, km: 1000, cm: .01, mm: .001, mile: 1609.344, yard: .9144, foot: .3048, inch: .0254 }, Mass: { kg: 1, g: .001, mg: 1e-6, tonne: 1000, lb: .45359237, oz: .0283495 }, Data: { B: 1, KB: 1024, MB: 1048576, GB: 1073741824, TB: 1099511627776, bit: .125 }, Time: { s: 1, min: 60, hour: 3600, day: 86400, week: 604800, year: 31557600 }, Area: { 'm²': 1, 'km²': 1e6, 'cm²': 1e-4, hectare: 1e4, acre: 4046.8564, 'ft²': .09290304 }, Speed: { 'm/s': 1, 'km/h': 1 / 3.6, mph: .44704, knot: .514444 }, Temperature: { '°C': 1, '°F': 1, K: 1 } };
+reg('calc', 'Unit converter', c => {
+  c.innerHTML = `<select class="hrp-sel" id="ucK">${Object.keys(UNITS).map(k => `<option>${k}</option>`).join('')}</select><div class="hrp-row"><input class="hrp-in sm" type="number" step="any" value="1" id="ucV" aria-label="Value"><select class="hrp-sel sm hrp-in" id="ucF" aria-label="From"></select><span>→</span><select class="hrp-sel sm hrp-in" id="ucT" aria-label="To"></select></div><div class="hrp-out" id="ucO"></div>`;
+  const K = $('#ucK', c), F = $('#ucF', c), Tt = $('#ucT', c), V = $('#ucV', c), O = $('#ucO', c);
+  const fill = () => { const u = Object.keys(UNITS[K.value]); F.innerHTML = Tt.innerHTML = u.map(x => `<option>${x}</option>`).join(''); Tt.selectedIndex = Math.min(1, u.length - 1); run(); };
+  const run = () => { const v = parseFloat(V.value); if (!Number.isFinite(v)) { O.textContent = ''; return; } let r;
+    if (K.value === 'Temperature') { const toC = { '°C': x => x, '°F': x => (x - 32) * 5 / 9, K: x => x - 273.15 }[F.value](v); r = { '°C': x => x, '°F': x => x * 9 / 5 + 32, K: x => x + 273.15 }[Tt.value](toC); }
+    else r = v * UNITS[K.value][F.value] / UNITS[K.value][Tt.value]; O.textContent = `${nf(v)} ${F.value} = ${+r.toPrecision(10)} ${Tt.value}`; };
+  K.addEventListener('change', fill); [V, F, Tt].forEach(x => x.addEventListener('input', run)); fill();
+});
+reg('calc', 'Date difference & add days', c => mk(c, [['a', 'From date', today(), 'date'], ['b', 'To date', ymd(new Date(Date.now() + 30 * 86400000)), 'date'], ['n', 'Add days to “From” date', 45]], v => {
+  const a = new Date(v.a + 'T00:00'), b = new Date(v.b + 'T00:00'); if (isNaN(a) || isNaN(b)) throw new Error('Pick both dates'); const d = Math.round((b - a) / 86400000); let t = `Difference: ${d} days (${Math.floor(Math.abs(d) / 7)} weeks ${Math.abs(d) % 7} days)`;
+  if (Number.isFinite(v.n)) { const x = new Date(a.getTime() + v.n * 86400000); t += `\n${v.a} + ${v.n} days = ${x.toDateString()}`; } return t; }));
+reg('calc', 'SGPA / CGPA calculator', c => mk(c, [['v', 'One subject per line: credits, grade point', '4, 9\n3, 8\n4, 10\n2, 7', 'textarea']], v => {
+  const rows = v.v.split('\n').map(l => l.split(/[,\s]+/).filter(Boolean).map(Number)).filter(r => r.length >= 2); if (!rows.length || rows.some(r => !Number.isFinite(r[0]) || !Number.isFinite(r[1]))) throw new Error('Use “credits, grade point” on each line');
+  const cr = rows.reduce((a, r) => a + r[0], 0), pts = rows.reduce((a, r) => a + r[0] * r[1], 0); return `Total credits: ${nf(cr)}\nGPA = Σ(credit × grade point) / Σ credits = ${nf(pts / cr)}\nApprox. percentage (×9.5): ${nf(pts / cr * 9.5)}%`; }, 'The same formula works for CGPA — enter all subjects, or use each semester’s total credits and SGPA as one line.'));
+reg('calc', 'CGPA ⇄ percentage & marks needed', c => mk(c, [['g', 'CGPA (10-point)', 8.2], ['p', 'Percentage', ''], ['tp', 'Target overall % (optional)', 75], ['got', 'Marks obtained so far (optional)', 300], ['tot', 'Out of (so far)', 450], ['rem', 'Remaining paper total', 150]], v => {
+  let t = ''; if (Number.isFinite(v.g)) t += `CGPA ${nf(v.g)} ≈ ${nf(v.g * 9.5)}%\n`; if (Number.isFinite(v.p)) t += `${nf(v.p)}% ≈ CGPA ${nf(v.p / 9.5)}\n`;
+  if ([v.tp, v.got, v.tot, v.rem].every(Number.isFinite)) { const need2 = v.tp / 100 * (v.tot + v.rem) - v.got; t += `To reach ${nf(v.tp)}% overall you need ${nf(need2)} out of ${nf(v.rem)} (${nf(need2 / v.rem * 100)}%)${need2 > v.rem ? ' — not reachable' : need2 <= 0 ? ' — already secured' : ''}`; } return t.trim(); }, 'Uses the common ×9.5 conversion; check your university’s own rule.'));
+reg('calc', 'Attendance (75%) calculator', c => mk(c, [['a', 'Classes attended', 42], ['t', 'Total classes held', 52], ['r', 'Required attendance %', 75]], v => { need(v.a, v.t, v.r); if (v.t <= 0 || v.a > v.t || v.r >= 100) throw new Error('Check the numbers'); const cur = v.a / v.t * 100;
+  let t = `Current attendance: ${nf(cur)}%\n`; if (cur >= v.r) { const x = Math.floor(v.a * 100 / v.r - v.t); t += `✅ You can safely miss up to ${x} more class(es) and stay at ${v.r}% or above.`; } else { const y = Math.ceil((v.r * v.t - 100 * v.a) / (100 - v.r)); t += `⚠️ Attend the next ${y} class(es) in a row to reach ${v.r}%.`; } return t; }));
+reg('calc', 'Roman numerals converter', c => mk(c, [['v', 'Number (1–3999) or Roman numeral', 2026, 'text']], v => {
+  const s = String(v.v).trim().toUpperCase(); const R = [[1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'], [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+  if (/^\d+$/.test(s)) { let n = +s; if (n < 1 || n > 3999) throw new Error('Use 1 to 3999'); let r = ''; R.forEach(([k, l]) => { while (n >= k) { r += l; n -= k; } }); return r; }
+  if (/^[IVXLCDM]+$/.test(s)) { let n = 0, p = 0; for (let k = s.length - 1; k >= 0; k--) { const val = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 }[s[k]]; n += val < p ? -val : val; p = val; } return String(n); } throw new Error('Enter digits or a Roman numeral'); }));
+reg('calc', 'Fibonacci, factorial & powers', c => mk(c, [['n', 'n (0–90)', 15]], v => { need(v.n); const n = Math.floor(v.n); if (n < 0 || n > 90) throw new Error('Use 0 to 90'); const f = [0n, 1n]; for (let i = 2; i <= n; i++) f[i] = f[i - 1] + f[i - 2];
+  const fs = big(n).toString(); return `Fibonacci F(${n}) = ${f[n]}\nSequence: ${f.slice(0, Math.min(n + 1, 20)).join(', ')}${n > 19 ? ', …' : ''}\n${n}! = ${fs.length > 60 ? fs.slice(0, 30) + '… (' + fs.length + ' digits)' : fs}\n2^${n} = ${2n ** BigInt(n)}\n${n}² = ${n * n}, ${n}³ = ${n ** 3}`; }));
+reg('calc', 'Squares & cubes table', c => mk(c, [['a', 'From', 1], ['b', 'To (max 60 rows)', 20]], v => { need(v.a, v.b); const a = Math.floor(v.a), b = Math.min(Math.floor(v.b), a + 59); if (b < a) throw new Error('“To” must be ≥ “From”'); let t = 'n    n²      n³      √n\n'; for (let k = a; k <= b; k++) t += `${String(k).padEnd(5)}${String(k * k).padEnd(8)}${String(k ** 3).padEnd(8)}${nf(Math.sqrt(k))}\n`; return t; }));
+function truthTable(expr){
+  let s = expr.toUpperCase().replace(/XNOR/g, '#').replace(/NAND/g, '@').replace(/NOR/g, '$').replace(/XOR/g, '^').replace(/AND/g, '&').replace(/OR/g, '|').replace(/NOT/g, '!').replace(/&&/g, '&').replace(/\|\|/g, '|').replace(/[~¬]/g, '!').replace(/[·*]/g, '&').replace(/\+/g, '|').replace(/\s+/g, '');
+  const vars = [...new Set(s.match(/[A-Z]/g) || [])].sort(); if (!vars.length) throw new Error('Use variables like A, B, C'); if (vars.length > 5) throw new Error('Up to 5 variables'); let i = 0;
+  const OR = () => { let l = XOR(); while (s[i] === '|' || s[i] === '$') { const o = s[i++], r = XOR(), a = l; l = e => o === '|' ? (a(e) || r(e)) : !(a(e) || r(e)); } return l; };
+  const XOR = () => { let l = AND(); while (s[i] === '^' || s[i] === '#') { const o = s[i++], r = AND(), a = l; l = e => o === '^' ? (a(e) !== r(e)) : (a(e) === r(e)); } return l; };
+  const AND = () => { let l = NOT(); while (s[i] === '&' || s[i] === '@') { const o = s[i++], r = NOT(), a = l; l = e => o === '&' ? (a(e) && r(e)) : !(a(e) && r(e)); } return l; };
+  const NOT = () => { if (s[i] === '!') { i++; const f = NOT(); return e => !f(e); } return PR(); };
+  const PR = () => { const ch = s[i]; if (ch === '(') { i++; const f = OR(); if (s[i] !== ')') throw new Error('Missing )'); i++; return f; } if (ch === '0' || ch === '1') { i++; return () => ch === '1'; } if (/[A-Z]/.test(ch || '')) { i++; return e => e[ch]; } throw new Error('Unexpected “' + (ch || 'end') + '”'); };
+  const f = OR(); if (i < s.length) throw new Error('Unexpected “' + s[i] + '”'); let t = vars.join(' ') + ' │ F\n' + '─'.repeat(vars.length * 2 + 4) + '\n', ones = 0;
+  for (let m = 0; m < (1 << vars.length); m++) { const e = {}; vars.forEach((v, k) => { e[v] = !!(m & (1 << (vars.length - 1 - k))); }); const r = f(e); if (r) ones++; t += vars.map(v => e[v] ? 1 : 0).join(' ') + ' │ ' + (r ? 1 : 0) + '\n'; }
+  return t + `\n${ones === 0 ? 'Contradiction (always 0)' : ones === (1 << vars.length) ? 'Tautology (always 1)' : ones + ' of ' + (1 << vars.length) + ' rows are 1'}`;
+}
+reg('calc', 'Boolean truth-table generator', c => mk(c, [['e', 'Expression (AND OR NOT XOR NAND NOR or & | ! ^)', '(A AND B) OR NOT C', 'text']], v => truthTable(v.e), 'Precedence: NOT, then AND, then XOR, then OR. Use brackets when unsure.'));
+function words(n){
+  const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'], tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  const two = x => x < 20 ? ones[x] : tens[Math.floor(x / 10)] + (x % 10 ? ' ' + ones[x % 10] : ''); const three = x => (x >= 100 ? ones[Math.floor(x / 100)] + ' hundred' + (x % 100 ? ' ' : '') : '') + (x % 100 ? two(x % 100) : '');
+  if (n === 0) return 'zero'; const parts = [], cr = Math.floor(n / 1e7), la = Math.floor(n / 1e5) % 100, th = Math.floor(n / 1e3) % 100, rest = n % 1000;
+  if (cr) parts.push(words(cr) + ' crore'); if (la) parts.push(two(la) + ' lakh'); if (th) parts.push(two(th) + ' thousand'); if (rest) parts.push(three(rest)); return parts.join(' ');
+}
+reg('calc', 'Number to words (Indian system)', c => mk(c, [['n', 'Whole number (up to 99,99,99,999)', 1234567]], v => { need(v.n); if (!Number.isInteger(v.n) || v.n < 0 || v.n > 9999999999) throw new Error('Use a whole number from 0 to 9,999,999,999'); return words(v.n).replace(/^./, m => m.toUpperCase()) + '\n\n' + v.n.toLocaleString('en-IN'); }));
+reg('calc', 'Ratio simplifier & proportion', c => mk(c, [['a', 'a', 12], ['b', 'b', 18], ['c', 'c (optional third term)', ''], ['x', 'Proportion: a : b = c : x → give c', 30]], v => { need(v.a, v.b); if (![v.a, v.b].every(Number.isInteger) || v.a < 0 || v.b < 0) throw new Error('Use whole numbers for the ratio'); const g = Number.isFinite(v.c) ? gcd2(gcd2(v.a, v.b), v.c) : gcd2(v.a, v.b);
+  let t = `Simplified: ${v.a / g} : ${v.b / g}${Number.isFinite(v.c) ? ' : ' + v.c / g : ''}`; if (Number.isFinite(v.x)) t += `\nIf ${v.a} : ${v.b} = ${nf(v.x)} : x, then x = ${nf(v.b * v.x / v.a)}`; return t; }));
+reg('calc', 'Weighted average', c => mk(c, [['v', 'One per line: value, weight', '80, 30\n90, 20\n70, 50', 'textarea']], v => { const rows = v.v.split('\n').map(l => l.split(/[,\s]+/).filter(Boolean).map(Number)).filter(r => r.length >= 2); if (!rows.length || rows.some(r => !r.every(Number.isFinite))) throw new Error('Use “value, weight” on each line');
+  const w = rows.reduce((a, r) => a + r[1], 0), s = rows.reduce((a, r) => a + r[0] * r[1], 0); return `Weighted average = ${nf(s / w)}\nSimple average = ${nf(rows.reduce((a, r) => a + r[0], 0) / rows.length)}\nTotal weight = ${nf(w)}`; }));
+reg('calc', 'Loan EMI calculator', c => mk(c, [['p', 'Loan amount (₹)', 500000], ['r', 'Annual interest (%)', 9], ['n', 'Tenure (months)', 60]], v => { need(v.p, v.r, v.n); const i = v.r / 1200, emi = i === 0 ? v.p / v.n : v.p * i * Math.pow(1 + i, v.n) / (Math.pow(1 + i, v.n) - 1);
+  return `Monthly EMI: ₹${nf(emi)}\nTotal payment: ₹${nf(emi * v.n)}\nTotal interest: ₹${nf(emi * v.n - v.p)}`; }));
+
+/* ============ FORMULA SHEETS ============ */
+const sheet = (name, rows, head) => reg('forms', name, c => { c.innerHTML = '<input class="hrp-in" placeholder="Filter…" aria-label="Filter" style="margin-bottom:8px"><div id="fsB"></div>'; const b = $('#fsB', c), inp = $('input', c);
+  const draw = () => { const q = inp.value.toLowerCase(); b.innerHTML = table(rows.filter(r => !q || r.join(' ').toLowerCase().includes(q)), head); }; inp.addEventListener('input', draw); draw(); });
+sheet('Aptitude formulas', [['Percentage change', '(New − Old) ÷ Old × 100'], ['Profit %', '(SP − CP) ÷ CP × 100'], ['Discount %', '(MP − SP) ÷ MP × 100'], ['Simple interest', 'P × R × T ÷ 100'], ['Compound amount', 'P (1 + R/100)ⁿ'], ['Average', 'Sum of terms ÷ number of terms'],
+  ['km/h → m/s', '× 5/18  (m/s → km/h: × 18/5)'], ['Relative speed', 'Same direction: S₁ − S₂ · Opposite: S₁ + S₂'], ['Train crossing', 'Pole: L ÷ v · Platform: (L + P) ÷ v'], ['Time & work', 'Together = 1 ÷ (1/a + 1/b)'], ['Ratio split', 'Part = Total × share ÷ sum of ratio'],
+  ['Alligation', 'Cheaper : Dearer = (d − m) : (m − c)'], ['Permutation', 'nPr = n! ÷ (n − r)!'], ['Combination', 'nCr = n! ÷ (r! (n − r)!)'], ['Probability', 'Favourable ÷ Total outcomes'], ['Sum of n naturals', 'n(n + 1) ÷ 2'], ['Sum of n squares', 'n(n + 1)(2n + 1) ÷ 6'],
+  ['AP', 'aₙ = a + (n − 1)d · Sₙ = n/2 [2a + (n − 1)d]'], ['GP', 'aₙ = a rⁿ⁻¹ · Sₙ = a (rⁿ − 1) ÷ (r − 1)']], ['Topic', 'Formula']);
+sheet('Algebra & trigonometry', [['(a + b)²', 'a² + 2ab + b²'], ['(a − b)²', 'a² − 2ab + b²'], ['a² − b²', '(a + b)(a − b)'], ['a³ + b³', '(a + b)(a² − ab + b²)'], ['a³ − b³', '(a − b)(a² + ab + b²)'], ['Quadratic roots', 'x = (−b ± √(b² − 4ac)) ÷ 2a'],
+  ['Sum / product of roots', '−b/a  ·  c/a'], ['Log rules', 'log(ab) = log a + log b · log(a/b) = log a − log b · log aⁿ = n log a'], ['sin² θ + cos² θ', '1'], ['tan θ', 'sin θ ÷ cos θ'], ['1 + tan² θ', 'sec² θ'], ['sin 2θ', '2 sin θ cos θ'], ['cos 2θ', 'cos² θ − sin² θ'],
+  ['Angles 0° 30° 45° 60° 90°', 'sin: 0, ½, 1/√2, √3/2, 1 · cos: 1, √3/2, 1/√2, ½, 0 · tan: 0, 1/√3, 1, √3, ∞']], ['Item', 'Value']);
+sheet('Geometry & mensuration', [['Circle', 'Area πr² · Circumference 2πr'], ['Triangle', 'Area ½ b h · Heron: √(s(s − a)(s − b)(s − c))'], ['Rectangle', 'Area l b · Perimeter 2(l + b)'], ['Square', 'Area a² · Diagonal a√2'], ['Trapezium', '½ (a + b) h'],
+  ['Cube', 'Volume a³ · Surface 6a²'], ['Cuboid', 'Volume l b h · Surface 2(lb + bh + hl)'], ['Cylinder', 'Volume πr²h · Curved surface 2πrh'], ['Cone', 'Volume ⅓πr²h · Curved surface πrl'], ['Sphere', 'Volume 4/3 πr³ · Surface 4πr²'], ['Pythagoras', 'a² + b² = c²'], ['Sum of interior angles', '(n − 2) × 180°']], ['Shape', 'Formulas']);
+sheet('Boolean algebra & logic gates', [['Identity', 'A + 0 = A · A · 1 = A'], ['Null', 'A + 1 = 1 · A · 0 = 0'], ['Idempotent', 'A + A = A · A · A = A'], ['Complement', 'A + A′ = 1 · A · A′ = 0'], ['Double negation', '(A′)′ = A'], ['De Morgan', '(A · B)′ = A′ + B′ · (A + B)′ = A′ · B′'],
+  ['Absorption', 'A + AB = A · A(A + B) = A'], ['XOR', 'A ⊕ B = A′B + AB′'], ['XNOR', '(A ⊕ B)′ = AB + A′B′'], ['Universal gates', 'NAND and NOR can build any gate'], ['Half adder', 'Sum = A ⊕ B · Carry = A · B'], ['Full adder', 'Sum = A ⊕ B ⊕ Cin · Carry = AB + Cin(A ⊕ B)']], ['Law', 'Rule']);
+sheet('Sorting algorithms', [['Bubble', 'O(n)', 'O(n²)', 'O(n²)', 'O(1)', 'Yes'], ['Selection', 'O(n²)', 'O(n²)', 'O(n²)', 'O(1)', 'No'], ['Insertion', 'O(n)', 'O(n²)', 'O(n²)', 'O(1)', 'Yes'], ['Merge', 'O(n log n)', 'O(n log n)', 'O(n log n)', 'O(n)', 'Yes'], ['Quick', 'O(n log n)', 'O(n log n)', 'O(n²)', 'O(log n)', 'No'], ['Heap', 'O(n log n)', 'O(n log n)', 'O(n log n)', 'O(1)', 'No'], ['Counting', 'O(n + k)', 'O(n + k)', 'O(n + k)', 'O(k)', 'Yes'], ['Radix', 'O(nk)', 'O(nk)', 'O(nk)', 'O(n + k)', 'Yes']], ['Algorithm', 'Best', 'Average', 'Worst', 'Space', 'Stable']);
+sheet('Data-structure complexities', [['Array', 'O(1)', 'O(n)', 'O(n)', 'O(n)'], ['Linked list', 'O(n)', 'O(n)', 'O(1)*', 'O(1)*'], ['Stack / Queue', 'O(n)', 'O(n)', 'O(1)', 'O(1)'], ['Hash table', 'O(1)', 'O(1)', 'O(1)', 'O(1)'], ['Binary search tree (balanced)', 'O(log n)', 'O(log n)', 'O(log n)', 'O(log n)'], ['Binary heap', 'O(n)', 'O(n)', 'O(log n)', 'O(log n)']], ['Structure', 'Access', 'Search', 'Insert', 'Delete']);
+sheet('Operating-system quick sheet', [['FCFS', 'Non-preemptive, simple, convoy effect'], ['SJF', 'Minimum average waiting time; may starve long jobs'], ['SRTF', 'Preemptive SJF'], ['Round Robin', 'Preemptive, time quantum, good response time'], ['Priority', 'Can starve low priority — fix with aging'], ['Deadlock conditions', 'Mutual exclusion · Hold & wait · No preemption · Circular wait'],
+  ['Page replacement', 'FIFO (Belady’s anomaly) · LRU · Optimal'], ['Fragmentation', 'Paging → internal · Segmentation → external'], ['Semaphore', 'wait(S): S--, block if < 0 · signal(S): S++, wake one'], ['Process states', 'New → Ready → Running → Waiting → Terminated'], ['Thrashing', 'Too much paging; cure by reducing multiprogramming']], ['Topic', 'Key points']);
+sheet('SQL joins & normal forms', [['INNER JOIN', 'Only matching rows in both tables'], ['LEFT JOIN', 'All left rows + matches from right'], ['RIGHT JOIN', 'All right rows + matches from left'], ['FULL OUTER JOIN', 'All rows from both, matched where possible'], ['CROSS JOIN', 'Cartesian product'], ['1NF', 'Atomic values, no repeating groups'], ['2NF', '1NF + no partial dependency'], ['3NF', '2NF + no transitive dependency'], ['BCNF', 'Every determinant is a candidate key'],
+  ['ACID', 'Atomicity · Consistency · Isolation · Durability'], ['Isolation problems', 'Dirty read · Non-repeatable read · Phantom read'], ['WHERE vs HAVING', 'Rows before grouping vs groups after aggregation']], ['Topic', 'Meaning']);
+sheet('OSI layers & common ports', [['7 Application', 'HTTP, FTP, SMTP, DNS'], ['6 Presentation', 'Encryption, compression, encoding'], ['5 Session', 'Session set-up and control'], ['4 Transport', 'TCP, UDP — ports, reliability'], ['3 Network', 'IP, routers — logical addressing'], ['2 Data link', 'MAC, switches — frames'], ['1 Physical', 'Cables, signals, bits'],
+  ['Port 20/21', 'FTP'], ['Port 22', 'SSH'], ['Port 23', 'Telnet'], ['Port 25', 'SMTP'], ['Port 53', 'DNS'], ['Port 80', 'HTTP'], ['Port 110 / 143', 'POP3 / IMAP'], ['Port 443', 'HTTPS'], ['Port 3306 / 5432', 'MySQL / PostgreSQL']], ['Layer / port', 'Protocols / use']);
+sheet('OOP concepts & SOLID', [['Encapsulation', 'Bundle data with methods; hide internals'], ['Inheritance', 'Reuse and extend a parent class'], ['Polymorphism', 'One interface, many forms (overloading, overriding)'], ['Abstraction', 'Expose essentials, hide details'], ['S — Single responsibility', 'A class should have one reason to change'], ['O — Open/closed', 'Open for extension, closed for modification'],
+  ['L — Liskov substitution', 'Subtypes must be usable in place of their base types'], ['I — Interface segregation', 'Prefer small, specific interfaces'], ['D — Dependency inversion', 'Depend on abstractions, not concrete classes']], ['Concept', 'Meaning']);
+sheet('Design patterns', [['Singleton', 'One instance with global access'], ['Factory', 'Create objects without exposing the exact class'], ['Builder', 'Construct complex objects step by step'], ['Observer', 'Subscribers get notified when state changes'], ['Strategy', 'Swap algorithms at runtime'], ['Decorator', 'Add behaviour by wrapping objects'], ['Adapter', 'Make incompatible interfaces work together'], ['MVC', 'Separate Model, View and Controller']], ['Pattern', 'Purpose']);
+sheet('Python quick reference', [['List / tuple / set / dict', '[1, 2] · (1, 2) · {1, 2} · {"a": 1}'], ['Comprehension', '[x*x for x in range(5) if x % 2]'], ['f-string', 'f"{name} scored {marks:.1f}"'], ['Slicing', 'a[start:stop:step] · a[::-1] reverses'], ['Functions', 'def f(a, b=2, *args, **kw): return a + b'], ['Lambda', 'lambda x: x * 2'], ['Loops', 'for i, v in enumerate(a): …'], ['Exceptions', 'try: … except ValueError as e: … finally: …'],
+  ['Files', 'with open("f.txt") as f: data = f.read()'], ['Classes', 'class A(B): def __init__(self): super().__init__()'], ['Useful built-ins', 'len, sum, min, max, sorted, zip, map, filter, any, all']], ['Topic', 'Syntax']);
+sheet('C language quick reference', [['Data types', 'int (4B) · char (1B) · float (4B) · double (8B)'], ['Format specifiers', '%d int · %f float · %c char · %s string · %p pointer'], ['Pointers', 'int *p = &x; *p reads the value at p'], ['Arrays', 'int a[5]; a[i] == *(a + i)'], ['Strings', 'char s[] = "hi"; ends with \\0'], ['Dynamic memory', 'malloc(n) · calloc(n, size) · realloc · free'], ['Structs', 'struct P { int x; int y; };'], ['Operators', '++ -- · && || ! · & | ^ ~ << >>'], ['Loops', 'for, while, do…while · break / continue']], ['Topic', 'Syntax']);
+sheet('HTML, CSS & JavaScript quick reference', [['Flexbox', 'display:flex; justify-content; align-items; gap; flex-wrap'], ['Grid', 'display:grid; grid-template-columns: repeat(3, 1fr); gap'], ['Box model', 'content + padding + border + margin'], ['Selectors', '.class · #id · a:hover · div > p · h1 + p'], ['Media query', '@media (max-width: 600px) { … }'], ['Semantic tags', 'header, nav, main, section, article, footer'],
+  ['DOM', 'document.querySelector(".x").addEventListener("click", fn)'], ['Fetch', 'const r = await fetch(url); const d = await r.json();'], ['Array methods', 'map, filter, reduce, find, some, every, forEach'], ['Equality', '=== compares type and value; == coerces types'], ['let / const / var', 'let, const are block-scoped; var is function-scoped']], ['Topic', 'Snippet']);
+sheet('Number systems & ASCII', [['Binary → decimal', 'Sum of bits × 2ᵖᵒˢⁱᵗⁱᵒⁿ'], ['Hex digits', 'A=10 B=11 C=12 D=13 E=14 F=15'], ['Powers of 2', '2⁴=16 · 2⁵=32 · 2⁶=64 · 2⁷=128 · 2⁸=256 · 2¹⁰=1024'], ['ASCII', '“0”=48 · “A”=65 · “a”=97 · space=32 · newline=10'], ['Two’s complement', 'Invert bits and add 1'], ['Range of n-bit unsigned', '0 … 2ⁿ − 1'], ['Range of n-bit signed', '−2ⁿ⁻¹ … 2ⁿ⁻¹ − 1'], ['1 KB, 1 MB, 1 GB', '1024 B · 1024 KB · 1024 MB']], ['Item', 'Value']);
+sheet('Squares, cubes & tables', Array.from({ length: 30 }, (_, k) => { k++; return [String(k), `${k}² = ${k * k}` + (k <= 15 ? ` · ${k}³ = ${k ** 3}` : '') + ` · ${k} × 12 = ${k * 12}`]; }), ['n', 'Values']);
+sheet('Useful constants & conversions', [['π', '3.14159265'], ['e', '2.71828183'], ['√2 · √3 · √5', '1.414 · 1.732 · 2.236'], ['g (gravity)', '9.8 m/s²'], ['Speed of light', '3 × 10⁸ m/s'], ['1 mile', '1.609 km'], ['1 inch', '2.54 cm'], ['1 kg', '2.205 lb'], ['°F ↔ °C', '°F = °C × 9/5 + 32'], ['1 lakh · 1 crore', '10⁵ · 10⁷'], ['Leap year', 'Divisible by 4, but centuries only if divisible by 400']], ['Item', 'Value']);
+
+/* ============ STUDY TOOLS ============ */
+const dt = s => new Date(s + 'T00:00');
+const dshort = d => d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+reg('study', 'Exam countdown', c => {
+  let ex = store.get('exams', []);
+  c.innerHTML = `<div id="ecL"></div><div class="hrp-h">Add an exam</div><div class="hrp-row"><input class="hrp-in sm" id="ecN" placeholder="Exam name" maxlength="60"><input class="hrp-in sm" id="ecD" type="date" style="max-width:170px;flex:0"><button class="hrp-btn pri" data-a="add">Add</button></div>`;
+  const draw = () => { const now = dt(today()); ex.sort((a, b) => a.d.localeCompare(b.d));
+    $('#ecL', c).innerHTML = ex.map((e, i) => { const n = Math.round((dt(e.d) - now) / 86400000); const tone = n < 0 ? 'var(--muted)' : n <= 7 ? 'var(--pink)' : n <= 21 ? 'var(--orange)' : 'var(--green)';
+      return `<div class="hrp-card" style="margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${esc(e.n)}</b>${dt(e.d).toDateString()}</div><div style="text-align:right"><div style="font-size:26px;font-weight:700;color:${tone}">${n < 0 ? 'Done' : n === 0 ? 'Today!' : n}</div><div class="hrp-muted">${n > 0 ? 'days left' : ''}</div><button class="hrp-x" data-del="${i}" aria-label="Delete">✕</button></div></div>`; }).join('') || '<p class="hrp-muted">No exams yet — add your first one below.</p>'; store.set('exams', ex); };
+  c.addEventListener('click', e => { if (e.target.dataset.a === 'add') { const n = $('#ecN', c).value.trim(), d = $('#ecD', c).value; if (!n || !d) return toast('Enter a name and a date', 'warn', '⚠️'); ex.push({ n: n.slice(0, 60), d }); $('#ecN', c).value = ''; draw(); } else if (e.target.dataset.del != null) { ex.splice(+e.target.dataset.del, 1); draw(); } }); draw();
+});
+reg('study', 'Study timetable generator', c => {
+  const d0 = new Date(Date.now() + 30 * 86400000);
+  c.innerHTML = `<label class="hrp-muted">Subjects (one per line)</label><textarea class="hrp-ta" style="font-family:inherit;min-height:90px">DSA\nDBMS\nOperating Systems\nNetworks</textarea><div class="hrp-row"><label>Exam date <input type="date" class="hrp-in" value="${ymd(d0)}" style="width:auto"></label><label>Hours/day <input type="number" class="hrp-in" min="1" max="14" value="4" style="width:80px"></label></div><div class="hrp-row"><button class="hrp-btn pri" data-a="g">Generate</button><button class="hrp-btn" data-a="c">Copy</button><button class="hrp-btn" data-a="d">⬇ .txt</button></div><div class="hrp-out" style="max-height:300px;overflow:auto"></div>`;
+  const out = $('.hrp-out', c);
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return;
+    if (a === 'c') return copy(out.textContent); if (a === 'd') return download('study-timetable.txt', out.textContent);
+    const subs = $('textarea', c).value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 12), ed = dt($('input[type=date]', c).value), h = Math.max(1, Math.min(14, +$('input[type=number]', c).value || 4));
+    if (!subs.length || isNaN(ed)) return toast('Add subjects and an exam date', 'warn', '⚠️'); const days = Math.round((ed - dt(today())) / 86400000); if (days < 1) { out.textContent = 'The exam date must be in the future.'; return; } if (days > 120) { out.textContent = 'Pick an exam within the next 120 days.'; return; }
+    const lines = []; let k = 0;
+    for (let d = 0; d < days; d++) { const day = new Date(dt(today()).getTime() + d * 86400000);
+      if (days - d <= 2) lines.push(`${dshort(day)}: 🔁 Full revision + previous papers + formula sheets`);
+      else if (day.getDay() === 0) lines.push(`${dshort(day)}: 📝 Mock test + review weak topics (${h}h)`);
+      else { const a = subs[k % subs.length], b = subs.length > 1 ? subs[(k + 1) % subs.length] : null; k += 2; lines.push(`${dshort(day)}: ${a}${b ? ' (' + (h / 2).toFixed(1) + 'h) + ' + b + ' (' + (h / 2).toFixed(1) + 'h)' : ' (' + h + 'h)'}`); } }
+    lines.unshift(`${days} days to go · ${h} h/day · ${subs.length} subject(s)\n`); out.textContent = lines.join('\n'); });
+});
+reg('study', 'Syllabus tracker', c => {
+  const done = store.get('syl:done', {}); const subs = Object.keys(SYL);
+  c.innerHTML = `<div class="hrp-card"><b id="syO">Overall</b><div class="hrp-bar"><i id="syB"></i></div></div><select class="hrp-sel" style="margin-top:10px">${subs.map(s => `<option>${esc(s)}</option>`).join('')}</select><div id="syL"></div>`;
+  const sel = $('select', c); sel.value = store.get('syl:sel', subs[0]); if (!subs.includes(sel.value)) sel.value = subs[0];
+  const draw = () => { const s = sel.value; store.set('syl:sel', s); $('#syL', c).innerHTML = SYL[s].map(t => `<label class="hrp-check${done[s + '|' + t] ? ' done' : ''}"><input type="checkbox" data-k="${esc(s + '|' + t)}" ${done[s + '|' + t] ? 'checked' : ''}><span>${esc(t)}</span></label>`).join('');
+    const p = Math.round(sylPct() * 100); $('#syO', c).textContent = `Overall syllabus done: ${p}%`; $('#syB', c).style.width = p + '%'; };
+  sel.addEventListener('change', draw); c.addEventListener('change', e => { const k = e.target.dataset.k; if (!k) return; if (e.target.checked) done[k] = 1; else delete done[k]; store.set('syl:done', done); addXP(e.target.checked ? 2 : 0); draw(); }); draw();
+});
+reg('study', 'Study log & daily goal', c => {
+  let log = store.get('study:log', []); const goal0 = store.get('study:goal', 120);
+  c.innerHTML = `<div class="hrp-card"><b id="slT"></b><div class="hrp-bar"><i id="slB"></i></div><span class="hrp-muted" id="slS"></span></div><div class="hrp-row"><label>Daily goal (min) <input class="hrp-in" id="slG" type="number" min="10" max="900" value="${goal0}" style="width:90px"></label></div>
+  <div class="hrp-h">Log a session</div><div class="hrp-row"><input class="hrp-in sm" id="slM" type="number" min="1" max="600" placeholder="Minutes" style="max-width:110px;flex:0"><select class="hrp-sel hrp-in sm" id="slSub">${Object.keys(SYL).map(s => `<option>${esc(s)}</option>`).join('')}<option>Other</option></select><button class="hrp-btn pri" data-a="add">Add</button></div><div class="hrp-h">Last 7 days</div><div id="slC" style="display:flex;gap:6px;align-items:flex-end;height:110px"></div><div class="hrp-row"><button class="hrp-btn" data-a="csv">⬇ Export log</button><button class="hrp-btn" data-a="clr">Clear log</button></div>`;
+  const byDay = () => { const m = {}; log.forEach(x => { m[x.d] = (m[x.d] || 0) + x.m; }); return m; };
+  const draw = () => { const m = byDay(), goal = Math.max(10, +$('#slG', c).value || 120), td = m[today()] || 0; $('#slT', c).textContent = `Today: ${td} / ${goal} min`; $('#slB', c).style.width = Math.min(100, td / goal * 100) + '%';
+    let st = 0; const d = new Date(); if (!m[ymd(d)]) d.setDate(d.getDate() - 1); while (m[ymd(d)] >= goal) { st++; d.setDate(d.getDate() - 1); } $('#slS', c).textContent = `${(log.reduce((a, x) => a + x.m, 0) / 60).toFixed(1)} h logged in total · goal streak ${st} day(s)`;
+    const days = Array.from({ length: 7 }, (_, k) => { const x = new Date(); x.setDate(x.getDate() - (6 - k)); return x; }); const mxv = Math.max(goal, ...days.map(x => m[ymd(x)] || 0));
+    $('#slC', c).innerHTML = days.map(x => { const v = m[ymd(x)] || 0; return `<div style="flex:1;text-align:center;font-size:11px"><div style="height:${Math.max(2, v / mxv * 80)}px;background:${v >= goal ? 'var(--green)' : 'var(--violet)'};border-radius:5px 5px 0 0"></div>${v}<br>${x.toLocaleDateString([], { weekday: 'short' }).slice(0, 2)}</div>`; }).join(''); store.set('study:log', log.slice(-400)); store.set('study:goal', goal); };
+  c.addEventListener('input', e => { if (e.target.id === 'slG') draw(); });
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (a === 'add') { const mn = +$('#slM', c).value; if (!(mn > 0)) return toast('Enter the minutes studied', 'warn', '⚠️'); log.push({ d: today(), m: Math.min(600, Math.round(mn)), s: $('#slSub', c).value }); $('#slM', c).value = ''; addXP(Math.min(20, Math.round(mn / 10))); draw(); }
+    else if (a === 'csv') download('study-log.csv', toCSV([['Date', 'Minutes', 'Subject']].concat(log.map(x => [x.d, x.m, x.s]))), 'text/csv'); else if (a === 'clr' && confirm('Clear the whole study log?')) { log = []; draw(); } }); draw();
+});
+reg('study', 'Spaced revision scheduler', c => {
+  c.innerHTML = `<input class="hrp-in" placeholder="Topic just studied, e.g. Normalisation" maxlength="80" style="margin-bottom:8px"><div class="hrp-row"><label>Studied on <input type="date" class="hrp-in" value="${today()}" style="width:auto"></label><button class="hrp-btn pri" data-a="g">Schedule</button></div><div class="hrp-out"></div><div class="hrp-row"><button class="hrp-btn" data-a="c">Copy</button><button class="hrp-btn" data-a="i">⬇ Calendar (.ics)</button></div><p class="hrp-muted">Revisit after 1, 3, 7, 14 and 30 days — the schedule most memory research supports.</p>`;
+  const out = $('.hrp-out', c); let ev = [];
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (!a) return; if (a === 'c') return copy(out.textContent);
+    if (a === 'i') { if (!ev.length) return toast('Create a schedule first', 'warn', '⚠️'); return download('revision-schedule.ics', makeICS(ev), 'text/calendar'); }
+    const topic = $('input', c).value.trim() || 'Revision', d0 = dt($('input[type=date]', c).value); if (isNaN(d0)) return toast('Pick a date', 'warn', '⚠️');
+    ev = [1, 3, 7, 14, 30].map((n, k) => { const s = new Date(d0.getTime() + n * 86400000); s.setHours(9, 0, 0, 0); return { title: `Revise: ${topic} (#${k + 1})`, start: s, end: new Date(s.getTime() + 30 * 60000), alarm: 15 }; });
+    out.textContent = `${topic}\n` + ev.map((x, k) => `Revision ${k + 1} (+${[1, 3, 7, 14, 30][k]}d): ${x.start.toDateString()}`).join('\n'); });
+});
+reg('study', 'Exam-day checklist', c => checklist(c, 'examday', ['Admit card / hall ticket', 'College ID card', 'Two working pens + pencil', 'Calculator (only if allowed)', 'Water bottle (clear)', 'Know the exam centre route and reporting time', 'Reach 30 minutes early', 'Phone switched off and stored as instructed', 'Read every instruction twice', 'Attempt easy questions first', 'Keep 10 minutes for review', 'Write your roll number on every sheet']));
+reg('study', 'Night-before checklist', c => checklist(c, 'nightbefore', ['Revise formula sheets and short notes only', 'Pack bag and documents', 'Set two alarms', 'Light dinner', 'Skip new topics', 'Charge phone and power bank', 'Lay out clothes', 'Sleep at least 7 hours', 'Do 5 minutes of slow breathing']));
+reg('study', 'Exam time allocator', c => {
+  c.innerHTML = `<div class="hrp-row"><label>Total time (min) <input class="hrp-in" type="number" min="10" max="480" value="180" style="width:100px"></label></div><label class="hrp-muted">Sections: name, marks (one per line)</label><textarea class="hrp-ta" style="min-height:90px">Section A, 40\nSection B, 30\nSection C, 30</textarea><div class="hrp-row"><button class="hrp-btn pri">Plan my time</button></div><div class="hrp-out"></div>`;
+  $('.pri', c).addEventListener('click', () => { const tot = +$('input', c).value, rows = $('textarea', c).value.split('\n').map(l => { const p = l.split(','); return [p.slice(0, -1).join(',').trim() || 'Section', +p[p.length - 1]]; }).filter(r => r[1] > 0); const out = $('.hrp-out', c);
+    if (!(tot > 0) || !rows.length) { out.textContent = 'Enter the total time and at least one section with marks.'; return; } const sm = rows.reduce((a, r) => a + r[1], 0), review = Math.round(tot * .1), work = tot - review; let t = `Working time ${work} min + ${review} min review\n≈ ${nf(work / sm)} min per mark\n\n`;
+    let clock = 0; rows.forEach(r => { const m = Math.round(work * r[1] / sm); t += `${r[0]} (${r[1]} marks): ${m} min  [${fmtClock(clock * 60).slice(0, -3) || '0'}–${Math.floor((clock + m) / 60)}:${pad((clock + m) % 60)}]\n`; clock += m; }); out.textContent = t + `Review: last ${review} min`; });
+});
+reg('study', 'Exam strategy guide', c => { c.innerHTML = table([['Before', 'Read the paper fully for the first 5 minutes; mark easy, medium and hard questions.'], ['Order', 'Start with sure marks, then medium, then hard. Never sit stuck for more than 3 minutes.'], ['MCQs', 'Eliminate two options first; guess only if negative marking is small.'], ['Numericals', 'Write formulae and units; partial marks reward method.'], ['Theory', 'Use headings, short points and a labelled diagram or example.'], ['Time', 'Check the clock at 25%, 50% and 75% of the time.'], ['Nerves', 'Slow breathing: in 4 s, hold 4 s, out 6 s. Then start with one easy question.'], ['Review', 'Recheck silly mistakes: signs, units, options marked in the wrong bubble.'], ['After', 'Do not post-mortem between papers — rest and revise for the next one.']], ['Stage', 'What to do']); });
+function simpleList(c, key, ph){
+  let list = store.get(key, []); c.innerHTML = `<div class="hrp-row"><input class="hrp-in sm" placeholder="${esc(ph)}" maxlength="140" aria-label="Item"><button class="hrp-btn pri" data-a="add">Add</button></div><div id="slI"></div><div class="hrp-row"><button class="hrp-btn" data-a="clr">Clear resolved</button><button class="hrp-btn" data-a="cp">Copy all</button></div>`;
+  const box = $('#slI', c), inp = $('input', c); const draw = () => { box.innerHTML = list.map((t, i) => `<div class="hrp-check${t.d ? ' done' : ''}"><input type="checkbox" data-i="${i}" ${t.d ? 'checked' : ''}><span style="flex:1">${esc(t.t)}</span><button class="hrp-x" data-del="${i}" aria-label="Delete">✕</button></div>`).join('') || '<p class="hrp-muted">Nothing here yet.</p>'; store.set(key, list); };
+  const add = () => { const v = inp.value.trim(); if (v) { list.unshift({ t: v.slice(0, 140), d: false }); inp.value = ''; draw(); } };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+  c.addEventListener('click', e => { const a = e.target.dataset.a, d = e.target.dataset.del; if (a === 'add') add(); else if (a === 'clr') { list = list.filter(t => !t.d); draw(); } else if (a === 'cp') copy(list.map(t => (t.d ? '[x] ' : '[ ] ') + t.t).join('\n')); else if (d != null) { list.splice(+d, 1); draw(); } });
+  c.addEventListener('change', e => { const i = e.target.dataset.i; if (i != null) { list[+i].d = e.target.checked; draw(); } }); draw();
+}
+reg('study', 'Doubt list', c => simpleList(c, 'doubts', 'A doubt to ask your teacher or friend…'));
+reg('study', 'Formulas I keep forgetting', c => simpleList(c, 'forgot', 'Formula or fact to memorise…'));
+
+/* ============ DRILLS ============ */
+const PASSAGES = ['A good pitch tells one clear story: the problem people face, the solution you built, and the difference it makes to their lives.', 'Sleep well, drink water and commit your work often, because small habits decide big results during a long hackathon sprint.', 'The quick brown fox jumps over the lazy dog while the team debugs their code, tests every feature and prepares a confident demo.', 'Practice does not make perfect; careful practice makes progress, and steady progress makes exams feel like just another mock test.'];
+reg('drills', 'Typing speed test', c => {
+  const pass = pick(PASSAGES); let t0 = 0, done = false;
+  c.innerHTML = `<div class="hrp-card" id="tyP" style="font-family:JetBrains Mono,monospace;line-height:1.7;font-size:15px"></div><textarea class="hrp-ta" id="tyI" style="min-height:90px;margin-top:8px" placeholder="Start typing here — the timer begins with your first key" autocomplete="off" spellcheck="false"></textarea><div class="hrp-row"><button class="hrp-btn" data-a="new">New passage</button></div><div class="hrp-out" id="tyO">Ready.</div>`;
+  const P = $('#tyP', c), I = $('#tyI', c), O = $('#tyO', c);
+  const paint = () => { const v = I.value; P.innerHTML = Array.from(pass).map((ch, i) => { const cls = i >= v.length ? '' : v[i] === ch ? 'color:var(--green)' : 'color:var(--pink);text-decoration:underline'; return `<span style="${cls}${i === v.length ? ';background:rgba(124,92,255,.35)' : ''}">${esc(ch)}</span>`; }).join(''); }; paint();
+  I.addEventListener('input', () => { if (done) return; if (!t0) t0 = Date.now(); paint(); const v = I.value; let ok = 0; for (let i = 0; i < v.length && i < pass.length; i++) if (v[i] === pass[i]) ok++; const mins = Math.max(.05, (Date.now() - t0) / 60000);
+    O.textContent = `${Math.round(ok / 5 / mins)} WPM · ${v.length ? Math.round(ok / v.length * 100) : 100}% accuracy`;
+    if (v.length >= pass.length) { done = true; const wpm = Math.round(ok / 5 / mins), acc = Math.round(ok / v.length * 100); O.textContent = `✅ Finished! ${wpm} WPM · ${acc}% accuracy · ${((Date.now() - t0) / 1000).toFixed(1)} s`; const best = store.get('ty:best', 0); if (wpm > best) { store.set('ty:best', wpm); O.textContent += ' · New personal best!'; } else O.textContent += ` · Best ${best} WPM`; if (wpm >= 40 && acc >= 90) award('typist'); addXP(5); } });
+  c.addEventListener('click', e => { if (e.target.dataset.a === 'new') renderHub(); });
+});
+reg('drills', 'Mental math sprint (60 s)', c => {
+  c.innerHTML = `<div class="hrp-row"><select class="hrp-sel hrp-in sm" id="mmM"><option value="mix">Mixed + − ×</option><option value="add">Addition</option><option value="sub">Subtraction</option><option value="mul">Multiplication tables (2–12)</option><option value="sq">Squares (1–30)</option><option value="cube">Cubes (1–15)</option></select><button class="hrp-btn pri" data-a="go">Start</button></div><div class="hrp-big" id="mmQ">Ready?</div><div class="hrp-row" style="justify-content:center"><input class="hrp-in" id="mmA" type="number" inputmode="numeric" style="max-width:160px;text-align:center;font-size:20px" disabled aria-label="Answer"></div><div class="hrp-muted" id="mmS" style="text-align:center"></div>`;
+  const Qe = $('#mmQ', c), A = $('#mmA', c), S = $('#mmS', c); let iv = null, end = 0, sc = 0, wr = 0, ans = 0;
+  const gen = () => { const m = $('#mmM', c).value, r = (a, b) => a + rnd(b - a + 1); let k = m === 'mix' ? pick(['add', 'sub', 'mul']) : m;
+    if (k === 'add') { const a = r(10, 99), b = r(10, 99); Qe.textContent = `${a} + ${b}`; ans = a + b; } else if (k === 'sub') { const a = r(30, 150), b = r(10, a - 1); Qe.textContent = `${a} − ${b}`; ans = a - b; }
+    else if (k === 'mul') { const a = r(2, 12), b = r(2, 12); Qe.textContent = `${a} × ${b}`; ans = a * b; } else if (k === 'sq') { const a = r(1, 30); Qe.textContent = `${a}²`; ans = a * a; } else { const a = r(1, 15); Qe.textContent = `${a}³`; ans = a ** 3; } A.value = ''; A.focus(); };
+  const stop = () => { clearInterval(iv); iv = null; A.disabled = true; const best = store.get('mm:best', 0); const nb = sc > best; if (nb) store.set('mm:best', sc); Qe.textContent = `Score ${sc}`; S.textContent = `${sc} correct · ${wr} wrong · best ${Math.max(best, sc)}${nb ? ' 🎉 new record' : ''}`; if (sc >= 15) award('math'); addXP(Math.min(15, sc)); };
+  const tick = () => { if (!c.isConnected) { clearInterval(iv); return; } const left = Math.max(0, Math.ceil((end - Date.now()) / 1000)); S.textContent = `⏱ ${left}s · ${sc} correct · ${wr} wrong`; if (left <= 0) stop(); };
+  c.addEventListener('click', e => { if (e.target.dataset.a === 'go') { sc = 0; wr = 0; end = Date.now() + 60000; A.disabled = false; clearInterval(iv); iv = setInterval(tick, 250); gen(); tick(); } });
+  A.addEventListener('keydown', e => { if (e.key === 'Enter' && A.value !== '' && iv) { if (+A.value === ans) sc++; else wr++; gen(); tick(); } });
+});
+const TOPICS = ['Is social media doing more good than harm to students?', 'Should coding be a compulsory subject in schools?', 'How can technology help farmers in India?', 'The role of AI in healthcare', 'Should exams be replaced by continuous assessment?', 'Impact of remote work on productivity', 'Is cyber security everyone’s responsibility?', 'Renewable energy: the way forward', 'Open-source software and innovation', 'Digital India: achievements and challenges'];
+reg('drills', 'Timed writing practice', c => {
+  c.innerHTML = `<div class="hrp-card" id="twT"><b></b></div><div class="hrp-row"><select class="hrp-sel hrp-in sm" style="max-width:150px"><option value="10">10 minutes</option><option value="20" selected>20 minutes</option><option value="30">30 minutes</option></select><button class="hrp-btn" data-a="topic">🎲 New topic</button><button class="hrp-btn pri" data-a="go">Start writing</button></div><div class="hrp-kbd" id="twC" style="display:inline-block">--:--</div><textarea class="hrp-ta" id="twX" style="min-height:200px;font-family:inherit" placeholder="Your answer…" disabled></textarea><div class="hrp-count" id="twN"></div>`;
+  const tp = $('#twT b', c), X = $('#twX', c), C = $('#twC', c), N = $('#twN', c); let iv = null, end = 0; tp.textContent = pick(TOPICS);
+  const cnt = () => { const w = (X.value.trim().match(/\S+/g) || []).length; N.textContent = `${w} words · ${X.value.length} characters`; }; X.addEventListener('input', cnt);
+  const tick = () => { if (!c.isConnected) { clearInterval(iv); return; } const l = Math.max(0, (end - Date.now()) / 1000); C.textContent = '⏱ ' + fmtClock(l); if (l <= 0) { clearInterval(iv); X.disabled = true; beep(3); const w = (X.value.trim().match(/\S+/g) || []).length; toast(`Time up! You wrote ${w} words`, 'success', '✍️'); addXP(5); } };
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (a === 'topic') tp.textContent = pick(TOPICS); else if (a === 'go') { end = Date.now() + +$('select', c).value * 60000; X.disabled = false; X.value = ''; X.focus(); clearInterval(iv); iv = setInterval(tick, 500); tick(); cnt(); } });
+});
+let NZ = null;
+reg('drills', 'Focus sounds (white / pink / brown noise)', c => {
+  c.innerHTML = `<div class="hrp-row"><select class="hrp-sel hrp-in sm" id="nzT"><option value="brown">Brown noise (deep, calming)</option><option value="pink">Pink noise (rain-like)</option><option value="white">White noise (static)</option></select></div><div class="hrp-row"><label>Volume <input type="range" id="nzV" min="1" max="60" value="${store.get('nzv', 20)}"></label></div><div class="hrp-row"><button class="hrp-btn pri" data-a="p">${NZ ? '■ Stop' : '▶ Play'}</button></div><p class="hrp-muted">Generated on your device — no internet needed. Keep the volume low while studying.</p>`;
+  const stop = () => { if (NZ) { try { NZ.src.stop(); NZ.ac.close(); } catch(e){} NZ = null; } };
+  c.addEventListener('input', e => { if (e.target.id === 'nzV') { store.set('nzv', +e.target.value); if (NZ) NZ.g.gain.value = e.target.value / 100; } });
+  c.addEventListener('click', e => { if (e.target.dataset.a !== 'p') return; if (NZ) { stop(); e.target.textContent = '▶ Play'; return; }
+    try { const ac = new (window.AudioContext || window.webkitAudioContext)(), len = ac.sampleRate * 4, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0), type = $('#nzT', c).value; let l = 0, b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (type === 'white') d[i] = w * .5; else if (type === 'brown') { l = (l + .02 * w) / 1.02; d[i] = l * 3.5; } else { b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852; b3 = .8665 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898; d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926; } }
+      const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = buf; src.loop = true; g.gain.value = $('#nzV', c).value / 100; src.connect(g); g.connect(ac.destination); src.start(); NZ = { ac, src, g }; e.target.textContent = '■ Stop'; } catch(err){ toast('Audio is not available here', 'warn', '🔇'); } });
+});
+reg('drills', '4-7-8 breathing (exam nerves)', c => {
+  c.innerHTML = `<div style="display:grid;place-items:center;height:210px"><div id="brC" style="width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,var(--cyan),var(--violet));display:grid;place-items:center;color:#fff;font-weight:700;transition:transform 4s ease-in-out;text-align:center;font-size:14px">Ready</div></div><div class="hrp-big" id="brT" style="font-size:22px">4-7-8</div><div class="hrp-row" style="justify-content:center"><button class="hrp-btn pri" data-a="s">Start</button></div><p class="hrp-muted" style="text-align:center">Inhale 4 s · hold 7 s · exhale 8 s. Four rounds calm most people.</p>`;
+  const C = $('#brC', c), Tt = $('#brT', c); let iv = null, round = 0, phase = 0, left = 0; const P = [['Inhale', 4, 'scale(1.9)'], ['Hold', 7, 'scale(1.9)'], ['Exhale', 8, 'scale(1)']];
+  const set = () => { const p = P[phase]; C.textContent = p[0]; C.style.transitionDuration = p[1] + 's'; C.style.transform = p[2]; left = p[1]; };
+  const tick = () => { if (!c.isConnected) { clearInterval(iv); return; } left--; Tt.textContent = `${P[phase][0]} · ${left + 1 > 0 ? left + 1 : 0}s · round ${round + 1}/4`; if (left <= 0) { phase++; if (phase > 2) { phase = 0; round++; if (round >= 4) { clearInterval(iv); iv = null; C.textContent = 'Done'; C.style.transform = 'scale(1)'; Tt.textContent = '✅ Well done. You are ready.'; addXP(3); return; } } set(); } };
+  c.addEventListener('click', e => { if (e.target.dataset.a === 's') { clearInterval(iv); round = 0; phase = 0; set(); Tt.textContent = 'Inhale…'; iv = setInterval(tick, 1000); } });
+});
+reg('drills', 'Focus mode & fullscreen', c => {
+  const on = document.documentElement.classList.contains('hrp-focus');
+  c.innerHTML = `<p class="hrp-muted">Hides banners, the marquee and floating buttons so you can study or take a mock test without distractions.</p><div class="hrp-row"><button class="hrp-btn pri" data-a="f">${on ? 'Turn focus mode off' : 'Turn focus mode on'}</button><button class="hrp-btn" data-a="fs">⛶ Toggle fullscreen</button></div>`;
+  c.addEventListener('click', e => { const a = e.target.dataset.a; if (a === 'f') { const v = document.documentElement.classList.toggle('hrp-focus'); store.set('focus', v); e.target.textContent = v ? 'Turn focus mode off' : 'Turn focus mode on'; }
+    else if (a === 'fs') { if (!document.fullscreenEnabled) return toast('Fullscreen is not supported here', 'warn', '⚠️'); if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); } });
+});
+if (store.get('focus', false)) document.documentElement.classList.add('hrp-focus');
+
+/* ============ WIRING ============ */
+TABS.push(['calc', '🧮 Calc', c => multi(c, CALCS, 'calcSel')]);
+TABS.push(['forms', '📐 Formulas', c => multi(c, FORMS, 'formSel')]);
+TABS.push(['study', '🎯 Study', c => multi(c, STUDY, 'studySel')]);
+TABS.push(['drills', '⌨️ Drills', c => multi(c, DRILLS, 'drillSel')]);
+const ORDER = ['home', 'exam', 'cards', 'calc', 'forms', 'study', 'drills', 'tools', 'cheats', 'plan', 'lists', 'badges', 'share', 'settings', 'help'];
+TABS.sort((a, b) => ORDER.indexOf(a[0]) - ORDER.indexOf(b[0]));
+feat('Command palette: exam shortcuts', () => {
+  const cm = window.__hrpCmds; if (!cm) return; const at = (id, sub) => () => { if (sub) store.set(sub[0], sub[1]); openHub(id); };
+  cm.push(['🎓 Open Exam Centre', '', at('exam')], ['⏱ Start a mock test', '', () => { EXS.view = 'setup'; EXS.cfg.mode = 'mock'; openHub('exam'); }], ['📅 Daily challenge', '', () => { openHub('exam'); setTimeout(() => EXACT.daily(), 60); }],
+    ['🃏 Flashcards', '', at('cards')], ['🧮 Calculators', '', at('calc')], ['📐 Formula sheets', '', at('forms')], ['🎯 Study planner', '', at('study')], ['⌨️ Typing & mental-math drills', '', at('drills')], ['🧮 Scientific calculator', '', at('calc', ['calcSel', 'Scientific calculator'])], ['🧾 Mistake bank', '', () => { openHub('exam'); setTimeout(() => EXACT.mistakes(), 60); }]);
+});
+feat('Distraction-free focus mode (hides banners & floating buttons)', () => {});
+feat('Fullscreen toggle', () => {});
+feat('Exam readiness score on the Exam home', () => {});
+window.HRPlus_exam = { questions: QB.length, decks: Object.keys(DECKS).length, cards: Object.values(DECKS).reduce((a, d) => a + d.length, 0) };
+
 /* ============ INIT ============ */
 feat('Daily visit tracking (streak, night-owl & early-bird badges)', () => {
   const today = ymd(new Date()); if (!G.days.includes(today)) { G.days.push(today); G.days = G.days.slice(-90); store.set('days', G.days); addXP(3); }
   award('early'); if (new Date().getHours() < 5) award('night'); if (streak() >= 3) award('streak3');
 });
-window.HRPlus = { count: F.length, features: F.slice(), open: openHub };
+window.HRPlus = { count: F.length, features: F.slice(), open: openHub, qb: QB, decks: DECKS };
 console.info('%cHR+ loaded: ' + F.length + ' features', 'color:#7c5cff;font-weight:bold');
 
 } catch (err) { console.error('[HR+] fatal', err); }
