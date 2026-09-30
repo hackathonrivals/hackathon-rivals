@@ -35,8 +35,8 @@ export default async function handler(req, res) {
           </p>
           <p style="margin:8px 0 0;font-size:13px;color:#8b90a4">
             ${isApproved 
-              ? 'Aapki team Grand Finale ke liye select ho gayi hai. Next steps jald milega.' 
-              : 'Is baar aapki team select nahi hui. Next season zaroor try karna!'}
+              ? 'Your team has been selected for the grand finale. Here are the next steps.' 
+              : 'While your team did not make it to the grand finale this time, we truly appreciate your participation and wish you the best in future endeavors!'}
           </p>
         </div>
         <p style="font-size:14px;margin-top:24px">— Team Hackathon Rivals</p>
