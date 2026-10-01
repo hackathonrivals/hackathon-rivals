@@ -3792,6 +3792,9 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
     storageKey: 'hr-auth-awvcorsw'
   }
 });
+  // Expose the single authenticated client so the REST helpers below always
+  // use the same Supabase session/JWT as login, profile and Admin UI.
+  window.__HR_SUPABASE__ = supabase;
   const FORMSPREE_URL = 'https://formspree.io/f/mppwlbwq';
  
 
@@ -11642,9 +11645,33 @@ Object.assign(EXACT, {
 const HK_URL = 'https://awvcorswnzbxsrrzepto.supabase.co', HK_KEY = 'sb_publishable_6GqdbyBWEX7cIkTzcp9yvw_WYNp5GJh', HK_FORM = 'https://formspree.io/f/mppwlbwq';
 const HK_DEFAULT = { id: 'main', name: 'Hackathon Rivals — Live Hackathon', starts_at: '2026-10-01T18:00:00+05:30', reg_closes_at: '2026-10-01T18:00:00+05:30', ends_at: null, reg_open: true, lock_main: true, message: 'Team up, pick a problem and build something great. Register before the countdown hits zero.' };
 const HB = { remote: false, checked: false, off: 0, tsrc: 'device clock', ev: { ...HK_DEFAULT }, lastReg: null, lastPhase: null, rt: 0 };
-function sbToken(){ try { const ref = new URL(HK_URL).hostname.split('.')[0]; const j = JSON.parse(localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return j && (j.access_token || (j.currentSession && j.currentSession.access_token)) || null; } catch(e){ return null; } }
+async function sbToken(){
+  // IMPORTANT: the app stores Supabase auth under the custom key
+  // `hr-auth-awvcorsw`. The old code only checked Supabase's default
+  // `sb-<project-ref>-auth-token` key, so Admin REST calls could be sent
+  // without the logged-in Admin JWT and RLS correctly returned 401/403.
+  try {
+    const client = window.__HR_SUPABASE__;
+    if (client?.auth?.getSession) {
+      const { data } = await client.auth.getSession();
+      const token = data?.session?.access_token;
+      if (token) return token;
+    }
+  } catch(e) {}
+  try {
+    const ref = new URL(HK_URL).hostname.split('.')[0];
+    const keys = ['hr-auth-awvcorsw', 'sb-' + ref + '-auth-token'];
+    for (const key of keys) {
+      const j = JSON.parse(localStorage.getItem(key) || 'null');
+      const token = j?.access_token || j?.currentSession?.access_token || j?.session?.access_token;
+      if (token) return token;
+    }
+  } catch(e) {}
+  return null;
+}
 async function pgrest(path, o = {}){
-  const tok = sbToken(); const h = { apikey: HK_KEY, 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}), ...(o.headers || {}) };
+  const tok = await sbToken();
+  const h = { apikey: HK_KEY, 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}), ...(o.headers || {}) };
   const r = await fetch(HK_URL + '/rest/v1/' + path, { method: o.method || 'GET', headers: h, body: o.body !== undefined ? JSON.stringify(o.body) : undefined });
   const t = await r.text(); let d = null; try { d = t ? JSON.parse(t) : null; } catch(e){ d = t; }
   if (!r.ok) { const e = new Error((d && (d.message || d.hint || d.details)) || 'HTTP ' + r.status); e.status = r.status; e.code = d && d.code; throw e; }
