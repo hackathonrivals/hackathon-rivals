@@ -2131,7 +2131,7 @@ html.hrp-links a{text-decoration:underline!important}
 #hrpBanner.show{transform:none}
 #hrpStick{position:fixed;left:50%;top:-70px;transform:translateX(-50%);z-index:120;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:999px;
   padding:7px 16px;font-size:12.5px;font-weight:600;transition:top .3s;box-shadow:0 10px 30px -12px rgba(0,0,0,.7);white-space:nowrap}
-#hrpStick.show{top:76px}
+#hrpStick.show{top:var(--hrp-hdr,76px)}
 #hrpBell{position:relative}
 .hrp-dot{position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--pink);border-radius:50%;display:none}
 .hrp-dot.on{display:block}
@@ -2161,6 +2161,39 @@ body{overflow-x:clip}
 
 /* focus mode */
 html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp-focus #hrpTopBtn,html.hrp-focus #hrpShareBtn,html.hrp-focus #hrpStick{display:none!important}
+
+/* hackathon section */
+.hk-sec{padding:60px 0 20px}
+.hk-box{background:linear-gradient(135deg,rgba(124,92,255,.14),rgba(34,211,238,.08));border:1px solid var(--border-strong);border-radius:22px;padding:28px}
+.hk-top{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;align-items:center;margin-bottom:22px}
+.hk-top h2{font-size:clamp(24px,3.4vw,38px);margin:6px 0}
+.hk-sub{color:var(--muted);margin:6px 0}.hk-times{font-size:14px;margin:8px 0}
+.hk-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hk-pill{display:inline-block;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--surface-3);border:1px solid var(--border-strong)}
+.hk-pill.ok{background:rgba(61,220,132,.15);border-color:var(--green);color:var(--green)}
+.hk-pill.bad{background:rgba(255,77,157,.15);border-color:var(--pink);color:var(--pink)}
+.hk-pill.live{background:rgba(255,77,157,.2);border-color:var(--pink);animation:hkPulse 1.4s infinite}
+@keyframes hkPulse{50%{opacity:.6}}
+.hk-timer{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.hk-timer div{background:var(--surface-2);border:1px solid var(--border-strong);border-radius:14px;padding:14px 6px;text-align:center}
+.hk-timer b{display:block;font-family:'Space Grotesk',sans-serif;font-size:clamp(26px,4vw,40px)}
+.hk-timer i{font-style:normal;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.hk-form h3,.hk-card h3{margin-bottom:10px}
+.hk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hk-grid label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+.hk-grid .wide{grid-column:1/-1}
+.hk-grid input,.hk-grid select,.hk-grid textarea{background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:11px 12px;font:inherit;font-size:14px}
+.hk-msg{min-height:20px;margin:10px 0;font-size:13.5px}.hk-msg.err{color:var(--pink)}.hk-msg.ok{color:var(--green)}
+.hk-note{font-size:12px;color:var(--muted);margin-top:8px}
+.hk-card{background:var(--surface-2);border:1px solid var(--border-strong);border-radius:14px;padding:16px;margin:10px 0}
+.hk-card.ok{border-color:var(--green)}.hk-card.bad{border-color:var(--pink)}
+.hk-quizzes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.hk-off{opacity:.55;pointer-events:none}
+#register.hk-locked .wrap>*:not(.hk-closed){display:none!important}
+@media (max-width:720px){.hk-top{grid-template-columns:1fr}.hk-grid{grid-template-columns:1fr}.hk-box{padding:18px}}
+
+#hrpStick{max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis}
+@media (max-width:720px){#hrpStick{font-size:11.5px;padding:6px 12px}}
 </style>
 </head>
 <body>
@@ -9567,13 +9600,12 @@ feat('Heading anchor links (copy section URL)', () => {
 feat('Sticky mini countdown pill', () => {
   const p = el('div', { id: 'hrpStick', role: 'button', tabindex: '0' }, ''); document.body.appendChild(p);
   const upd = () => {
-    const g = id => { const e = document.getElementById(id); return e ? +e.textContent || 0 : 0; };
-    const d = g('cd-days'), h = g('cd-hours'), m = g('cd-mins'), s = g('cd-secs');
-    p.textContent = (d + h + m + s === 0) ? '🏁 Grand Finale countdown has ended' : `⏳ ${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s to Grand Finale`;
-    p.classList.toggle('show', window.scrollY > 800);
+    const t = window.__hrpHackPill ? window.__hrpHackPill() : null;
+    const hd = document.querySelector('header'); if (hd) document.documentElement.style.setProperty('--hrp-hdr', Math.round(hd.getBoundingClientRect().bottom + 8) + 'px');
+    p.textContent = t || ''; p.classList.toggle('show', !!t && window.scrollY > 800);
   };
   setInterval(upd, 1000); window.addEventListener('scroll', upd, { passive: true }); upd();
-  p.addEventListener('click', () => { const r = $('#register'); if (r) r.scrollIntoView({ behavior: 'smooth' }); });
+  p.addEventListener('click', () => { const r = $('#hackathon') || $('#register'); if (r) r.scrollIntoView({ behavior: 'smooth' }); });
 });
 feat('Page title follows current section', () => {
   const base = document.title; const secs = $$('section[id]:not(#admin)');
@@ -9627,18 +9659,19 @@ function openHub(tab){
   hubEl.classList.add('open'); const d = $('#hrpDot'); if (d && hubTab === 'home') d.classList.remove('on');
   renderHub();
 }
-function closeAll(){ $$('.hrp-bg.open').forEach(b => b.classList.remove('open')); }
+function closeAll(){ $$('.hrp-bg.open').forEach(b => { if (!b.dataset.noesc) b.classList.remove('open'); }); }
 function renderHub(){
   const tabs = $('.hrp-tabs', hubEl);
   const oldBody = $('.hrp-body', hubEl), body = oldBody.cloneNode(false); oldBody.replaceWith(body); // fresh node = no stale listeners from earlier tabs
   tabs.innerHTML = '';
-  TABS.forEach(([id, label]) => {
+  const vis = TABS.filter(x => !x[3] || x[3]()); if (!vis.some(x => x[0] === hubTab)) hubTab = vis[0][0];
+  vis.forEach(([id, label]) => {
     const b = el('button', { class: 'hrp-tab' + (id === hubTab ? ' active' : ''), type: 'button' }, label);
     b.addEventListener('click', () => { hubTab = id; store.set('lastTab', id); renderHub(); });
     tabs.appendChild(b);
   });
   body.innerHTML = '';
-  const t = TABS.find(x => x[0] === hubTab) || TABS[0];
+  const t = vis.find(x => x[0] === hubTab) || vis[0];
   try { t[2](body); } catch(e){ body.textContent = 'Something went wrong loading this tab.'; console.warn(e); }
   body.scrollTop = 0;
 }
@@ -10777,6 +10810,154 @@ Object.assign(SYL, {
 /* balance answer positions so the correct option is spread evenly across A–D (matters when option shuffling is off) */
 QB.forEach((q, i) => { const t = (i * 7 + 3) % 4; if (q.a !== t) { const x = q.o[q.a]; q.o[q.a] = q.o[t]; q.o[t] = x; q.a = t; } });
 
+/* ============ SEMESTER-WISE B.TECH BANK (first year + later semesters) ============ */
+Object.assign(SUBJ, { m1: 'Engineering Mathematics-I', m2: 'Engineering Mathematics-II', phy: 'Engineering Physics', chem: 'Engineering Chemistry', bee: 'Basic Electrical Engg', c: 'Programming in C', ml: 'Machine Learning', ai: 'Artificial Intelligence', crypto: 'Cryptography & Security', cloud: 'Cloud Computing' });
+
+/* --- Engineering Mathematics-I (Sem 1) --- */
+B('m1',1,'∫₀¹ x² dx =',['1/3','1/2','1','2/3'],0,'∫x² dx = x³/3, evaluated from 0 to 1 gives 1/3.');
+B('m1',1,'The rank of the 3×3 identity matrix is…',['1','2','3','0'],2,'All three rows are linearly independent.');
+B('m1',2,'The first three non-zero terms of the Maclaurin series of cos x are…',['1 − x²/2 + x⁴/24','1 + x²/2 + x⁴/24','x − x³/6 + x⁵/120','1 − x + x²/2'],0,'cos x = Σ (−1)ⁿ x²ⁿ/(2n)! = 1 − x²/2! + x⁴/4! − …');
+B('m1',2,'The eigenvalues of [[2, 1], [1, 2]] are…',['1 and 3','2 and 2','0 and 4','−1 and 3'],0,'Trace 4 and determinant 3 give λ² − 4λ + 3 = 0, so λ = 1, 3.');
+B('m1',2,'If f(x, y) = x²y + y³, then ∂f/∂y =',['x² + 3y²','2xy','x² + y²','2xy + 3y²'],0,'Treat x as a constant: ∂/∂y (x²y) = x² and ∂/∂y (y³) = 3y².');
+B('m1',2,'∫₀¹ ∫₀¹ (x + y) dx dy =',['1/2','1','3/2','2'],1,'Each of the two terms integrates to 1/2, so the total is 1.');
+B('m1',2,'The Jacobian ∂(x, y)/∂(r, θ) for x = r cos θ, y = r sin θ is…',['r','1','r²','cos θ sin θ'],0,'The determinant of [[cos θ, −r sin θ], [sin θ, r cos θ]] is r cos²θ + r sin²θ = r.');
+B('m1',3,'By the Mean Value Theorem, for f(x) = x² on [1, 3], the value of c is…',['1.5','2','2.5','3'],1,'f′(c) = (9 − 1)/(3 − 1) = 4, so 2c = 4 and c = 2.');
+B('m1',3,'The characteristic equation of A = [[1, 2], [3, 4]] is…',['λ² − 5λ − 2 = 0','λ² + 5λ − 2 = 0','λ² − 5λ + 2 = 0','λ² − 4λ − 2 = 0'],0,'λ² − (trace)λ + det = λ² − 5λ + (4 − 6) = λ² − 5λ − 2.');
+B('m1',3,'The radius of convergence of the power series Σ xⁿ/n (n ≥ 1) is…',['0','1','2','∞'],1,'By the ratio test |x| < 1 (the series converges for −1 ≤ x < 1).');
+B('m1',3,'lim (x → 0) (1 − cos x)/x² =',['0','1/2','1','∞'],1,'1 − cos x ≈ x²/2 for small x.');
+
+/* --- Engineering Mathematics-II (Sem 2) --- */
+B('m2',1,'The order and degree of (d²y/dx²)³ + (dy/dx)² + y = 0 are…',['2 and 3','3 and 2','2 and 2','1 and 3'],0,'The highest derivative is second order and it is raised to the power 3.');
+B('m2',1,'The solution of dy/dx = 2x is…',['y = x² + C','y = 2x² + C','y = x + C','y = eˣ + C'],0,'Integrate both sides.');
+B('m2',1,'The Laplace transform of t is…',['1/s','1/s²','s²','s'],1,'L{tⁿ} = n!/sⁿ⁺¹, so L{t} = 1/s².');
+B('m2',1,'The divergence of F = x i + y j + z k is…',['0','1','3','x + y + z'],2,'∂x/∂x + ∂y/∂y + ∂z/∂z = 3.');
+B('m2',2,'The integrating factor of dy/dx + 2y = eˣ is…',['e²ˣ','eˣ','e⁻²ˣ','2eˣ'],0,'IF = e^(∫2 dx) = e²ˣ.');
+B('m2',2,'The general solution of y″ + y = 0 is…',['C₁ cos x + C₂ sin x','C₁ eˣ + C₂ e⁻ˣ','C₁ + C₂ x','C₁ cosh x'],0,'The characteristic roots are ±i.');
+B('m2',2,'L{ sin(at) } =',['a/(s² + a²)','s/(s² + a²)','a/(s² − a²)','1/(s + a)'],0,'A standard Laplace transform pair.');
+B('m2',2,'For a scalar field φ, curl(grad φ) is…',['0','∇²φ','φ','A non-zero vector in general'],0,'The curl of a gradient is always the zero vector.');
+B('m2',2,'The general solution of y″ − 3y′ + 2y = 0 is…',['C₁ eˣ + C₂ e²ˣ','C₁ e⁻ˣ + C₂ e⁻²ˣ','C₁ eˣ + C₂ e⁻²ˣ','C₁ cos x + C₂ sin 2x'],0,'The roots of m² − 3m + 2 = 0 are 1 and 2.');
+B('m2',3,'Green’s theorem relates…',['A line integral around a closed curve to a double integral over the enclosed region','A surface integral to a volume integral','A line integral to a surface integral in 3-D','Two double integrals'],0,'∮(P dx + Q dy) = ∬(∂Q/∂x − ∂P/∂y) dA.');
+B('m2',3,'The Fourier series of f(x) = x on (−π, π) contains…',['Only sine terms','Only cosine terms','Both sine and cosine terms','Only a constant'],0,'f is an odd function, so all cosine coefficients (and a₀) vanish.');
+B('m2',3,'If L{f(t)} = F(s), then L{ e^(at) f(t) } =',['F(s − a)','F(s + a)','e^(as) F(s)','F(s)/a'],0,'The first shifting theorem.');
+
+/* --- Engineering Physics (Sem 1) --- */
+B('phy',1,'The de Broglie wavelength of a particle of momentum p is…',['h/p','p/h','hp','h/p²'],0,'λ = h/p.');
+B('phy',1,'In Young’s double-slit experiment the fringe width is…',['λD/d','λd/D','D/λd','dD/λ'],0,'β = λD/d (D = screen distance, d = slit separation).');
+B('phy',1,'In the photoelectric effect the maximum kinetic energy of emitted electrons is…',['hν − φ','hν + φ','φ − hν','hν/φ'],0,'Einstein’s equation: KE_max = hν − φ.');
+B('phy',1,'For laser action, which condition is essential?',['Population inversion','Thermal equilibrium','Low pumping','Only spontaneous emission'],0,'More atoms must be in the excited state than in the lower state.');
+B('phy',2,'The Heisenberg uncertainty principle states that…',['Δx Δp ≥ ħ/2','Δx Δp = 0','Δx + Δp ≥ ħ','Δx/Δp ≥ ħ'],0,'Position and momentum cannot both be known exactly.');
+B('phy',2,'For a particle in a 1-D infinite potential well, the energy Eₙ is proportional to…',['n²','n','1/n','n³'],0,'Eₙ = n²h²/(8mL²).');
+B('phy',2,'Bragg’s law for X-ray diffraction is…',['2d sin θ = nλ','d sin θ = nλ','2d cos θ = nλ','d = 2nλ sin θ'],0,'It gives the condition for constructive interference from crystal planes.');
+B('phy',2,'The numerical aperture of an optical fibre is…',['√(n₁² − n₂²)','n₁ − n₂','n₁² − n₂²','(n₁ − n₂)/n₁'],0,'NA = sin θ_max = √(n₁² − n₂²) for core index n₁ and cladding index n₂.');
+B('phy',3,'For a particle in a 1-D infinite well, the ratio E₂/E₁ is…',['2','4','8','1/4'],1,'Eₙ ∝ n², so E₂/E₁ = 4.');
+B('phy',3,'A fibre has core index 1.50 and cladding index 1.46. Its numerical aperture is about…',['0.34','0.50','0.04','1.03'],0,'√(1.50² − 1.46²) = √0.1184 ≈ 0.344.');
+B('phy',3,'In Compton scattering, the wavelength shift is maximum at a scattering angle of…',['0°','90°','180°','45°'],2,'Δλ = (h/mc)(1 − cos θ) is largest when cos θ = −1.');
+
+/* --- Engineering Chemistry (Sem 2) --- */
+B('chem',1,'The pH of a 0.01 M HCl solution is…',['1','2','3','12'],1,'[H⁺] = 10⁻² M, so pH = 2.');
+B('chem',1,'Hardness of water is mainly due to dissolved salts of…',['Sodium and potassium','Calcium and magnesium','Iron and copper','Zinc and lead'],1,'Ca²⁺ and Mg²⁺ bicarbonates, chlorides and sulphates cause hardness.');
+B('chem',1,'The octane number of iso-octane is…',['0','50','100','150'],2,'It is the reference value 100 on the octane scale (n-heptane = 0).');
+B('chem',1,'The Beer–Lambert law is…',['A = εcl','A = c/εl','A = εl/c','A = ε + c + l'],0,'Absorbance is proportional to concentration and path length.');
+B('chem',2,'The zeolite (permutit) process softens water by…',['Ion exchange','Precipitation with lime','Boiling','Reverse osmosis'],0,'Na⁺ in the zeolite exchanges with Ca²⁺ and Mg²⁺ in hard water.');
+B('chem',2,'In galvanic corrosion of two connected metals, the anode is the metal that has…',['Lower (more negative) reduction potential','Higher reduction potential','Higher melting point','Greater density'],0,'The more active metal is oxidised (corrodes) and the noble metal is protected.');
+B('chem',2,'The standard EMF of the Daniell cell (E°Cu = +0.34 V, E°Zn = −0.76 V) is…',['0.42 V','1.10 V','−1.10 V','0.76 V'],1,'E°cell = E°cathode − E°anode = 0.34 − (−0.76) = 1.10 V.');
+B('chem',2,'The monomer of Teflon is…',['Tetrafluoroethylene','Vinyl chloride','Ethylene','Styrene'],0,'Polymerisation of CF₂=CF₂ gives PTFE.');
+B('chem',3,'The Gibbs phase rule is…',['F = C − P + 2','F = C + P − 2','F = P − C + 2','F = C − P − 2'],0,'F = degrees of freedom, C = components, P = phases.');
+B('chem',3,'At the triple point of water, the number of degrees of freedom is…',['0','1','2','3'],0,'C = 1 and P = 3, so F = 1 − 3 + 2 = 0.');
+B('chem',3,'The higher calorific value of a fuel differs from the lower calorific value because it includes…',['Latent heat of condensation of the steam formed','Heat lost in flue gases','Ash content','Moisture in air'],0,'HCV includes the latent heat recovered when the water vapour from combustion condenses.');
+
+/* --- Basic Electrical Engineering (Sem 1) --- */
+B('bee',1,'Two resistors of 4 Ω and 6 Ω are connected in series. The equivalent resistance is…',['2.4 Ω','5 Ω','10 Ω','24 Ω'],2,'Series resistances add.');
+B('bee',1,'Two resistors of 6 Ω and 3 Ω are connected in parallel. The equivalent resistance is…',['2 Ω','4.5 Ω','9 Ω','18 Ω'],0,'(6 × 3)/(6 + 3) = 2 Ω.');
+B('bee',1,'The RMS value of a sinusoidal voltage with a peak of 100 V is about…',['50 V','70.7 V','100 V','141 V'],1,'V_rms = V_peak/√2 ≈ 70.7 V.');
+B('bee',1,'A transformer has a 10 : 1 turns ratio (step-down) and a 230 V primary. The secondary voltage is…',['23 V','2300 V','115 V','10 V'],0,'V₂ = V₁ × (N₂/N₁) = 230/10 = 23 V.');
+B('bee',2,'Kirchhoff’s voltage law is based on the conservation of…',['Energy','Charge','Momentum','Mass'],0,'The algebraic sum of voltages around a closed loop is zero.');
+B('bee',2,'The power factor of a purely inductive circuit is…',['0','0.5','1','∞'],0,'Voltage leads current by 90°, so cos 90° = 0.');
+B('bee',2,'The time constant of a series R–L circuit is…',['L/R','R/L','RL','1/(RL)'],0,'τ = L/R.');
+B('bee',2,'In a balanced star connection, the line voltage equals…',['√3 × phase voltage','Phase voltage','Phase voltage/√3','3 × phase voltage'],0,'V_L = √3 V_ph in star; I_L = I_ph.');
+B('bee',3,'A series RLC circuit has L = 1 mH and C = 10 µF. Its resonant frequency is about…',['1.59 kHz','159 Hz','15.9 kHz','50 Hz'],0,'f₀ = 1 ÷ (2π√(LC)) = 1 ÷ (2π × 10⁻⁴) ≈ 1,591 Hz.');
+B('bee',3,'The total real power of a balanced three-phase load is…',['√3 V_L I_L cos φ','3 V_L I_L cos φ','V_L I_L sin φ','√3 V_L I_L'],0,'P = √3 × line voltage × line current × power factor.');
+B('bee',3,'The back EMF of a DC motor is proportional to…',['Speed and flux','Armature current only','Supply frequency','Load torque only'],0,'E_b = kΦN.');
+
+/* --- Programming in C (Sem 1) --- */
+B('c',1,'What does printf("%d", 5 / 2); print in C?',['2','2.5','3','0'],0,'Integer division truncates: 5 / 2 = 2.');
+B('c',1,'int a = 10, *p = &a; printf("%d", *p + 1); prints…',['11','10','The address of a','Error'],0,'*p is 10, so *p + 1 = 11.');
+B('c',1,'A static local variable in a function…',['Keeps its value between calls','Is re-initialised on every call','Is stored on the stack','Cannot be initialised'],0,'It lives for the whole program run and is initialised only once.');
+B('c',1,'What is factorial(5) computed by f(n) = (n <= 1) ? 1 : n * f(n − 1)?',['24','60','120','720'],2,'5 × 4 × 3 × 2 × 1 = 120.');
+B('c',1,'malloc() returns…',['A void pointer, or NULL on failure','An int','A char pointer only','Nothing'],0,'The result should be checked for NULL before use.');
+B('c',2,'int r = 2 + 3 * 4 % 5; The value of r is…',['4','2','6','0'],0,'*, / and % have equal precedence (left to right): 3 × 4 = 12, 12 % 5 = 2, then 2 + 2 = 4.');
+B('c',2,'for (i = 0; i < 3; i++); printf("%d", i); prints…',['3','2','0','012'],0,'The semicolon makes the loop body empty; after the loop i is 3.');
+B('c',2,'char s[] = "hello"; What are strlen(s) and sizeof(s)?',['5 and 6','5 and 5','6 and 6','6 and 5'],0,'sizeof also counts the terminating null character.');
+B('c',2,'The main difference between a struct and a union is that…',['Union members share the same memory','Struct members share memory','Unions cannot hold arrays','Structs cannot be nested'],0,'A union’s size is that of its largest member.');
+B('c',2,'int x = 7; x >>= 1; The value of x is…',['3','4','14','6'],0,'Right-shifting 7 (111 in binary) by one bit gives 11 in binary = 3.');
+B('c',2,'What is 5 & 3 in C?',['1','2','7','8'],0,'101 AND 011 = 001 = 1.');
+B('c',3,'What does printf("%d", 10 > 5 > 2); print in C?',['0','1','2','Compile error'],0,'It is evaluated as (10 > 5) > 2, i.e. 1 > 2, which is 0.');
+B('c',3,'int a[5] = {1, 2, 3}; The value of a[4] is…',['0','Garbage','3','Undefined'],0,'Remaining elements of a partially initialised array are set to 0.');
+
+/* --- Artificial Intelligence (Sem 5) --- */
+B('ai',1,'Breadth-first search is complete and optimal when…',['All step costs are equal','Costs are negative','The graph is infinite','The heuristic is admissible'],0,'It expands the shallowest node first, which is the cheapest when every step costs the same.');
+B('ai',1,'Who proposed the Turing test?',['Alan Turing','John McCarthy','Marvin Minsky','Herbert Simon'],0,'Turing described it in his 1950 paper on machine intelligence.');
+B('ai',1,'Modus ponens states that from P and P → Q we can infer…',['Q','¬P','P ∧ ¬Q','¬Q'],0,'It is the basic inference rule of propositional logic.');
+B('ai',1,'Hill-climbing search can get stuck at…',['Local maxima, plateaus and ridges','Only the global maximum','The start state always','Nowhere'],0,'It only moves to better neighbours.');
+B('ai',2,'A* search is optimal when its heuristic is…',['Admissible (never overestimates)','Always zero only','Larger than the true cost','Random'],0,'For graph search, consistency is also required.');
+B('ai',2,'A simple reflex agent selects actions based on…',['Condition–action rules using the current percept','A full model of the world and goals','Learned utility','Past percept history only'],0,'It ignores history.');
+B('ai',2,'The three genetic-algorithm operators are…',['Selection, crossover and mutation','Sorting, hashing and merging','Training, testing and validation','Pruning, sampling and boosting'],0,'They are applied repeatedly to evolve a population.');
+B('ai',2,'In a Bayesian network, the joint probability is…',['The product of P(Xᵢ | Parents(Xᵢ)) over all nodes','The sum of all marginals','The maximum of the conditionals','Independent of the graph'],0,'The network structure encodes conditional independence.');
+B('ai',3,'With perfect move ordering, alpha–beta pruning reduces minimax time from O(bᵈ) to about…',['O(b^(d/2))','O(d)','O(b)','O(bᵈ⁺¹)'],0,'It can search roughly twice as deep in the same time.');
+B('ai',3,'Resolution is a proof method that is…',['Refutation-complete for first-order logic','Only for propositional Horn clauses','Incomplete for all logics','A heuristic search'],0,'If a set of clauses is unsatisfiable, resolution can derive the empty clause.');
+B('ai',3,'A heuristic h(n) is consistent if for every edge (n, n′) with cost c…',['h(n) ≤ c(n, n′) + h(n′)','h(n) ≥ c(n, n′) + h(n′)','h(n) = 0','h(n) = c(n, n′)'],0,'This triangle-inequality condition implies admissibility.');
+
+/* --- Machine Learning (Sem 6) --- */
+B('ml',1,'Which of these is an unsupervised learning algorithm?',['k-means clustering','Linear regression','Logistic regression','Decision tree classifier'],0,'k-means groups unlabelled data.');
+B('ml',1,'Overfitting means a model…',['Fits training data very well but generalises poorly','Fits training data poorly','Has too few parameters','Cannot be trained'],0,'Training error is low but test error is high.');
+B('ml',1,'The gradient-descent update rule is…',['θ := θ − α ∇J(θ)','θ := θ + α ∇J(θ)','θ := α ∇J(θ)','θ := θ ÷ α'],0,'Move the parameters against the gradient of the cost, with learning rate α.');
+B('ml',1,'The sigmoid function σ(0) equals…',['0.5','0','1','−1'],0,'1 ÷ (1 + e⁰) = 0.5.');
+B('ml',2,'A classifier has TP = 40 and FP = 10. Its precision is…',['0.8','0.4','0.25','0.5'],0,'Precision = TP ÷ (TP + FP) = 40 ÷ 50.');
+B('ml',2,'L1 regularisation (Lasso) tends to…',['Produce sparse weights (many exactly zero)','Shrink all weights equally','Increase variance','Remove the bias term'],0,'The L1 penalty can drive some coefficients exactly to zero.');
+B('ml',2,'A 1-nearest-neighbour classifier typically has…',['Low bias and high variance','High bias and low variance','High bias and high variance','No training error possible'],0,'It fits the training data exactly and is sensitive to noise.');
+B('ml',2,'The principal components in PCA are…',['Eigenvectors of the covariance matrix','Rows of the data matrix','Cluster centres','Support vectors'],0,'They are ordered by the eigenvalues (variance explained).');
+B('ml',2,'The entropy of a fair coin toss is…',['1 bit','0 bits','2 bits','0.5 bits'],0,'−(½ log₂ ½ + ½ log₂ ½) = 1.');
+B('ml',3,'Precision = 0.8 and recall = 2/3. The F1-score is…',['8/11 ≈ 0.727','0.733','0.8','0.667'],0,'F1 = 2PR ÷ (P + R) = 2 × (4/5)(2/3) ÷ (22/15) = 8/11.');
+B('ml',3,'In an SVM the support vectors are…',['Training points that lie on or inside the margin','All training points','Points far from the boundary','The cluster centres'],0,'Only these points determine the separating hyperplane.');
+B('ml',3,'Increasing model complexity generally…',['Reduces bias and increases variance','Increases both bias and variance','Reduces both','Increases bias and reduces variance'],0,'This is the bias–variance trade-off.');
+
+/* --- Cryptography & Network Security (Sem 6) --- */
+B('crypto',1,'With a Caesar cipher of shift 3, “ABC” becomes…',['DEF','XYZ','CDE','BCD'],0,'Each letter moves three places forward.');
+B('crypto',1,'The block size of AES is…',['128 bits','64 bits','256 bits only','56 bits'],0,'AES uses 128-bit blocks with 128, 192 or 256-bit keys.');
+B('crypto',1,'SHA-256 produces a digest of…',['256 bits','128 bits','160 bits','512 bits'],0,'The name gives the output length.');
+B('crypto',1,'Which of these is an asymmetric (public-key) algorithm?',['RSA','AES','DES','RC4'],0,'RSA uses a key pair.');
+B('crypto',1,'The CIA triad stands for…',['Confidentiality, Integrity, Availability','Control, Identity, Access','Cipher, Integrity, Authentication','Confidentiality, Identity, Authorisation'],0,'The three core goals of information security.');
+B('crypto',2,'A digital signature provides…',['Authentication, integrity and non-repudiation','Only confidentiality','Only availability','Compression'],0,'The signer’s private key signs a hash of the message.');
+B('crypto',2,'Unauthenticated Diffie–Hellman key exchange is vulnerable to…',['A man-in-the-middle attack','Brute force on the hash','A padding oracle','SQL injection'],0,'An attacker can negotiate a separate key with each party.');
+B('crypto',2,'CBC mode of a block cipher requires…',['An initialisation vector (IV)','No key','A public key','A hash function'],0,'The IV randomises the first block so equal plaintexts encrypt differently.');
+B('crypto',2,'The birthday paradox is relevant to…',['Finding hash collisions','The key length of AES','The Caesar cipher','Firewall rules'],0,'A collision in an n-bit hash needs only about 2^(n/2) attempts.');
+B('crypto',3,'In RSA, p = 3, q = 11 and e = 3. What is the private exponent d?',['7','9','11','13'],0,'n = 33, φ(n) = 20 and 3 × 7 = 21 ≡ 1 (mod 20).');
+B('crypto',3,'Diffie–Hellman with p = 23, g = 5, a = 6, b = 15. The shared secret is…',['2','8','19','6'],0,'A = 5⁶ mod 23 = 8, B = 5¹⁵ mod 23 = 19, and 19⁶ mod 23 = 2.');
+B('crypto',3,'In the RSA example n = 33, e = 3, d = 7, the plaintext 4 encrypts to…',['31','12','7','19'],0,'4³ mod 33 = 64 mod 33 = 31.');
+
+/* --- Cloud Computing (Sem 7) --- */
+B('cloud',1,'Gmail is an example of…',['SaaS','IaaS','PaaS','DaaS only'],0,'Software delivered to users over the web.');
+B('cloud',1,'A virtual machine on a rented cloud server is an example of…',['IaaS','SaaS','PaaS','FaaS'],0,'Infrastructure as a Service.');
+B('cloud',1,'Kubernetes is mainly used for…',['Container orchestration','Data encryption','Version control','Load testing'],0,'It automates deployment, scaling and management of containers.');
+B('cloud',1,'A load balancer…',['Distributes incoming traffic across several servers','Stores backups','Compiles code','Encrypts disks'],0,'It improves availability and throughput.');
+B('cloud',2,'Elasticity in cloud computing means…',['Resources scale up and down automatically with demand','Fixed capacity','Cheaper hardware','More RAM only'],0,'Capacity follows workload.');
+B('cloud',2,'A Type-1 hypervisor…',['Runs directly on the hardware','Runs inside a host OS','Is a container runtime','Is a load balancer'],0,'Examples: VMware ESXi and Xen.');
+B('cloud',2,'Docker containers on one host share…',['The host OS kernel','A separate kernel each','The same file system always','Nothing'],0,'This makes containers lighter than virtual machines.');
+B('cloud',2,'Serverless computing (FaaS) means…',['Code runs in on-demand functions and you do not manage servers','There are no servers anywhere','Only static websites','Applications run offline'],0,'The provider manages the servers and scales automatically.');
+B('cloud',3,'According to the CAP theorem, during a network partition a distributed system must trade off…',['Consistency and availability','Cost and speed','Security and privacy','Latency and bandwidth'],0,'When a partition occurs you can keep either consistency or availability, not both.');
+B('cloud',3,'In the shared responsibility model, the cloud customer is always responsible for…',['Their data and access management','Physical data-centre security','Hypervisor patches','Network cables'],0,'The provider secures the infrastructure; customers secure what they put in it.');
+
+/* --- semester & branch metadata (0 = placement / general) --- */
+const SUBJ_META = { m1: [1, 'common'], phy: [1, 'common'], bee: [1, 'common'], c: [1, 'common'], m2: [2, 'common'], chem: [2, 'common'],
+  dsa: [3, 'cse'], dm: [3, 'cse'], dl: [3, 'cse'], coa: [3, 'cse'], prog: [3, 'cse'], dbms: [4, 'cse'], os: [4, 'cse'], algo: [4, 'cse'], em: [4, 'cse'],
+  toc: [5, 'cse'], cn: [5, 'cse'], se: [5, 'cse'], web: [5, 'cse'], ai: [5, 'cse'], cd: [6, 'cse'], ml: [6, 'cse'], crypto: [6, 'cse'], cloud: [7, 'cse'], apt: [0, 'all'], lr: [0, 'all'] };
+const BRANCHES = { all: 'All branches', common: 'Common (Sem 1–2)', cse: 'CSE / IT' };
+QB.forEach(q => { const m = SUBJ_META[q.s] || [0, 'all']; if (q.sem === undefined) q.sem = m[0]; if (!q.br) q.br = m[1]; });
+const BUILTIN_Q = QB.map(q => ({ ...q, o: q.o.slice() }));   // pristine copy for admin overrides
+/* re-balance answer positions across A–D for the whole bank */
+QB.forEach((q, i) => { const t = (i * 7 + 3) % 4; if (q.a !== t) { const x = q.o[q.a]; q.o[q.a] = q.o[t]; q.o[t] = x; q.a = t; } });
+BUILTIN_Q.forEach((q, i) => { const src = QM[q.id]; q.o = src.o.slice(); q.a = src.a; });
+
 /* ============ EXAM CENTRE ============ */
 Object.assign(BADGES, {
   quiz1: ['📝', 'First Test', 'Finished your first test'], ace: ['🏆', 'Ace', 'Scored 90%+ on a test of 10+ questions'],
@@ -10796,6 +10977,7 @@ function seeded(seed){ let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >
 function seededPick(n, seed){ const bt = QB.filter(q => q.b), src = bt.length >= n ? bt : QB, r = seeded(seed), idx = src.map((_, i) => i); for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; } return idx.slice(0, n).map(i => src[i].id); }
 const dateSeed = () => +today().replace(/-/g, '');
 function shuffled(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const semOk = (c, q) => c.sem === undefined || c.sem < 0 || q.sem === c.sem;
 const dLabel = d => ['All levels', 'Easy', 'Medium', 'Hard'][d] || 'All levels';
 const fmtClock = s => { s = Math.max(0, Math.round(s)); return (s >= 3600 ? Math.floor(s / 3600) + ':' : '') + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); };
 const totalAnswered = () => Object.values(XS.sub()).reduce((a, s) => a + (s.a || 0), 0);
@@ -10810,7 +10992,7 @@ function readiness(){
 }
 function pool(cfg){
   if (cfg.ids) return cfg.ids.filter(id => QM[id]);
-  return QB.filter(q => (cfg.subj === 'all' || q.s === cfg.subj) && (!cfg.diff || q.d === cfg.diff) && (!cfg.lvl || q.b)).map(q => q.id);
+  return QB.filter(q => (cfg.subj === 'all' || q.s === cfg.subj) && (!cfg.diff || q.d === cfg.diff) && (!cfg.lvl || q.b) && semOk(cfg, q)).map(q => q.id);
 }
 function saveResume(){ const T = EXS.T; if (T && !T.fin) store.set('ex:resume', T); else store.del('ex:resume'); }
 function startTest(cfg, ids){
@@ -10875,7 +11057,7 @@ const VIEWS = {
     return `<div class="hrp-card"><b>Exam readiness: ${r}%</b><div class="hrp-bar"><i style="width:${r}%"></i></div><span class="hrp-muted">${rankName()} · ${totalAnswered()} answered · ${totalCorrect()} correct · 🔥 daily streak ${dailyStreak()}</span></div>${resumeCard}
     <div class="hrp-h">Start</div><div class="hrp-grid"><button class="hrp-btn pri" data-act="setup" data-m="practice">📖 Practice<br><small>instant feedback</small></button><button class="hrp-btn pri" data-act="setup" data-m="mock">⏱ Mock test<br><small>timed · negative marking</small></button>
     <button class="hrp-btn" data-act="daily">📅 Daily challenge<br><small>${dn ? 'done ✅ ' + dn.c + '/' + dn.n : '5 questions'}</small></button><button class="hrp-btn" data-act="mistakes">🧾 Mistake bank<br><small>${mist.length} to revise</small></button>
-    <button class="hrp-btn" data-act="bookmarks">🔖 Bookmarked<br><small>${bm.length} questions</small></button><button class="hrp-btn" data-act="view" data-v="stats">📊 My stats<br><small>history & subjects</small></button></div>
+    <button class="hrp-btn" data-act="bookmarks">🔖 Bookmarked<br><small>${bm.length} questions</small></button><button class="hrp-btn" data-act="view" data-v="stats">📊 My stats<br><small>history & subjects</small></button><button class="hrp-btn pri" data-act="view" data-v="browse" style="grid-column:1/-1">📚 Browse by semester · subject · level</button></div>
     <div class="hrp-h">💡 Question of the day · ${esc(SUBJ[qq.s])}</div><div class="hrp-card"><div style="margin-bottom:6px">${esc(qq.t)}</div>${qq.o.map((o, i) => `<button type="button" class="hrp-btn" style="display:block;width:100%;text-align:left;margin:5px 0;${solved ? (i === qq.a ? 'border-color:var(--green);background:rgba(61,220,132,.15)' : (qd.pick === i ? 'border-color:var(--pink)' : '')) : ''}" data-act="qotd" data-i="${i}" ${solved ? 'disabled' : ''}>${'ABCD'[i]}. ${esc(o)}</button>`).join('')}${solved ? `<div class="hrp-muted" style="margin-top:6px">${qd.pick === qq.a ? '✅ Correct!' : '❌ Not quite.'} ${esc(qq.e)}</div>` : ''}</div>
     <p class="hrp-muted">${QB.length} questions (${QB.filter(q => q.b).length} at B.Tech level) across ${Object.keys(SUBJ).length} subjects · progress is saved on this device only.</p>`;
   },
@@ -10883,7 +11065,8 @@ const VIEWS = {
     const c = EXS.cfg, m = c.mode, avail = pool(c).length;
     return `<div class="hrp-row"><button class="hrp-tab" data-act="view" data-v="home">← Back</button><b>${m === 'mock' ? '⏱ Mock test' : '📖 Practice'} setup</b></div>
     <label class="hrp-muted">Level</label><select class="hrp-sel" data-cfg="lvl"><option value="1"${c.lvl ? ' selected' : ''}>B.Tech level (semester / GATE-style)</option><option value="0"${c.lvl ? '' : ' selected'}>All levels (includes basics)</option></select>
-    <label class="hrp-muted">Subject</label><select class="hrp-sel" data-cfg="subj"><option value="all"${c.subj === 'all' ? ' selected' : ''}>All subjects (${QB.filter(q => !c.lvl || q.b).length})</option>${Object.keys(SUBJ).filter(k => QB.some(q => q.s === k && (!c.lvl || q.b))).map(k => `<option value="${k}"${c.subj === k ? ' selected' : ''}>${esc(SUBJ[k])} (${QB.filter(q => q.s === k && (!c.lvl || q.b)).length})</option>`).join('')}</select>
+    <label class="hrp-muted">Semester</label><select class="hrp-sel" data-cfg="sem"><option value="-1"${(c.sem === undefined || c.sem < 0) ? ' selected' : ''}>All semesters</option>${[...new Set(QB.map(q => q.sem))].sort((x, y) => x - y).map(s => `<option value="${s}"${c.sem === s ? ' selected' : ''}>${s === 0 ? 'General & placement' : 'Semester ' + s}</option>`).join('')}</select>
+    <label class="hrp-muted">Subject</label><select class="hrp-sel" data-cfg="subj"><option value="all"${c.subj === 'all' ? ' selected' : ''}>All subjects (${QB.filter(q => (!c.lvl || q.b) && semOk(c, q)).length})</option>${Object.keys(SUBJ).filter(k => QB.some(q => q.s === k && (!c.lvl || q.b) && semOk(c, q))).map(k => `<option value="${k}"${c.subj === k ? ' selected' : ''}>${esc(SUBJ[k])} (${QB.filter(q => q.s === k && (!c.lvl || q.b) && semOk(c, q)).length})</option>`).join('')}</select>
     <label class="hrp-muted">Difficulty</label><select class="hrp-sel" data-cfg="diff">${[0, 1, 2, 3].map(d => `<option value="${d}"${c.diff === d ? ' selected' : ''}>${dLabel(d)}</option>`).join('')}</select>
     <label class="hrp-muted">Number of questions (${avail} available)</label><select class="hrp-sel" data-cfg="n">${[5, 10, 15, 20, 30, 50, 65].map(n => `<option value="${n}"${c.n === n ? ' selected' : ''}>${n}</option>`).join('')}</select>
     ${m === 'mock' ? `<label class="hrp-muted">Time limit (minutes)</label><input class="hrp-in" type="number" min="1" max="180" value="${c.mins}" data-cfg="mins"><label class="hrp-check"><input type="checkbox" data-cfg="neg" ${c.neg ? 'checked' : ''}><span>Negative marking (−¼ per wrong answer)</span></label>` : ''}
@@ -10994,7 +11177,7 @@ TABS.push(['exam', '🎓 Exam', c => {
   if ((EXS.view === 'result' || EXS.view === 'review') && !EXS.res) EXS.view = 'home';
   exDraw();
   c.onclick = e => { const b = e.target.closest('[data-act]'); if (!b || b.disabled) return; const f = EXACT[b.dataset.act]; if (f) f(b, e); };
-  c.onchange = c.oninput = e => { const k = e.target.dataset.cfg; if (!k) return; const t = e.target; const v = t.type === 'checkbox' ? t.checked : (k === 'subj' ? t.value : +t.value); EXS.cfg[k] = v; if (k === 'lvl' && EXS.cfg.subj !== 'all' && !QB.some(q => q.s === EXS.cfg.subj && (!v || q.b))) EXS.cfg.subj = 'all';
+  c.onchange = c.oninput = e => { const d = e.target.dataset; if (d.bn) { EXS.bm.n = +e.target.value; return; } if (d.lsem) { EXS.bm.lsem = +e.target.value; exDraw(); return; } const k = d.cfg; if (!k) return; const t = e.target; const v = t.type === 'checkbox' ? t.checked : (k === 'subj' ? t.value : +t.value); EXS.cfg[k] = v; if ((k === 'lvl' || k === 'sem') && EXS.cfg.subj !== 'all' && !QB.some(q => q.s === EXS.cfg.subj && (!EXS.cfg.lvl || q.b) && semOk(EXS.cfg, q))) EXS.cfg.subj = 'all';
     if (t.tagName === 'SELECT' && e.type === 'change') exDraw(); };
 }]);
 document.addEventListener('keydown', e => {
@@ -11368,12 +11551,548 @@ feat('Fullscreen toggle', () => {});
 feat('Exam readiness score on the Exam home', () => {});
 window.HRPlus_exam = { questions: QB.length, decks: Object.keys(DECKS).length, cards: Object.values(DECKS).reduce((a, d) => a + d.length, 0) };
 
+/* ============ BROWSE MODES (semester / subject / level) ============ */
+const LV = ['All levels', 'Easy', 'Medium', 'Hard'];
+EXS.bm = { mode: 'sem', sem: 1, run: 'practice', n: 10, lsem: -1 };
+const semName = s => s === 0 ? 'General & placement' : 'Semester ' + s;
+const qcount = f => QB.reduce((a, q) => a + (f(q) ? 1 : 0), 0);
+const semsList = () => [...new Set(QB.map(q => q.sem))].sort((a, b) => a - b);
+function lvlButtons(subj, sem){
+  return [1, 2, 3, 0].map(d => { const n = qcount(q => (subj === 'all' || q.s === subj) && (!d || q.d === d) && (sem < 0 || q.sem === sem));
+    return `<button type="button" class="hrp-mini" data-act="bgo" data-s="${esc(subj)}" data-d="${d}" data-sem="${sem}" ${n ? '' : 'disabled style="opacity:.4"'}>${d ? LV[d] : 'Mixed'} · ${n}</button>`; }).join(' ');
+}
+function subjRow(k){
+  const n = qcount(q => q.s === k); if (!n) return '';
+  const sm = (QB.find(q => q.s === k) || {}).sem;
+  return `<div class="hrp-card" style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(SUBJ[k] || k)}</b><span class="hrp-muted">${semName(sm)} · ${n} Qs</span></div><div class="hrp-row" style="margin:8px 0 0">${lvlButtons(k, -1)}</div></div>`;
+}
+VIEWS.browse = function(){
+  const B = EXS.bm, sems = semsList();
+  if (B.mode === 'sem' && !sems.includes(B.sem)) B.sem = sems[0];
+  const head = `<div class="hrp-row"><button class="hrp-tab" data-act="view" data-v="home">← Back</button><b>Browse questions</b></div>
+  <div class="hrp-row">${[['sem', '📚 Semester-wise'], ['sub', '🧩 Subject-wise'], ['lvl', '📈 Level-wise']].map(([m, l]) => `<button class="hrp-tab${B.mode === m ? ' active' : ''}" data-act="bmode" data-m="${m}">${l}</button>`).join('')}</div>
+  <div class="hrp-row"><button class="hrp-tab${B.run === 'practice' ? ' active' : ''}" data-act="brun" data-r="practice">📖 Practice</button><button class="hrp-tab${B.run === 'mock' ? ' active' : ''}" data-act="brun" data-r="mock">⏱ Mock (timed)</button>
+  <select class="hrp-sel" data-bn="1" style="max-width:130px" aria-label="Number of questions">${[5, 10, 15, 20, 30].map(n => `<option value="${n}"${B.n === n ? ' selected' : ''}>${n} questions</option>`).join('')}</select></div>`;
+  let body = '';
+  if (B.mode === 'sem') {
+    body = `<div class="hrp-row">${sems.map(s => `<button class="hrp-tab${B.sem === s ? ' active' : ''}" data-act="bsem" data-sem="${s}">${s === 0 ? 'General' : 'Sem ' + s}</button>`).join('')}</div>
+    <div class="hrp-card"><b>${semName(B.sem)} — all subjects</b><span class="hrp-muted">${qcount(q => q.sem === B.sem)} questions</span><div class="hrp-row" style="margin:8px 0 0">${lvlButtons('all', B.sem)}</div></div>
+    ${Object.keys(SUBJ).filter(k => QB.some(q => q.s === k && q.sem === B.sem)).map(subjRow).join('')}`;
+  } else if (B.mode === 'sub') {
+    body = Object.keys(SUBJ).sort((a, b) => ((QB.find(q => q.s === a) || { sem: 99 }).sem - (QB.find(q => q.s === b) || { sem: 99 }).sem) || SUBJ[a].localeCompare(SUBJ[b])).map(subjRow).join('');
+  } else {
+    body = `<label class="hrp-muted">Limit to a semester (optional)</label><select class="hrp-sel" data-lsem="1"><option value="-1"${B.lsem < 0 ? ' selected' : ''}>All semesters</option>${sems.map(s => `<option value="${s}"${B.lsem === s ? ' selected' : ''}>${semName(s)}</option>`).join('')}</select>
+    <div class="hrp-grid" style="margin-top:10px">${[1, 2, 3].map(d => { const n = qcount(q => q.d === d && (B.lsem < 0 || q.sem === B.lsem)); return `<div class="hrp-card"><b>${['', '🟢 Easy', '🟡 Medium', '🔴 Hard'][d]}</b>${n} questions<div class="hrp-row" style="margin:8px 0 0"><button class="hrp-btn pri" data-act="bgo" data-s="all" data-d="${d}" data-sem="${B.lsem}" ${n ? '' : 'disabled'}>Start</button></div></div>`; }).join('')}</div>`;
+  }
+  return head + body;
+};
+Object.assign(EXACT, {
+  browse(){ EXS.view = 'browse'; exDraw(); },
+  bmode(b){ EXS.bm.mode = b.dataset.m; exDraw(); },
+  brun(b){ EXS.bm.run = b.dataset.r; exDraw(); },
+  bsem(b){ EXS.bm.sem = +b.dataset.sem; exDraw(); },
+  bgo(b){ const B = EXS.bm; startTest({ mode: B.run, subj: b.dataset.s, diff: +b.dataset.d, n: B.n, mins: Math.max(1, Math.round(B.n * 1.5)), neg: true, shuf: true, lvl: 0, sem: +b.dataset.sem }); }
+});
+['Semester-wise mode (Sem 1 → 7 + general)', 'Subject-wise mode', 'Level-wise mode (easy / medium / hard)', 'Per-subject level buttons with live question counts', 'Practice or timed mock from any browse screen', 'Semester filter in the test setup'].forEach(n => feat('Browse: ' + n, () => {}));
+
+/* ============ HACKATHON: backend, countdown, registration ============ */
+const HK_URL = 'https://awvcorswnzbxsrrzepto.supabase.co', HK_KEY = 'sb_publishable_6GqdbyBWEX7cIkTzcp9yvw_WYNp5GJh', HK_FORM = 'https://formspree.io/f/mppwlbwq';
+const HK_DEFAULT = { id: 'main', name: 'Hackathon Rivals — Live Hackathon', starts_at: '2026-10-01T18:00:00+05:30', reg_closes_at: '2026-10-01T18:00:00+05:30', ends_at: null, reg_open: true, lock_main: true, message: 'Team up, pick a problem and build something great. Register before the countdown hits zero.' };
+const HB = { remote: false, checked: false, off: 0, tsrc: 'device clock', ev: { ...HK_DEFAULT }, lastReg: null, lastPhase: null, rt: 0 };
+function sbToken(){ try { const ref = new URL(HK_URL).hostname.split('.')[0]; const j = JSON.parse(localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return j && (j.access_token || (j.currentSession && j.currentSession.access_token)) || null; } catch(e){ return null; } }
+async function pgrest(path, o = {}){
+  const tok = sbToken(); const h = { apikey: HK_KEY, 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}), ...(o.headers || {}) };
+  const r = await fetch(HK_URL + '/rest/v1/' + path, { method: o.method || 'GET', headers: h, body: o.body !== undefined ? JSON.stringify(o.body) : undefined });
+  const t = await r.text(); let d = null; try { d = t ? JSON.parse(t) : null; } catch(e){ d = t; }
+  if (!r.ok) { const e = new Error((d && (d.message || d.hint || d.details)) || 'HTTP ' + r.status); e.status = r.status; e.code = d && d.code; throw e; }
+  return d;
+}
+const UPSERT = { Prefer: 'resolution=merge-duplicates,return=minimal' };
+async function syncTime(){
+  try { const t0 = Date.now(); const r = await pgrest('rpc/hr_now', { method: 'POST', body: {} }); const t1 = Date.now(); const s = new Date(r).getTime(); if (isFinite(s)) { HB.off = s - (t0 + t1) / 2; HB.tsrc = 'database clock'; return; } } catch(e){}
+  try { const t0 = Date.now(); const r = await fetch(location.href.split('#')[0], { method: 'HEAD', cache: 'no-store' }); const d = r.headers.get('date'); const t1 = Date.now(); if (d) { HB.off = new Date(d).getTime() - (t0 + t1) / 2; HB.tsrc = 'web-server clock'; return; } } catch(e){}
+  HB.off = 0; HB.tsrc = 'device clock';
+}
+const nowMs = () => Date.now() + HB.off;
+async function loadEvent(){
+  const ev = { ...HK_DEFAULT };
+  try { const rows = await pgrest('hr_events?id=eq.main&select=*'); HB.remote = true; if (rows && rows[0]) Object.keys(rows[0]).forEach(k => { if (rows[0][k] !== null || k === 'ends_at') ev[k] = rows[0][k]; }); }
+  catch(e){ HB.remote = false; const l = store.get('hk:ev', null); if (l) Object.assign(ev, l); }
+  HB.ev = ev; HB.checked = true; return ev;
+}
+async function saveEvent(ev){
+  const row = { id: 'main', name: ev.name, starts_at: ev.starts_at, reg_closes_at: ev.reg_closes_at, ends_at: ev.ends_at || null, reg_open: !!ev.reg_open, lock_main: !!ev.lock_main, message: ev.message || '', updated_at: new Date().toISOString() };
+  if (HB.remote) await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [row] }); else store.set('hk:ev', row);
+  HB.ev = { ...HB.ev, ...row };
+}
+function evState(){
+  const e = HB.ev, n = nowMs(), s = Date.parse(e.starts_at), c = Date.parse(e.reg_closes_at), en = e.ends_at ? Date.parse(e.ends_at) : 0;
+  const regOpen = e.reg_open !== false && n < c; const phase = en && n >= en ? 'ended' : n >= s ? 'live' : 'upcoming'; return { n, s, c, en, regOpen, phase };
+}
+const fmtIST = ms => new Date(ms).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) + ' IST';
+const hkEl = id => document.getElementById(id);
+
+/* ---- retarget the site's existing countdown to this hackathon ---- */
+const OLDCD = {};
+feat('Existing countdown box now counts down to the live hackathon', () => {
+  [['d', 'cd-days'], ['h', 'cd-hours'], ['m', 'cd-mins'], ['s', 'cd-secs']].forEach(([k, id]) => { const e = document.getElementById(id); if (e) { OLDCD[k] = e; e.id = id + '-hk'; } });
+});
+function cdWrite(units, left){
+  const d = Math.floor(left / 864e5), h = Math.floor(left % 864e5 / 36e5), m = Math.floor(left % 36e5 / 6e4), s = Math.floor(left % 6e4 / 1e3);
+  const v = { d: pad(d), h: pad(h), m: pad(m), s: pad(s) }; Object.keys(v).forEach(k => { if (units[k] && units[k].textContent !== v[k]) units[k].textContent = v[k]; });
+}
+window.__hrpHackPill = () => { const st = evState(); const e = HB.ev; if (st.phase === 'ended') return null;
+  if (st.phase === 'live') return '🔴 ' + e.name + ' is LIVE'; const l = Math.max(0, st.s - st.n); const d = Math.floor(l / 864e5), h = Math.floor(l % 864e5 / 36e5), m = Math.floor(l % 36e5 / 6e4), s = Math.floor(l % 6e4 / 1e3);
+  return `⏳ ${d ? d + 'd ' : ''}${pad(h)}h ${pad(m)}m ${pad(s)}s to hackathon` + (st.regOpen ? ' · register' : ' · registration closed'); };
+
+/* ---- hackathon section on the page ---- */
+function myReg(){ return store.get('hk:mine', null); }
+function hkSectionHTML(){
+  const st = evState(), e = HB.ev, mine = myReg();
+  const status = st.phase === 'live' ? '<span class="hk-pill live">🔴 LIVE NOW</span>' : st.phase === 'ended' ? '<span class="hk-pill">Ended</span>' : '<span class="hk-pill">⏳ Starts soon</span>';
+  const reg = st.regOpen ? '<span class="hk-pill ok">🟢 Registration open</span>' : '<span class="hk-pill bad">🔒 Registration closed</span>';
+  const times = `Starts <b>${fmtIST(st.s)}</b>${st.c !== st.s ? ` · Registration closes <b>${fmtIST(st.c)}</b>` : ' · Registration closes when the countdown ends'}`;
+  let body;
+  if (mine && mine.event === (e.starts_at)) body = `<div class="hk-card ok"><h3>✅ You are registered</h3><p>Team <b>${esc(mine.team_name)}</b> (${esc(mine.email)}) is registered${mine.via === 'formspree' ? ' — the organisers received your details by email' : ''}. Keep an eye on your email for the joining details.</p></div>`;
+  else if (st.regOpen) body = `<form class="hk-form" id="hkForm" novalidate><h3>Register your team</h3><div class="hk-grid">
+    <label>Team name *<input name="team_name" maxlength="60" required autocomplete="organization"></label>
+    <label>Team leader name *<input name="leader_name" maxlength="80" required autocomplete="name"></label>
+    <label>Email *<input name="email" type="email" maxlength="120" required autocomplete="email" inputmode="email"></label>
+    <label>Phone / WhatsApp *<input name="phone" type="tel" maxlength="16" required autocomplete="tel" inputmode="tel"></label>
+    <label>College / organisation *<input name="college" maxlength="120" required autocomplete="organization"></label>
+    <label>Team size *<select name="team_size">${[1, 2, 3, 4, 5, 6].map(n => `<option${n === 4 ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+    <label class="wide">Other team members (names, one per line)<textarea name="members" rows="3" maxlength="600"></textarea></label>
+    <label class="wide">Preferred track / problem statement (optional)<input name="track" maxlength="120"></label>
+    <label class="wide">Anything else we should know? (optional)<textarea name="notes" rows="2" maxlength="400"></textarea></label></div>
+    <div class="hk-msg" id="hkMsg" role="alert"></div><button class="btn btn-primary btn-lg" id="hkSubmit" type="submit">Register team →</button>
+    <p class="hk-note">Registration closes automatically at the deadline — nobody can submit after the timer ends. Time is checked against ${esc(HB.tsrc)}.</p></form>`;
+  else body = `<div class="hk-card bad"><h3>🔒 Registration is closed</h3><p>The registration window ended on <b>${fmtIST(st.c)}</b>. Thank you for your interest — follow our channels for the next event.</p></div>`;
+  return `<div class="wrap"><div class="hk-box"><div class="hk-top"><div><div class="eyebrow">Live hackathon</div><h2>${esc(e.name)}</h2><p class="hk-sub">${esc(e.message || '')}</p><p class="hk-times">${times}</p><div class="hk-pills">${status}${reg}</div></div>
+  <div class="hk-timer" aria-live="off"><div><b id="hkD">00</b><i>Days</i></div><div><b id="hkH">00</b><i>Hours</i></div><div><b id="hkM">00</b><i>Min</i></div><div><b id="hkS">00</b><i>Sec</i></div></div></div>
+  ${body}<div id="hkQuizBox"></div><div class="hk-admin" id="hkAdminBtn" style="display:none"><button class="hrp-btn" data-hk="manage" type="button">🛡️ Manage hackathon (admin)</button></div></div></div>`;
+}
+function renderHackathon(){
+  let sec = hkEl('hackathon'); const anchor = document.querySelector('.countdown-sec');
+  if (!sec) { sec = el('section', { class: 'sec hk-sec', id: 'hackathon' }); (anchor || document.querySelector('main') || document.body).insertAdjacentElement(anchor ? 'afterend' : 'afterbegin', sec); }
+  sec.innerHTML = hkSectionHTML(); bindHackathon(sec); renderQuizList(); tickHack();
+}
+function bindHackathon(sec){
+  const f = $('#hkForm', sec);
+  if (f) f.addEventListener('submit', async ev => {
+    ev.preventDefault(); const msg = $('#hkMsg', sec), btn = $('#hkSubmit', sec); const fd = Object.fromEntries(new FormData(f).entries());
+    Object.keys(fd).forEach(k => fd[k] = String(fd[k]).trim().replace(/\s{3,}/g, '  '));
+    const bad = m => { msg.textContent = m; msg.className = 'hk-msg err'; };
+    if (!fd.team_name || !fd.leader_name || !fd.email || !fd.phone || !fd.college) return bad('Please fill every required field (*).');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(fd.email)) return bad('Please enter a valid email address.');
+    if (!/^\+?[\d\s-]{10,16}$/.test(fd.phone)) return bad('Enter a valid phone number (10–15 digits).');
+    fd.team_size = Math.min(6, Math.max(1, parseInt(fd.team_size, 10) || 1)); fd.email = fd.email.toLowerCase();
+    btn.disabled = true; btn.textContent = 'Checking time…'; msg.textContent = ''; msg.className = 'hk-msg';
+    await syncTime(); if (!evState().regOpen) { renderHackathon(); applyMainLock(); return; }
+    btn.textContent = 'Submitting…';
+    try { const via = await submitReg(fd); store.set('hk:mine', { event: HB.ev.starts_at, team_name: fd.team_name, email: fd.email, via }); confetti(90); toast('Team registered! 🎉', 'success', '✅'); renderHackathon(); }
+    catch(err){ btn.disabled = false; btn.textContent = 'Register team →'; if (/closed/i.test(err.message)) { await loadEvent(); renderHackathon(); applyMainLock(); } else bad(err.message || 'Something went wrong — please try again.'); }
+  });
+  const ab = $('[data-hk=manage]', sec); if (ab) ab.addEventListener('click', () => { store.set('adminSub', 'hack'); openHub('admin'); });
+}
+async function submitReg(p){
+  if (!evState().regOpen) throw new Error('Registration is closed');
+  if (HB.remote) {
+    try { await pgrest('rpc/hr_register', { method: 'POST', body: { p } }); return 'database'; }
+    catch(e){ if (/REGISTRATION_CLOSED/.test(e.message)) throw new Error('Registration is closed'); if (/duplicate|already|unique/i.test(e.message)) throw new Error('This email is already registered for this hackathon.'); if (e.status !== 404) throw new Error(e.message || 'Could not submit — please try again.'); }
+  }
+  const r = await fetch(HK_FORM, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ _subject: 'Hackathon registration: ' + p.team_name, event: HB.ev.name, ...p }) });
+  if (!r.ok) throw new Error('Could not submit — please try again.'); return 'formspree';
+}
+
+/* ---- lock the site's own registration form when time is up ---- */
+function applyMainLock(){
+  const st = evState(), lock = HB.ev.lock_main !== false && !st.regOpen; const reg = hkEl('register'); if (!reg) return;
+  reg.classList.toggle('hk-locked', lock);
+  let card = $('.hk-closed', reg); const wrap = $('.wrap', reg);
+  if (lock && !card && wrap) { card = el('div', { class: 'hk-closed hk-card bad' }, `<h3>🔒 Registration is closed</h3><p>The registration deadline (${fmtIST(st.c)}) has passed, so new registrations can no longer be submitted.</p>`); wrap.prepend(card); }
+  if (!lock && card) card.remove();
+  $$('a.btn[href="#register"], a.btn[href="#hackathon"]').forEach(a => {
+    if (a.dataset.hkT === undefined) { a.dataset.hkT = a.textContent; a.dataset.hkH = a.getAttribute('href'); }
+    if (lock) { a.textContent = '🔒 Registration closed'; a.classList.add('hk-off'); a.setAttribute('href', '#hackathon'); } else { a.textContent = a.dataset.hkT; a.setAttribute('href', a.dataset.hkH); a.classList.remove('hk-off'); }
+  });
+}
+document.addEventListener('click', e => { if (evState().regOpen || HB.ev.lock_main === false) return; if (e.target.closest('#nextBtn, #regShell')) { e.stopImmediatePropagation(); e.preventDefault(); toast('Registration is closed', 'warn', '🔒'); } }, true);
+feat('Registration form locks automatically when the countdown ends', () => {});
+feat('Server-time check (database or web-server clock) so changing the device clock does not re-open registration', () => {});
+
+/* ---- the 1-second ticker ---- */
+function tickHack(){
+  if (!HB.checked) return;
+  const st = evState(); const target = st.phase === 'upcoming' ? st.s : (st.phase === 'live' && st.en ? st.en : 0), left = Math.max(0, target - st.n);
+  cdWrite({ d: hkEl('hkD'), h: hkEl('hkH'), m: hkEl('hkM'), s: hkEl('hkS') }, left); cdWrite(OLDCD, left);
+  if (st.regOpen !== HB.lastReg || st.phase !== HB.lastPhase) { const first = HB.lastReg === null; HB.lastReg = st.regOpen; HB.lastPhase = st.phase; if (!first) renderHackathon(); applyMainLock(); updateOldBox(); if (!first && !st.regOpen) toast('Registration is now closed', 'warn', '🔒'); }
+}
+function updateOldBox(){
+  const st = evState(), e = HB.ev, box = document.querySelector('.countdown-info'); if (!box) return;
+  const eb = $('.eyebrow', box), h2 = $('h2', box), p = $('p', box), a = $('a.btn', box);
+  if (eb) eb.textContent = st.phase === 'live' ? '🔴 Live now' : 'Hackathon countdown';
+  if (h2) h2.textContent = e.name; if (p) p.textContent = st.regOpen ? `Starts ${fmtIST(st.s)}. Registration is open until the timer hits zero.` : `Starts ${fmtIST(st.s)}. Registration is closed.`;
+  if (a) { a.setAttribute('href', '#hackathon'); if (a.dataset.hkT === undefined) a.dataset.hkT = 'Register now →'; a.textContent = st.regOpen ? 'Register now →' : '🔒 Registration closed'; a.classList.toggle('hk-off', !st.regOpen); }
+}
+feat('Hackathon section with live countdown, status pills and registration form', () => {});
+feat('"Hackathon" link added to the top navigation', () => {
+  const nav = hkEl('navLinks'); if (nav && !$('a[href="#hackathon"]', nav)) { const a = el('a', { href: '#hackathon' }, '🚀 Hackathon'); nav.insertBefore(a, nav.children[1] || null); }
+});
+
+/* ---- quizzes (participant side) ---- */
+const HQ = { list: [], cur: null };
+async function fetchQuizzes(){
+  if (HB.remote) { try { HQ.list = await pgrest('hr_quizzes?published=eq.true&select=*&order=created_at.desc'); return; } catch(e){} }
+  HQ.list = store.get('hk:lq', []).filter(q => q.published);
+}
+function quizState(q){ const n = nowMs(), o = q.opens_at ? Date.parse(q.opens_at) : 0, c = q.closes_at ? Date.parse(q.closes_at) : 0; return n < o ? 'upcoming' : (c && n >= c) ? 'closed' : 'open'; }
+async function renderQuizList(){
+  const box = hkEl('hkQuizBox'); if (!box) return; await fetchQuizzes(); const b2 = hkEl('hkQuizBox'); if (!b2) return;
+  if (!HQ.list.length) { b2.innerHTML = ''; return; }
+  const done = store.get('hk:done', {});
+  b2.innerHTML = `<h3 style="margin:22px 0 8px">📝 Hackathon quizzes</h3><div class="hk-quizzes">${HQ.list.map(q => { const s = quizState(q), d = done[q.id];
+    return `<div class="hk-card"><b>${esc(q.title)}</b><p class="hk-sub">${esc(q.description || '')}</p><p class="hrp-muted">${q.duration_min} min · ${s === 'open' ? '🟢 Open' : s === 'upcoming' ? '⏳ Opens ' + fmtIST(Date.parse(q.opens_at)) : '🔒 Closed'}${d ? ` · Your score ${d.score}/${d.max}` : ''}</p>
+    <div class="hrp-row"><button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button></div></div>`; }).join('')}</div>`;
+  b2.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const q = HQ.list.find(x => x.id === b.dataset.q); if (q) (b.dataset.a === 'start' ? openQuiz(q) : openBoard(q)); };
+}
+let qzEl = null;
+function qzModal(){ if (!qzEl) { qzEl = el('div', { class: 'hrp-bg', id: 'hkQuizBg', role: 'dialog', 'aria-modal': 'true', 'data-noesc': '1' }, '<div class="hrp-modal"><div class="hrp-head"><h3 id="hkQT">Quiz</h3><button class="hrp-x" type="button" aria-label="Close" data-a="close">✕</button></div><div class="hrp-body" id="hkQB"></div></div>'); document.body.appendChild(qzEl); }
+  return qzEl; }
+async function openQuiz(q){
+  const m = qzModal(), B = $('#hkQB', m); $('#hkQT', m).textContent = q.title; m.classList.add('open'); const me = store.get('hk:me', { name: '', email: '' });
+  B.innerHTML = `<p class="hrp-muted">${esc(q.description || '')}</p><p><b>${q.duration_min} minutes</b> · one attempt per email. Once you start, the timer runs.</p><label class="hrp-muted">Your name</label><input class="hrp-in" id="hqN" value="${esc(me.name)}" maxlength="80" style="margin-bottom:8px"><label class="hrp-muted">Email (same as registration)</label><input class="hrp-in" id="hqE" type="email" value="${esc(me.email)}" maxlength="120"><div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="go">Start now</button><button class="hrp-btn" data-a="close">Cancel</button></div>`;
+  m.onclick = async e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') { if (HQ.cur && !confirm('Leave the quiz? Your answers will be lost.')) return; clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); return; }
+    if (a.dataset.a === 'go') { const name = $('#hqN', m).value.trim(), email = $('#hqE', m).value.trim().toLowerCase(), msg = $('#hqM', m); if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) { msg.textContent = 'Enter your name and a valid email.'; msg.className = 'hk-msg err'; return; }
+      store.set('hk:me', { name, email }); await syncTime(); if (quizState(q) !== 'open') { msg.textContent = 'This quiz is not open right now.'; msg.className = 'hk-msg err'; return; }
+      try { const qs = await quizQuestions(q); if (!qs.length) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
+}
+async function quizQuestions(q){
+  if (HB.remote) return await pgrest(`hr_quiz_questions?quiz_id=eq.${encodeURIComponent(q.id)}&select=id,pos,text,options,points&order=pos`);
+  return (store.get('hk:lqq:' + q.id, [])).map(x => ({ id: x.id, pos: x.pos, text: x.text, options: x.options, points: x.points }));
+}
+function runQuiz(q, qs, name, email){
+  const m = qzModal(), B = $('#hkQB', m); const ans = {}; const t0 = Date.now(), end = t0 + q.duration_min * 60000; HQ.cur = { q, ans };
+  B.innerHTML = `<div class="hrp-row" style="justify-content:space-between"><b>${qs.length} questions</b><span class="hrp-kbd" id="hqT">--:--</span></div>${qs.map((x, i) => `<div class="hrp-card" style="margin:10px 0"><b>${i + 1}. ${esc(x.text)}</b> <span class="hrp-muted">(${x.points || 1} pt)</span>${x.options.map((o, k) => `<label class="hrp-check"><input type="radio" name="hq${i}" data-q="${esc(x.id)}" value="${k}"><span>${esc(o)}</span></label>`).join('')}</div>`).join('')}<div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="sub">Submit answers</button></div>`;
+  const submit = async auto => {
+    clearInterval(HQ.iv); const secs = Math.round((Date.now() - t0) / 1000); const msg = $('#hqM', m); if (msg) { msg.textContent = 'Submitting…'; msg.className = 'hk-msg'; }
+    try { const r = await submitAttempt(q, qs, ans, name, email, secs); const d = store.get('hk:done', {}); d[q.id] = { score: r.score, max: r.max }; store.set('hk:done', d); HQ.cur = null; showQuizResult(q, r, auto); renderQuizList(); }
+    catch(err){ if (msg) { msg.textContent = err.message; msg.className = 'hk-msg err'; } if (/already/i.test(err.message)) HQ.cur = null; }
+  };
+  m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'sub') { const un = qs.length - Object.keys(ans).length; if (!un || confirm(un + ' question(s) unanswered. Submit anyway?')) submit(false); } else if (a.dataset.a === 'close') { if (confirm('Leave the quiz? Your answers will be lost.')) { clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); } } };
+  m.onchange = e => { if (e.target.type === 'radio') ans[e.target.dataset.q] = +e.target.value; };
+  clearInterval(HQ.iv); HQ.iv = setInterval(() => { const l = Math.max(0, (end - Date.now()) / 1000), t = $('#hqT', m); if (t) t.textContent = '⏱ ' + fmtClock(l); if (l <= 0) { toast('Time is up — submitting', 'warn', '⏰'); submit(true); } }, 500);
+}
+async function submitAttempt(q, qs, ans, name, email, secs){
+  if (HB.remote) {
+    try { return await pgrest('rpc/hr_submit_attempt', { method: 'POST', body: { p_quiz: q.id, p_email: email, p_name: name, p_answers: ans, p_secs: secs } }); }
+    catch(e){ if (/ALREADY_SUBMITTED|duplicate|unique/i.test(e.message)) throw new Error('This email has already submitted this quiz.'); if (/QUIZ_CLOSED/.test(e.message)) throw new Error('The quiz has closed.'); throw new Error(e.message || 'Could not submit'); }
+  }
+  const keys = store.get('hk:lqq:' + q.id, []); let score = 0, max = 0, correct = 0; const review = [];
+  keys.forEach(k => { max += k.points || 1; const ok = ans[k.id] === k.answer; if (ok) { score += k.points || 1; correct++; } review.push({ id: k.id, answer: k.answer, explanation: k.explanation || '' }); });
+  const lb = store.get('hk:latt:' + q.id, []); lb.push({ name, email, score, max_score: max, secs }); lb.sort((x, y) => y.score - x.score || x.secs - y.secs); store.set('hk:latt:' + q.id, lb);
+  return { score, max, correct, total: keys.length, review };
+}
+function showQuizResult(q, r, auto){
+  const m = qzModal(), B = $('#hkQB', m); confetti(50);
+  const qs = store.get('hk:lqq:' + q.id, []);
+  B.innerHTML = `<div class="hrp-card" style="text-align:center"><div class="hrp-big" style="margin:0">${r.score}/${r.max}</div><b>${auto ? 'Time is up — answers submitted' : 'Answers submitted'}</b>${r.correct}/${r.total} correct</div><p class="hrp-muted">Your score is recorded. Check the leaderboard for your rank.</p><div class="hrp-row"><button class="hrp-btn pri" data-a="lb">🏆 Leaderboard</button><button class="hrp-btn" data-a="close">Close</button></div>`;
+  m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') m.classList.remove('open'); else if (a.dataset.a === 'lb') openBoard(q); };
+}
+async function openBoard(q){
+  const m = qzModal(), B = $('#hkQB', m); $('#hkQT', m).textContent = '🏆 ' + q.title; m.classList.add('open'); B.innerHTML = '<p class="hrp-muted">Loading…</p>';
+  m.onclick = e => { if (e.target.closest('[data-a=close]')) m.classList.remove('open'); };
+  let rows = []; try { rows = HB.remote ? await pgrest('rpc/hr_leaderboard', { method: 'POST', body: { p_quiz: q.id } }) : store.get('hk:latt:' + q.id, []); } catch(e){ B.innerHTML = '<p class="hrp-muted">Leaderboard is not available yet.</p>'; return; }
+  B.innerHTML = rows.length ? table(rows.slice(0, 30).map((r, i) => [String(i + 1), r.name, String(r.score), fmtClock(r.secs || 0)]), ['#', 'Name', 'Score', 'Time']) : '<p class="hrp-muted">No submissions yet.</p>';
+}
+feat('Hackathon quizzes: participants can take timed quizzes and see a leaderboard', () => {});
+
+/* ---- load admin-managed question bank ---- */
+const BK = { rows: [], remote: false };
+function applyBank(rows){
+  QB.length = 0; Object.keys(QM).forEach(k => delete QM[k]);
+  BUILTIN_Q.forEach(q => { const c = { ...q, o: q.o.slice() }; QB.push(c); QM[c.id] = c; });
+  (rows || []).forEach(r => {
+    if (r.deleted) { const i = QB.findIndex(q => q.id === r.id); if (i >= 0) QB.splice(i, 1); delete QM[r.id]; return; }
+    const o = Array.isArray(r.opts) ? r.opts : []; if (o.length !== 4 || !r.text || !r.subj) return;
+    if (r.subj_name) SUBJ[r.subj] = r.subj_name; if (!SUBJ[r.subj]) SUBJ[r.subj] = r.subj;
+    const q = { id: r.id, s: r.subj, d: Math.min(3, Math.max(1, +r.lvl || 2)), t: String(r.text), o: o.map(String), a: Math.min(3, Math.max(0, +r.ans || 0)), e: String(r.expl || ''), b: 1, sem: Math.max(0, +r.sem || 0), br: r.br || 'all' };
+    const i = QB.findIndex(x => x.id === r.id); if (i >= 0) QB[i] = q; else QB.push(q); QM[r.id] = q;
+  });
+}
+async function loadBank(){
+  let rows = [];
+  try { rows = await pgrest('hr_bank?select=*&order=updated_at'); BK.remote = true; } catch(e){ BK.remote = false; rows = store.get('bankLocal', []); }
+  BK.rows = rows || []; applyBank(BK.rows); if (EXS.c && EXS.c.isConnected && ['home', 'setup', 'browse', 'stats'].includes(EXS.view)) exDraw();
+}
+feat('Question bank loads admin edits, additions and deletions from the database', () => {});
+
+/* ---- init ---- */
+(async function initHackathon(){
+  await syncTime(); await loadEvent(); renderHackathon(); applyMainLock(); updateOldBox(); tickHack(); loadBank();
+  setInterval(tickHack, 1000);
+  setInterval(async () => { const before = JSON.stringify(HB.ev); await syncTime(); await loadEvent(); if (JSON.stringify(HB.ev) !== before) { renderHackathon(); applyMainLock(); updateOldBox(); } loadBank(); }, 60000);
+  setInterval(() => { const b = hkEl('hkAdminBtn'); if (b) b.style.display = isAdminUI() ? '' : 'none'; }, 1500);
+})();
+function isAdminUI(){ if (document.getElementById('ddAdmin')) return true; const a = document.getElementById('admin'); return !!(a && a.style.display !== 'none' && getComputedStyle(a).display !== 'none'); }
+
+/* ============ ADMIN CONSOLE ============ */
+const HK_SQL = "-- ============================================================\n-- Hackathon Rivals \u2014 hackathon, quizzes & question-bank backend\n-- Run once in: Supabase \u2192 SQL Editor \u2192 New query \u2192 Run.\n-- Safe to run again (uses IF NOT EXISTS / DROP POLICY IF EXISTS).\n-- Assumes your existing table public.profiles(id uuid, role text)\n-- where role = 'Admin' marks administrators (same as your site).\n-- ============================================================\n\ncreate extension if not exists pgcrypto;\n\n-- Who is an admin? (checked by every write policy below)\ncreate or replace function public.hr_is_admin() returns boolean\nlanguage sql stable security definer set search_path = public as $$\n  select exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'Admin');\n$$;\ngrant execute on function public.hr_is_admin() to anon, authenticated;\n\n-- Trusted server clock (used by the page so changing a phone clock cannot re-open registration)\ncreate or replace function public.hr_now() returns timestamptz\nlanguage sql stable as $$ select now(); $$;\ngrant execute on function public.hr_now() to anon, authenticated;\n\n-- ---------- event settings (one row: id = 'main') ----------\ncreate table if not exists public.hr_events (\n  id text primary key default 'main',\n  name text not null,\n  starts_at timestamptz not null,\n  reg_closes_at timestamptz not null,\n  ends_at timestamptz,\n  reg_open boolean not null default true,\n  lock_main boolean not null default true,\n  message text,\n  updated_at timestamptz not null default now()\n);\nalter table public.hr_events enable row level security;\ndrop policy if exists hr_events_read on public.hr_events;\ndrop policy if exists hr_events_write on public.hr_events;\ncreate policy hr_events_read on public.hr_events for select using (true);\ncreate policy hr_events_write on public.hr_events for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\n-- Default event: 1 Oct 2026, 6:00 PM IST (change it later from the Admin console)\ninsert into public.hr_events (id, name, starts_at, reg_closes_at, message)\nvalues ('main', 'Hackathon Rivals \u2014 Live Hackathon', '2026-10-01 18:00:00+05:30', '2026-10-01 18:00:00+05:30',\n        'Team up, pick a problem and build something great. Register before the countdown hits zero.')\non conflict (id) do nothing;\n\n-- ---------- registrations ----------\ncreate table if not exists public.hr_registrations (\n  id uuid primary key default gen_random_uuid(),\n  event_id text not null default 'main',\n  team_name text not null,\n  leader_name text not null,\n  email text not null,\n  phone text not null,\n  college text not null,\n  team_size int not null check (team_size between 1 and 6),\n  members text,\n  track text,\n  notes text,\n  created_at timestamptz not null default now()\n);\ncreate unique index if not exists hr_registrations_email_uq on public.hr_registrations (event_id, lower(email));\nalter table public.hr_registrations enable row level security;\ndrop policy if exists hr_reg_admin on public.hr_registrations;\ncreate policy hr_reg_admin on public.hr_registrations for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n-- (no INSERT policy on purpose: the only way in is hr_register(), which enforces the deadline)\n\ncreate or replace function public.hr_register(p jsonb) returns jsonb\nlanguage plpgsql security definer set search_path = public as $$\ndeclare ev public.hr_events%rowtype; rid uuid; sz int;\nbegin\n  select * into ev from public.hr_events where id = 'main';\n  if not found or not ev.reg_open or now() >= ev.reg_closes_at then\n    raise exception 'REGISTRATION_CLOSED';\n  end if;\n  if coalesce(trim(p->>'team_name'), '') = '' or coalesce(trim(p->>'leader_name'), '') = ''\n     or coalesce(trim(p->>'email'), '') = '' or coalesce(trim(p->>'phone'), '') = ''\n     or coalesce(trim(p->>'college'), '') = '' then\n    raise exception 'MISSING_FIELDS';\n  end if;\n  sz := least(6, greatest(1, coalesce(nullif(p->>'team_size', '')::int, 1)));\n  insert into public.hr_registrations (event_id, team_name, leader_name, email, phone, college, team_size, members, track, notes)\n  values ('main', left(trim(p->>'team_name'), 60), left(trim(p->>'leader_name'), 80), lower(left(trim(p->>'email'), 120)),\n          left(trim(p->>'phone'), 20), left(trim(p->>'college'), 120), sz,\n          left(p->>'members', 600), left(p->>'track', 120), left(p->>'notes', 400))\n  returning id into rid;\n  return jsonb_build_object('ok', true, 'id', rid);\nend $$;\ngrant execute on function public.hr_register(jsonb) to anon, authenticated;\n\n-- ---------- question bank edits (built-in question overrides, hidden questions, new questions) ----------\ncreate table if not exists public.hr_bank (\n  id text primary key,\n  subj text, subj_name text, sem int, br text, lvl int,\n  text text, opts jsonb, ans int, expl text,\n  deleted boolean not null default false,\n  updated_at timestamptz not null default now()\n);\nalter table public.hr_bank enable row level security;\ndrop policy if exists hr_bank_read on public.hr_bank;\ndrop policy if exists hr_bank_write on public.hr_bank;\ncreate policy hr_bank_read on public.hr_bank for select using (true);\ncreate policy hr_bank_write on public.hr_bank for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\n-- ---------- hackathon quizzes ----------\ncreate table if not exists public.hr_quizzes (\n  id uuid primary key,\n  title text not null,\n  description text,\n  duration_min int not null default 30 check (duration_min between 1 and 600),\n  opens_at timestamptz,\n  closes_at timestamptz,\n  published boolean not null default false,\n  created_at timestamptz not null default now()\n);\ncreate table if not exists public.hr_quiz_questions (\n  id uuid primary key,\n  quiz_id uuid not null references public.hr_quizzes(id) on delete cascade,\n  pos int not null default 1,\n  text text not null,\n  options jsonb not null,\n  points int not null default 1 check (points between 1 and 100)\n);\n-- answers live in a separate admin-only table so participants can never read them\ncreate table if not exists public.hr_quiz_keys (\n  question_id uuid primary key references public.hr_quiz_questions(id) on delete cascade,\n  answer int not null check (answer between 0 and 3),\n  explanation text\n);\ncreate table if not exists public.hr_attempts (\n  id uuid primary key default gen_random_uuid(),\n  quiz_id uuid not null references public.hr_quizzes(id) on delete cascade,\n  email text not null,\n  name text not null,\n  score int not null,\n  max_score int not null,\n  answers jsonb,\n  secs int,\n  created_at timestamptz not null default now()\n);\ncreate unique index if not exists hr_attempts_once on public.hr_attempts (quiz_id, lower(email));\n\nalter table public.hr_quizzes enable row level security;\nalter table public.hr_quiz_questions enable row level security;\nalter table public.hr_quiz_keys enable row level security;\nalter table public.hr_attempts enable row level security;\n\ndrop policy if exists hr_quizzes_read on public.hr_quizzes;\ndrop policy if exists hr_quizzes_write on public.hr_quizzes;\ncreate policy hr_quizzes_read on public.hr_quizzes for select using (published or public.hr_is_admin());\ncreate policy hr_quizzes_write on public.hr_quizzes for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_qq_read on public.hr_quiz_questions;\ndrop policy if exists hr_qq_write on public.hr_quiz_questions;\ncreate policy hr_qq_read on public.hr_quiz_questions for select\n  using (public.hr_is_admin() or exists (select 1 from public.hr_quizzes z where z.id = quiz_id and z.published));\ncreate policy hr_qq_write on public.hr_quiz_questions for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_keys_admin on public.hr_quiz_keys;\ncreate policy hr_keys_admin on public.hr_quiz_keys for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_attempts_admin on public.hr_attempts;\ncreate policy hr_attempts_admin on public.hr_attempts for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ncreate or replace function public.hr_submit_attempt(p_quiz uuid, p_email text, p_name text, p_answers jsonb, p_secs int)\nreturns jsonb language plpgsql security definer set search_path = public as $$\ndeclare q public.hr_quizzes%rowtype; sc int := 0; mx int := 0; cr int := 0; tot int := 0; r record; rev jsonb := '[]'::jsonb; a text;\nbegin\n  select * into q from public.hr_quizzes where id = p_quiz and published;\n  if not found then raise exception 'QUIZ_CLOSED'; end if;\n  if (q.opens_at is not null and now() < q.opens_at)\n     or (q.closes_at is not null and now() >= q.closes_at + make_interval(mins => q.duration_min + 1)) then\n    raise exception 'QUIZ_CLOSED';\n  end if;\n  if coalesce(trim(p_email), '') = '' or coalesce(trim(p_name), '') = '' then raise exception 'MISSING_FIELDS'; end if;\n  if exists (select 1 from public.hr_attempts where quiz_id = p_quiz and lower(email) = lower(trim(p_email))) then\n    raise exception 'ALREADY_SUBMITTED';\n  end if;\n  for r in select qq.id, qq.points, k.answer, k.explanation\n           from public.hr_quiz_questions qq join public.hr_quiz_keys k on k.question_id = qq.id\n           where qq.quiz_id = p_quiz order by qq.pos loop\n    tot := tot + 1; mx := mx + r.points;\n    a := p_answers ->> r.id::text;\n    if a is not null and a ~ '^[0-3]$' and a::int = r.answer then sc := sc + r.points; cr := cr + 1; end if;\n    rev := rev || jsonb_build_array(jsonb_build_object('id', r.id, 'answer', r.answer, 'explanation', r.explanation));\n  end loop;\n  insert into public.hr_attempts (quiz_id, email, name, score, max_score, answers, secs)\n  values (p_quiz, lower(trim(p_email)), left(trim(p_name), 80), sc, mx, p_answers, least(greatest(coalesce(p_secs, 0), 0), 86400));\n  return jsonb_build_object('score', sc, 'max', mx, 'correct', cr, 'total', tot, 'review', rev);\nend $$;\ngrant execute on function public.hr_submit_attempt(uuid, text, text, jsonb, int) to anon, authenticated;\n\ncreate or replace function public.hr_leaderboard(p_quiz uuid)\nreturns table (name text, score int, secs int) language sql stable security definer set search_path = public as $$\n  select a.name, a.score, a.secs from public.hr_attempts a\n  where a.quiz_id = p_quiz order by a.score desc, a.secs asc limit 50;\n$$;\ngrant execute on function public.hr_leaderboard(uuid) to anon, authenticated;\n\n-- ---------- OPTIONAL: also close the site's own team-registration table at the deadline ----------\n-- Only installed if public.team_registrations exists. Remove this block if you do not want that.\ndo $$\nbegin\n  if to_regclass('public.team_registrations') is not null then\n    execute $f$\n      create or replace function public.hr_lock_team_registrations() returns trigger\n      language plpgsql security definer set search_path = public as $b$\n      declare ev public.hr_events%rowtype;\n      begin\n        select * into ev from public.hr_events where id = 'main';\n        if found and ev.lock_main and (not ev.reg_open or now() >= ev.reg_closes_at) then\n          raise exception 'REGISTRATION_CLOSED';\n        end if;\n        return new;\n      end $b$;\n    $f$;\n    execute 'drop trigger if exists hr_lock_team_reg on public.team_registrations';\n    execute 'create trigger hr_lock_team_reg before insert on public.team_registrations for each row execute function public.hr_lock_team_registrations()';\n  end if;\nend $$;\n";
+function parseCSV(t){
+  const rows = []; let r = [], f = '', q = false;
+  for (let i = 0; i < t.length; i++) { const ch = t[i];
+    if (q) { if (ch === '"' && t[i + 1] === '"') { f += '"'; i++; } else if (ch === '"') q = false; else f += ch; }
+    else if (ch === '"') q = true; else if (ch === ',') { r.push(f); f = ''; } else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; r.push(f); f = ''; rows.push(r); r = []; } else f += ch; }
+  if (f !== '' || r.length) { r.push(f); rows.push(r); } return rows.filter(x => x.some(v => String(v).trim() !== ''));
+}
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 24) || 'general';
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+const AD = { sub: store.get('adminSub', 'hack'), c: null, qz: null, bank: { subj: 'all', sem: '-1', lvl: '0', q: '', lim: 25, edit: null, imp: null } };
+const ADV = {};
+const admErr = e => (e && e.status === 401 || e && e.status === 403 || /permission|policy|jwt|row-level/i.test(e && e.message || '')) ? 'Permission denied — log in as an Admin and make sure the SQL policies are installed.' : (e && e.message) || 'Something went wrong';
+
+function adRender(){
+  const c = AD.c; if (!c || !c.isConnected) return;
+  if (!isAdminUI()) { c.innerHTML = '<p class="hrp-muted">Admin login required. Log in with an Admin account to manage the hackathon and question bank.</p>'; return; }
+  const subs = [['hack', '🚀 Hackathon'], ['regs', '📋 Registrations'], ['quiz', '📝 Quizzes'], ['bank', '🗂️ Question bank'], ['setup', '🔧 Setup']];
+  c.innerHTML = `<div class="hrp-card" style="border-color:${HB.remote ? 'var(--green)' : 'var(--orange)'};margin-bottom:10px">${HB.remote ? '🟢 <b>Connected to the database</b> — changes are shared with every visitor.' : '🟠 <b>Local mode</b> — the database tables are not set up yet, so changes are saved only in this browser. Open <b>Setup</b> and run the SQL.'}<br><span class="hrp-muted">Time source: ${esc(HB.tsrc)} · admin rights are enforced by database policies, not by this screen.</span></div>
+  <div class="hrp-row">${subs.map(([k, l]) => `<button class="hrp-tab${AD.sub === k ? ' active' : ''}" data-ad="nav" data-k="${k}">${l}</button>`).join('')}</div><div id="adB"></div>`;
+  const f = ADV[AD.sub]; if (f) f($('#adB', c));
+}
+const adAct = {};
+TABS.push(['admin', '🛡️ Admin', c => { AD.c = c; adRender(); c.onclick = e => { const b = e.target.closest('[data-ad]'); if (!b || b.disabled) return; const f = adAct[b.dataset.ad]; if (f) f(b, e); };
+  c.onchange = c.oninput = e => { const f = adAct['chg:' + (e.target.dataset.ch || '')]; if (f) f(e.target, e); }; }, isAdminUI]);
+adAct.nav = b => { AD.sub = b.dataset.k; store.set('adminSub', AD.sub); AD.bank.edit = null; AD.qz = null; adRender(); };
+feat('Admin console tab (visible only when an Admin is logged in)', () => {});
+
+/* ---------- Hackathon settings ---------- */
+ADV.hack = box => {
+  const e = HB.ev, st = evState(); const s = Date.parse(e.starts_at), c = Date.parse(e.reg_closes_at), en = e.ends_at ? Date.parse(e.ends_at) : 0;
+  box.innerHTML = `<div class="hrp-card"><b>Status now:</b> ${st.phase === 'live' ? '🔴 Live' : st.phase === 'ended' ? 'Ended' : '⏳ Upcoming'} · registration ${st.regOpen ? '<b style="color:var(--green)">open</b>' : '<b style="color:var(--pink)">closed</b>'}</div>
+  <label class="hrp-muted">Event name</label><input class="hrp-in" id="adName" value="${esc(e.name)}" maxlength="100" style="margin-bottom:8px">
+  <div class="hrp-row"><label>Starts <input type="datetime-local" class="hrp-in" id="adStart" value="${localInput(new Date(s))}" style="width:auto"></label><label>Registration closes <input type="datetime-local" class="hrp-in" id="adClose" value="${localInput(new Date(c))}" style="width:auto"></label><label>Ends (optional) <input type="datetime-local" class="hrp-in" id="adEnd" value="${en ? localInput(new Date(en)) : ''}" style="width:auto"></label></div>
+  <p class="hrp-muted">Times use your device time zone: ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}. Visitors always see IST.</p>
+  <label class="hrp-muted">Message shown on the page</label><textarea class="hrp-ta" id="adMsg" style="min-height:70px;font-family:inherit">${esc(e.message || '')}</textarea>
+  <label class="hrp-check"><input type="checkbox" id="adOpen" ${e.reg_open !== false ? 'checked' : ''}><span>Registration switch is ON (untick to close registration immediately)</span></label>
+  <label class="hrp-check"><input type="checkbox" id="adLock" ${e.lock_main !== false ? 'checked' : ''}><span>Also lock the site’s main team-registration form when time is up</span></label>
+  <div class="hrp-row"><button class="hrp-btn pri" data-ad="hsave">Save changes</button><button class="hrp-btn" data-ad="hclose">Close registration now</button><button class="hrp-btn" data-ad="hopen">Reopen (switch ON)</button></div><div class="hk-msg" id="adMsgOut"></div>`;
+};
+async function adSaveEvent(patch, okMsg){
+  const out = $('#adMsgOut', AD.c);
+  try { await saveEvent({ ...HB.ev, ...patch }); await syncTime(); renderHackathon(); applyMainLock(); updateOldBox(); tickHack(); toast(okMsg || 'Saved', 'success', '✅'); adRender(); }
+  catch(e){ if (out) { out.textContent = admErr(e); out.className = 'hk-msg err'; } }
+}
+adAct.hsave = () => { const c = AD.c, out = $('#adMsgOut', c); const s = new Date($('#adStart', c).value).getTime(); let cl = new Date($('#adClose', c).value).getTime(); const en = $('#adEnd', c).value ? new Date($('#adEnd', c).value).getTime() : null;
+  if (!isFinite(s)) { out.textContent = 'Pick a valid start time.'; out.className = 'hk-msg err'; return; } if (!isFinite(cl)) cl = s;
+  adSaveEvent({ name: $('#adName', c).value.trim() || HK_DEFAULT.name, starts_at: new Date(s).toISOString(), reg_closes_at: new Date(cl).toISOString(), ends_at: en ? new Date(en).toISOString() : null, message: $('#adMsg', c).value.trim(), reg_open: $('#adOpen', c).checked, lock_main: $('#adLock', c).checked }, 'Hackathon settings saved'); };
+adAct.hclose = () => adSaveEvent({ reg_open: false }, 'Registration closed');
+adAct.hopen = () => { const st = evState(); adSaveEvent({ reg_open: true }, st.n >= st.c ? 'Switch is ON, but the closing time has already passed — move “Registration closes” to a later time' : 'Registration reopened'); };
+
+/* ---------- Registrations ---------- */
+ADV.regs = async box => {
+  if (!HB.remote) { box.innerHTML = '<div class="hrp-card"><b>Registrations are arriving by email</b>The database is not connected, so each hackathon registration is being sent to your Formspree inbox (the same one used by the contact form). Run the SQL in <b>Setup</b> to store and manage registrations here.</div>'; return; }
+  box.innerHTML = '<p class="hrp-muted">Loading…</p>';
+  try { const rows = await pgrest('hr_registrations?select=*&order=created_at.desc'); AD.regs = rows;
+    box.innerHTML = `<div class="hrp-row"><b>${rows.length} team${rows.length === 1 ? '' : 's'} registered</b><input class="hrp-in sm" data-ch="rs" placeholder="Search…" aria-label="Search"><button class="hrp-btn" data-ad="rcsv">⬇ CSV</button></div><div id="rgT" style="overflow:auto"></div>`; adRegTable(''); }
+  catch(e){ box.innerHTML = `<p class="hrp-muted">❌ ${esc(admErr(e))}</p>`; }
+};
+function adRegTable(q){ const rows = (AD.regs || []).filter(r => !q || JSON.stringify(r).toLowerCase().includes(q)); const t = $('#rgT', AD.c); if (!t) return;
+  t.innerHTML = `<table class="hrp-table"><tr><th>Team</th><th>Leader</th><th>Email</th><th>Phone</th><th>College</th><th>Size</th><th>When</th><th></th></tr>${rows.map(r => `<tr><td>${esc(r.team_name)}</td><td>${esc(r.leader_name)}</td><td>${esc(r.email)}</td><td>${esc(r.phone)}</td><td>${esc(r.college)}</td><td>${esc(r.team_size)}</td><td>${new Date(r.created_at).toLocaleString()}</td><td><button class="hrp-x" data-ad="rdel" data-id="${esc(r.id)}" aria-label="Delete">✕</button></td></tr>`).join('')}</table>`; }
+adAct['chg:rs'] = t => adRegTable(t.value.trim().toLowerCase());
+adAct.rcsv = () => { const r = AD.regs || []; download('hackathon-registrations.csv', toCSV([['Team', 'Leader', 'Email', 'Phone', 'College', 'Team size', 'Members', 'Track', 'Notes', 'Registered at']].concat(r.map(x => [x.team_name, x.leader_name, x.email, x.phone, x.college, x.team_size, x.members, x.track, x.notes, x.created_at]))), 'text/csv'); };
+adAct.rdel = async b => { if (!confirm('Delete this registration?')) return; try { await pgrest('hr_registrations?id=eq.' + encodeURIComponent(b.dataset.id), { method: 'DELETE' }); AD.regs = AD.regs.filter(r => r.id !== b.dataset.id); adRegTable($('[data-ch=rs]', AD.c).value.toLowerCase()); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+
+/* ---------- Hackathon quizzes ---------- */
+const QZ = {
+  async list(){ if (HB.remote) return await pgrest('hr_quizzes?select=*&order=created_at.desc'); return store.get('hk:lq', []); },
+  async save(q){ if (HB.remote) await pgrest('hr_quizzes?on_conflict=id', { method: 'POST', headers: UPSERT, body: [q] }); else { const l = store.get('hk:lq', []).filter(x => x.id !== q.id); l.unshift(q); store.set('hk:lq', l); } },
+  async del(id){ if (HB.remote) await pgrest('hr_quizzes?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }); else { store.set('hk:lq', store.get('hk:lq', []).filter(x => x.id !== id)); store.del('hk:lqq:' + id); } },
+  async qs(id){
+    if (!HB.remote) return store.get('hk:lqq:' + id, []);
+    const qs = await pgrest(`hr_quiz_questions?quiz_id=eq.${encodeURIComponent(id)}&select=*&order=pos`); if (!qs.length) return [];
+    const keys = await pgrest(`hr_quiz_keys?question_id=in.(${qs.map(x => x.id).join(',')})&select=*`); const km = {}; keys.forEach(k => km[k.question_id] = k);
+    return qs.map(x => ({ ...x, answer: (km[x.id] || {}).answer ?? 0, explanation: (km[x.id] || {}).explanation || '' }));
+  },
+  async saveQ(quizId, arr){
+    if (!HB.remote) { const cur = store.get('hk:lqq:' + quizId, []); arr.forEach(a => { const i = cur.findIndex(x => x.id === a.id); if (i >= 0) cur[i] = a; else cur.push(a); }); cur.sort((a, b) => a.pos - b.pos); store.set('hk:lqq:' + quizId, cur); return; }
+    await pgrest('hr_quiz_questions?on_conflict=id', { method: 'POST', headers: UPSERT, body: arr.map(a => ({ id: a.id, quiz_id: quizId, pos: a.pos, text: a.text, options: a.options, points: a.points })) });
+    await pgrest('hr_quiz_keys?on_conflict=question_id', { method: 'POST', headers: UPSERT, body: arr.map(a => ({ question_id: a.id, answer: a.answer, explanation: a.explanation || '' })) });
+  },
+  async delQ(quizId, id){ if (HB.remote) await pgrest('hr_quiz_questions?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }); else store.set('hk:lqq:' + quizId, store.get('hk:lqq:' + quizId, []).filter(x => x.id !== id)); },
+  async attempts(id){ if (HB.remote) return await pgrest(`hr_attempts?quiz_id=eq.${encodeURIComponent(id)}&select=*&order=score.desc,secs.asc`); return store.get('hk:latt:' + id, []); }
+};
+ADV.quiz = async box => {
+  if (AD.qz && AD.qz.mode === 'edit') return adQuizEditor(box);
+  if (AD.qz && AD.qz.mode === 'results') return adQuizResults(box);
+  box.innerHTML = '<p class="hrp-muted">Loading…</p>';
+  try { const list = await QZ.list(); AD.qzList = list;
+    box.innerHTML = `<div class="hrp-row"><button class="hrp-btn pri" data-ad="qnew">➕ New quiz</button></div>${list.map(q => `<div class="hrp-card" style="margin:8px 0"><b>${esc(q.title)}</b> ${q.published ? '<span class="hk-pill ok">published</span>' : '<span class="hk-pill">draft</span>'}<div class="hrp-muted">${q.duration_min} min${q.opens_at ? ' · opens ' + new Date(q.opens_at).toLocaleString() : ''}${q.closes_at ? ' · closes ' + new Date(q.closes_at).toLocaleString() : ''}</div>
+    <div class="hrp-row" style="margin:8px 0 0"><button class="hrp-mini" data-ad="qopen" data-id="${esc(q.id)}">✏️ Edit & questions</button><button class="hrp-mini" data-ad="qpub" data-id="${esc(q.id)}">${q.published ? 'Unpublish' : 'Publish'}</button><button class="hrp-mini" data-ad="qres" data-id="${esc(q.id)}">📊 Results</button><button class="hrp-mini" data-ad="qdel" data-id="${esc(q.id)}">🗑 Delete</button></div></div>`).join('') || '<p class="hrp-muted">No quizzes yet. Click “New quiz” to create one for your hackathon.</p>'}`; }
+  catch(e){ box.innerHTML = `<p class="hrp-muted">❌ ${esc(admErr(e))}</p>`; }
+};
+adAct.qnew = () => { AD.qz = { mode: 'edit', quiz: { id: uid(), title: '', description: '', duration_min: 30, opens_at: null, closes_at: null, published: false, isNew: true }, qs: [], editQ: null }; adRender(); };
+adAct.qopen = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { AD.qz = { mode: 'edit', quiz: { ...q }, qs: await QZ.qs(q.id), editQ: null }; adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.qpub = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { await QZ.save({ ...q, published: !q.published }); renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.qdel = async b => { if (!confirm('Delete this quiz and all its questions and results?')) return; try { await QZ.del(b.dataset.id); renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.qres = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { AD.qz = { mode: 'results', quiz: q, rows: await QZ.attempts(q.id) }; adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+function adQuizResults(box){
+  const { quiz, rows } = AD.qz;
+  box.innerHTML = `<div class="hrp-row"><button class="hrp-tab" data-ad="qback">← Quizzes</button><b>${esc(quiz.title)} — results (${rows.length})</b><button class="hrp-btn" data-ad="qcsv">⬇ CSV</button></div>${rows.length ? table(rows.map((r, i) => [String(i + 1), r.name, r.email, r.score + '/' + r.max_score, fmtClock(r.secs || 0)]), ['#', 'Name', 'Email', 'Score', 'Time']) : '<p class="hrp-muted">No submissions yet.</p>'}`;
+}
+adAct.qback = () => { AD.qz = null; adRender(); };
+adAct.qcsv = () => { const { quiz, rows } = AD.qz; download('quiz-results.csv', toCSV([['Rank', 'Name', 'Email', 'Score', 'Max', 'Seconds', 'Submitted']].concat(rows.map((r, i) => [i + 1, r.name, r.email, r.score, r.max_score, r.secs, r.created_at]))), 'text/csv'); };
+function adQuizEditor(box){
+  const { quiz, qs, editQ } = AD.qz;
+  const form = editQ ? `<div class="hrp-card" style="margin:10px 0"><b>${editQ.isNew ? 'New question' : 'Edit question'}</b><textarea class="hrp-ta" id="aqT" style="min-height:70px;font-family:inherit;margin:6px 0" placeholder="Question">${esc(editQ.text)}</textarea>${[0, 1, 2, 3].map(i => `<input class="hrp-in" id="aqO${i}" placeholder="Option ${'ABCD'[i]}" value="${esc((editQ.options || [])[i] || '')}" style="margin-bottom:6px">`).join('')}
+    <div class="hrp-row"><label>Correct <select class="hrp-sel hrp-in" id="aqA" style="width:auto">${[0, 1, 2, 3].map(i => `<option value="${i}"${editQ.answer === i ? ' selected' : ''}>${'ABCD'[i]}</option>`).join('')}</select></label><label>Points <input class="hrp-in" id="aqP" type="number" min="1" max="100" value="${editQ.points || 1}" style="width:90px"></label></div>
+    <textarea class="hrp-ta" id="aqE" style="min-height:50px;font-family:inherit" placeholder="Explanation (optional)">${esc(editQ.explanation || '')}</textarea><div class="hk-msg" id="aqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="qqsave">Save question</button><button class="hrp-btn" data-ad="qqcancel">Cancel</button></div></div>` : '';
+  box.innerHTML = `<div class="hrp-row"><button class="hrp-tab" data-ad="qback">← Quizzes</button><b>${quiz.isNew ? 'New quiz' : 'Edit quiz'}</b></div>
+  <input class="hrp-in" id="aqTitle" placeholder="Quiz title" value="${esc(quiz.title)}" maxlength="120" style="margin-bottom:8px"><textarea class="hrp-ta" id="aqDesc" style="min-height:60px;font-family:inherit" placeholder="Short description / instructions">${esc(quiz.description || '')}</textarea>
+  <div class="hrp-row"><label>Duration (min) <input class="hrp-in" id="aqDur" type="number" min="1" max="600" value="${quiz.duration_min}" style="width:90px"></label><label>Opens <input class="hrp-in" id="aqOp" type="datetime-local" value="${quiz.opens_at ? localInput(new Date(quiz.opens_at)) : ''}" style="width:auto"></label><label>Closes <input class="hrp-in" id="aqCl" type="datetime-local" value="${quiz.closes_at ? localInput(new Date(quiz.closes_at)) : ''}" style="width:auto"></label></div>
+  <label class="hrp-check"><input type="checkbox" id="aqPub" ${quiz.published ? 'checked' : ''}><span>Published (visible to participants inside its open window)</span></label><div class="hk-msg" id="aqMsg"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="qsave">Save quiz</button></div>
+  <div class="hrp-h">Questions (${qs.length})</div><div class="hrp-row"><button class="hrp-btn" data-ad="qqnew">➕ Add question</button><button class="hrp-btn" data-ad="qqimp">⬆ Bulk import</button></div>${form}
+  ${qs.map((x, i) => `<div class="hrp-card" style="margin:8px 0"><b>${i + 1}. ${esc(x.text)}</b><div class="hrp-muted">${(x.options || []).map((o, k) => (k === x.answer ? '✅ ' : '') + 'ABCD'[k] + ') ' + esc(o)).join('  ·  ')} · ${x.points} pt</div><div class="hrp-row" style="margin:6px 0 0"><button class="hrp-mini" data-ad="qqedit" data-id="${esc(x.id)}">Edit</button><button class="hrp-mini" data-ad="qqdel" data-id="${esc(x.id)}">Delete</button></div></div>`).join('')}
+  <div id="qImp"></div>`;
+  if (AD.qz.imp) { const im = $('#qImp', box); im.innerHTML = `<div class="hrp-card"><b>Bulk import questions</b><p class="hrp-muted">CSV columns: <code>question, A, B, C, D, answer, points, explanation</code> (answer = A–D). Or a JSON array of objects with the same keys.</p><textarea class="hrp-ta" id="qImpT" style="min-height:120px"></textarea><div class="hrp-row"><button class="hrp-btn pri" data-ad="qimpgo">Import</button><button class="hrp-btn" data-ad="qimpx">Cancel</button></div><div class="hk-msg" id="qImpM"></div></div>`; }
+}
+adAct.qsave = async () => { const c = AD.c, m = $('#aqMsg', c), q = AD.qz.quiz; const t = $('#aqTitle', c).value.trim(); if (!t) { m.textContent = 'Give the quiz a title.'; m.className = 'hk-msg err'; return; }
+  const op = $('#aqOp', c).value, cl = $('#aqCl', c).value; const o = { id: q.id, title: t, description: $('#aqDesc', c).value.trim(), duration_min: Math.min(600, Math.max(1, +$('#aqDur', c).value || 30)), opens_at: op ? new Date(op).toISOString() : null, closes_at: cl ? new Date(cl).toISOString() : null, published: $('#aqPub', c).checked };
+  try { await QZ.save(o); AD.qz.quiz = { ...o }; renderQuizList(); m.textContent = 'Quiz saved ✔ — now add questions below.'; m.className = 'hk-msg ok'; } catch(e){ m.textContent = admErr(e); m.className = 'hk-msg err'; } };
+adAct.qqnew = () => { AD.qz.editQ = { id: uid(), text: '', options: ['', '', '', ''], answer: 0, points: 1, explanation: '', isNew: true }; adRender(); };
+adAct.qqedit = b => { AD.qz.editQ = { ...AD.qz.qs.find(x => x.id === b.dataset.id) }; adRender(); };
+adAct.qqcancel = () => { AD.qz.editQ = null; adRender(); };
+adAct.qqsave = async () => { const c = AD.c, m = $('#aqM', c), e = AD.qz.editQ; const text = $('#aqT', c).value.trim(), opts = [0, 1, 2, 3].map(i => $('#aqO' + i, c).value.trim());
+  if (!text || opts.some(x => !x)) { m.textContent = 'Fill the question and all four options.'; m.className = 'hk-msg err'; return; }
+  const item = { id: e.id, pos: e.pos ?? (AD.qz.qs.length ? Math.max(...AD.qz.qs.map(x => x.pos ?? 0)) + 1 : 1), text, options: opts, answer: +$('#aqA', c).value, points: Math.min(100, Math.max(1, +$('#aqP', c).value || 1)), explanation: $('#aqE', c).value.trim() };
+  try { const ex = await QZ.list(); if (!ex.some(x => x.id === AD.qz.quiz.id)) await QZ.save({ id: AD.qz.quiz.id, title: AD.qz.quiz.title || 'Untitled quiz', description: AD.qz.quiz.description || '', duration_min: AD.qz.quiz.duration_min || 30, opens_at: AD.qz.quiz.opens_at, closes_at: AD.qz.quiz.closes_at, published: false });
+    await QZ.saveQ(AD.qz.quiz.id, [item]); AD.qz.qs = await QZ.qs(AD.qz.quiz.id); AD.qz.editQ = null; adRender(); } catch(er){ m.textContent = admErr(er); m.className = 'hk-msg err'; } };
+adAct.qqdel = async b => { if (!confirm('Delete this question?')) return; try { await QZ.delQ(AD.qz.quiz.id, b.dataset.id); AD.qz.qs = await QZ.qs(AD.qz.quiz.id); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.qqimp = () => { AD.qz.imp = true; adRender(); }; adAct.qimpx = () => { AD.qz.imp = false; adRender(); };
+adAct.qimpgo = async () => { const c = AD.c, m = $('#qImpM', c), raw = $('#qImpT', c).value.trim(); if (!raw) return; let items = [];
+  try { if (/^[\[{]/.test(raw)) { const j = JSON.parse(raw); items = (Array.isArray(j) ? j : [j]).map(o => ({ text: o.question || o.text, options: o.options || [o.A, o.B, o.C, o.D], ans: o.answer, points: o.points, expl: o.explanation })); }
+    else { const rows = parseCSV(raw); const h = rows[0].map(x => x.trim().toLowerCase()); const has = h.includes('question'); const body = has ? rows.slice(1) : rows; const ix = k => has ? h.indexOf(k) : ['question', 'a', 'b', 'c', 'd', 'answer', 'points', 'explanation'].indexOf(k);
+      items = body.map(r => ({ text: r[ix('question')], options: ['a', 'b', 'c', 'd'].map(k => r[ix(k)]), ans: r[ix('answer')], points: r[ix('points')], expl: r[ix('explanation')] })); }
+    const base = AD.qz.qs.length ? Math.max(...AD.qz.qs.map(x => x.pos ?? 0)) : 0; const arr = []; const bad = [];
+    items.forEach((o, i) => { const opts = (o.options || []).map(x => String(x ?? '').trim()); let a = String(o.ans ?? '').trim().toUpperCase(); a = 'ABCD'.includes(a) && a ? 'ABCD'.indexOf(a) : (+a >= 1 && +a <= 4 ? +a - 1 : -1);
+      if (!o.text || opts.length !== 4 || opts.some(x => !x) || a < 0) { bad.push(i + 1); return; } arr.push({ id: uid(), pos: base + arr.length + 1, text: String(o.text).trim(), options: opts, answer: a, points: Math.min(100, Math.max(1, parseInt(o.points, 10) || 1)), explanation: String(o.expl || '').trim() }); });
+    if (!arr.length) { m.textContent = 'No valid questions found.' + (bad.length ? ' Check rows: ' + bad.join(', ') : ''); m.className = 'hk-msg err'; return; }
+    const ex = await QZ.list(); if (!ex.some(x => x.id === AD.qz.quiz.id)) await QZ.save({ id: AD.qz.quiz.id, title: AD.qz.quiz.title || 'Untitled quiz', description: AD.qz.quiz.description || '', duration_min: AD.qz.quiz.duration_min || 30, opens_at: AD.qz.quiz.opens_at, closes_at: AD.qz.quiz.closes_at, published: false });
+    await QZ.saveQ(AD.qz.quiz.id, arr); AD.qz.qs = await QZ.qs(AD.qz.quiz.id); AD.qz.imp = false; adRender(); toast(`Imported ${arr.length} question(s)` + (bad.length ? `, skipped ${bad.length}` : ''), 'success', '⬆'); }
+  catch(e){ m.textContent = admErr(e); m.className = 'hk-msg err'; } };
+feat('Admin: create hackathon quizzes, add questions one by one or by CSV/JSON import, publish, view results', () => {});
+feat('Quiz answers stay on the server — participants only receive the score after submitting', () => {});
+
+/* ---------- Question bank manager ---------- */
+const lvlNum = v => { v = String(v ?? '').trim().toLowerCase(); return ({ easy: 1, medium: 2, moderate: 2, hard: 3, difficult: 3, '1': 1, '2': 2, '3': 3 })[v] || 0; };
+function subjKeyFor(name){ name = String(name || '').trim(); const f = Object.keys(SUBJ).find(k => SUBJ[k].toLowerCase() === name.toLowerCase() || k === name.toLowerCase()); return f ? { key: f, name: SUBJ[f] } : { key: 'x_' + slug(name), name }; }
+async function bankSave(rows){
+  const clean = rows.map(r => ({ id: r.id, subj: r.subj || null, subj_name: r.subj_name || null, sem: r.sem ?? null, br: r.br || null, lvl: r.lvl ?? null, text: r.text ?? null, opts: r.opts ?? null, ans: r.ans ?? null, expl: r.expl ?? null, deleted: !!r.deleted, updated_at: new Date().toISOString() }));
+  if (BK.remote) { for (let i = 0; i < clean.length; i += 200) await pgrest('hr_bank?on_conflict=id', { method: 'POST', headers: UPSERT, body: clean.slice(i, i + 200) }); }
+  const ids = new Set(clean.map(r => r.id)); BK.rows = BK.rows.filter(r => !ids.has(r.id)).concat(clean); if (!BK.remote) store.set('bankLocal', BK.rows); applyBank(BK.rows);
+}
+async function bankRemove(id){ if (BK.remote) await pgrest('hr_bank?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }); BK.rows = BK.rows.filter(r => r.id !== id); if (!BK.remote) store.set('bankLocal', BK.rows); applyBank(BK.rows); }
+const isBuiltin = id => BUILTIN_Q.some(q => q.id === id);
+ADV.bank = box => {
+  const S = AD.bank;
+  if (S.edit) return adBankEdit(box); if (S.imp) return adBankImport(box);
+  const semOk = q => S.sem === '-1' || q.sem === +S.sem, m = QB.filter(q => (S.subj === 'all' || q.s === S.subj) && semOk(q) && (!+S.lvl || q.d === +S.lvl) && (!S.q || (q.t + ' ' + q.o.join(' ')).toLowerCase().includes(S.q.toLowerCase())));
+  const over = new Set(BK.rows.map(r => r.id));
+  box.innerHTML = `<div class="hrp-card"><b>${QB.length} questions in the bank</b> · ${BK.rows.filter(r => !r.deleted).length} added/edited by admins · ${BK.rows.filter(r => r.deleted).length} hidden</div>
+  <div class="hrp-row"><button class="hrp-btn pri" data-ad="bnew">➕ Add question</button><button class="hrp-btn" data-ad="bimp">⬆ Import CSV / JSON</button><button class="hrp-btn" data-ad="bexp">⬇ Export JSON</button><button class="hrp-btn" data-ad="btpl">⬇ CSV template</button></div>
+  <div class="hrp-row"><select class="hrp-sel hrp-in sm" data-ch="bf" data-k="subj"><option value="all">All subjects</option>${Object.keys(SUBJ).map(k => `<option value="${k}"${S.subj === k ? ' selected' : ''}>${esc(SUBJ[k])}</option>`).join('')}</select>
+  <select class="hrp-sel hrp-in sm" data-ch="bf" data-k="sem"><option value="-1">All semesters</option>${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(s => `<option value="${s}"${S.sem === String(s) ? ' selected' : ''}>${semName(s)}</option>`).join('')}</select>
+  <select class="hrp-sel hrp-in sm" data-ch="bf" data-k="lvl"><option value="0">All levels</option>${[1, 2, 3].map(l => `<option value="${l}"${S.lvl === String(l) ? ' selected' : ''}>${LV[l]}</option>`).join('')}</select>
+  <input class="hrp-in sm" data-ch="bf" data-k="q" placeholder="Search text…" value="${esc(S.q)}"></div><div class="hrp-muted">${m.length} match${m.length === 1 ? '' : 'es'}</div>
+  ${m.slice(0, S.lim).map(q => `<div class="hrp-card" style="margin:8px 0"><div class="hrp-muted">${esc(SUBJ[q.s] || q.s)} · ${semName(q.sem)} · ${LV[q.d]} ${isBuiltin(q.id) ? (over.has(q.id) ? '· ✏️ edited' : '· built-in') : '· ➕ custom'}</div><b>${esc(q.t.length > 140 ? q.t.slice(0, 140) + '…' : q.t)}</b><div class="hrp-muted">✅ ${esc(q.o[q.a])}</div>
+  <div class="hrp-row" style="margin:6px 0 0"><button class="hrp-mini" data-ad="bedit" data-id="${esc(q.id)}">Edit</button><button class="hrp-mini" data-ad="bdel" data-id="${esc(q.id)}">${isBuiltin(q.id) ? 'Hide' : 'Delete'}</button>${over.has(q.id) && isBuiltin(q.id) ? `<button class="hrp-mini" data-ad="brest" data-id="${esc(q.id)}">Restore original</button>` : ''}</div></div>`).join('')}
+  ${m.length > S.lim ? '<div class="hrp-row"><button class="hrp-btn" data-ad="bmore">Show more</button></div>' : ''}
+  ${BK.rows.some(r => r.deleted) ? '<div class="hrp-row"><button class="hrp-btn" data-ad="bunhide">Show all hidden built-in questions again</button></div>' : ''}`;
+};
+adAct['chg:bf'] = (t, e) => { AD.bank[t.dataset.k] = t.value; AD.bank.lim = 25; if (t.dataset.k === 'q') { clearTimeout(AD.bt); AD.bt = setTimeout(() => { adRender(); const i = $('[data-k=q]', AD.c); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 300); } else adRender(); };
+adAct.bmore = () => { AD.bank.lim += 25; adRender(); };
+adAct.bnew = () => { AD.bank.edit = { id: 'u' + uid().replace(/-/g, '').slice(0, 12), isNew: true, subj: 'dsa', sem: 3, br: 'cse', lvl: 2, text: '', opts: ['', '', '', ''], ans: 0, expl: '' }; adRender(); };
+adAct.bedit = b => { const q = QM[b.dataset.id]; AD.bank.edit = { id: q.id, subj: q.s, sem: q.sem, br: q.br, lvl: q.d, text: q.t, opts: q.o.slice(), ans: q.a, expl: q.e }; adRender(); };
+adAct.bdel = async b => { const id = b.dataset.id; if (!confirm(isBuiltin(id) ? 'Hide this built-in question from all quizzes?' : 'Delete this question permanently?')) return;
+  try { if (isBuiltin(id)) await bankSave([{ id, deleted: true }]); else await bankRemove(id); adRender(); toast('Done', 'success', '✅'); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.brest = async b => { try { await bankRemove(b.dataset.id); adRender(); toast('Original restored', 'success', '↩'); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.bunhide = async () => { try { for (const r of BK.rows.filter(x => x.deleted && isBuiltin(x.id))) await bankRemove(r.id); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+function adBankEdit(box){
+  const e = AD.bank.edit; const sub = Object.keys(SUBJ);
+  box.innerHTML = `<div class="hrp-row"><button class="hrp-tab" data-ad="bcancel">← Back</button><b>${e.isNew ? 'Add question' : 'Edit question'}</b></div>
+  <label class="hrp-muted">Subject</label><select class="hrp-sel" id="beS">${sub.map(k => `<option value="${k}"${e.subj === k ? ' selected' : ''}>${esc(SUBJ[k])}</option>`).join('')}<option value="__new">➕ New subject…</option></select><input class="hrp-in" id="beSN" placeholder="New subject name" style="display:none;margin-top:6px" maxlength="60">
+  <div class="hrp-row"><label>Semester <select class="hrp-sel hrp-in" id="beSem" style="width:auto">${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(s => `<option value="${s}"${e.sem === s ? ' selected' : ''}>${semName(s)}</option>`).join('')}</select></label>
+  <label>Branch <select class="hrp-sel hrp-in" id="beBr" style="width:auto">${Object.keys(BRANCHES).concat(['ece', 'eee', 'mech', 'civil'].filter(x => !BRANCHES[x])).map(k => `<option value="${k}"${e.br === k ? ' selected' : ''}>${esc(BRANCHES[k] || k.toUpperCase())}</option>`).join('')}</select></label>
+  <label>Level <select class="hrp-sel hrp-in" id="beLv" style="width:auto">${[1, 2, 3].map(l => `<option value="${l}"${e.lvl === l ? ' selected' : ''}>${LV[l]}</option>`).join('')}</select></label></div>
+  <textarea class="hrp-ta" id="beT" style="min-height:80px;font-family:inherit;margin:6px 0" placeholder="Question">${esc(e.text)}</textarea>${[0, 1, 2, 3].map(i => `<input class="hrp-in" id="beO${i}" placeholder="Option ${'ABCD'[i]}" value="${esc(e.opts[i] || '')}" style="margin-bottom:6px">`).join('')}
+  <div class="hrp-row"><label>Correct answer <select class="hrp-sel hrp-in" id="beA" style="width:auto">${[0, 1, 2, 3].map(i => `<option value="${i}"${e.ans === i ? ' selected' : ''}>${'ABCD'[i]}</option>`).join('')}</select></label></div>
+  <textarea class="hrp-ta" id="beE" style="min-height:60px;font-family:inherit" placeholder="Explanation shown after answering">${esc(e.expl)}</textarea><div class="hk-msg" id="beM"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="bsave">Save</button><button class="hrp-btn" data-ad="bcancel">Cancel</button></div>`;
+  $('#beS', box).addEventListener('change', ev => { $('#beSN', box).style.display = ev.target.value === '__new' ? '' : 'none'; });
+}
+adAct.bcancel = () => { AD.bank.edit = null; AD.bank.imp = null; adRender(); };
+adAct.bsave = async () => { const c = AD.c, m = $('#beM', c), e = AD.bank.edit; const text = $('#beT', c).value.trim(), opts = [0, 1, 2, 3].map(i => $('#beO' + i, c).value.trim());
+  let subj = $('#beS', c).value, sname = null; if (subj === '__new') { const nm = $('#beSN', c).value.trim(); if (!nm) { m.textContent = 'Enter the new subject name.'; m.className = 'hk-msg err'; return; } const k = subjKeyFor(nm); subj = k.key; sname = k.name; }
+  if (!text || opts.some(x => !x)) { m.textContent = 'Fill the question and all four options.'; m.className = 'hk-msg err'; return; } if (new Set(opts).size !== 4) { m.textContent = 'Options must all be different.'; m.className = 'hk-msg err'; return; }
+  try { await bankSave([{ id: e.id, subj, subj_name: sname || SUBJ[subj], sem: +$('#beSem', c).value, br: $('#beBr', c).value, lvl: +$('#beLv', c).value, text, opts, ans: +$('#beA', c).value, expl: $('#beE', c).value.trim() }]); AD.bank.edit = null; adRender(); toast('Question saved', 'success', '✅'); }
+  catch(er){ m.textContent = admErr(er); m.className = 'hk-msg err'; } };
+function bankParse(raw){
+  let items = [];
+  if (/^[\[{]/.test(raw)) { const j = JSON.parse(raw); items = (Array.isArray(j) ? j : [j]).map(o => ({ subject: o.subject, sem: o.semester ?? o.sem, br: o.branch ?? o.br, lvl: o.level ?? o.difficulty, text: o.question ?? o.text, opts: o.options || [o.optionA ?? o.A, o.optionB ?? o.B, o.optionC ?? o.C, o.optionD ?? o.D], ans: o.answer, expl: o.explanation })); }
+  else { const rows = parseCSV(raw); const h = rows[0].map(x => x.trim().toLowerCase().replace(/[\s_]/g, '')); const ix = (...ks) => { for (const k of ks) { const i = h.indexOf(k); if (i >= 0) return i; } return -1; };
+    if (ix('question', 'text') < 0) throw new Error('The first row must be a header with a “question” column'); const I = { s: ix('subject'), sem: ix('semester', 'sem'), br: ix('branch'), l: ix('level', 'difficulty'), q: ix('question', 'text'), a: ix('optiona', 'a'), b: ix('optionb', 'b'), c: ix('optionc', 'c'), d: ix('optiond', 'd'), ans: ix('answer', 'correct'), e: ix('explanation', 'expl') };
+    items = rows.slice(1).map(r => ({ subject: r[I.s], sem: r[I.sem], br: r[I.br], lvl: r[I.l], text: r[I.q], opts: [r[I.a], r[I.b], r[I.c], r[I.d]], ans: r[I.ans], expl: r[I.e] })); }
+  const out = [], bad = [];
+  items.forEach((o, i) => { const opts = (o.opts || []).map(x => String(x ?? '').trim()); let a = String(o.ans ?? '').trim(); const up = a.toUpperCase(); let ai = up.length === 1 && 'ABCD'.includes(up) ? 'ABCD'.indexOf(up) : (/^[1-4]$/.test(a) ? +a - 1 : opts.findIndex(x => x && x.toLowerCase() === a.toLowerCase()));
+    const sem = /^gen|^0$|placement/i.test(String(o.sem ?? '')) ? 0 : parseInt(String(o.sem ?? '').replace(/\D/g, ''), 10); const lv = lvlNum(o.lvl) || 2; const sn = String(o.subject || '').trim();
+    if (!o.text || !sn || opts.length !== 4 || opts.some(x => !x) || ai < 0 || new Set(opts).size !== 4 || !(sem >= 0 && sem <= 8)) { bad.push(i + 2); return; }
+    const k = subjKeyFor(sn); out.push({ id: 'u' + uid().replace(/-/g, '').slice(0, 12), subj: k.key, subj_name: k.name, sem, br: String(o.br || 'all').trim().toLowerCase() || 'all', lvl: lv, text: String(o.text).trim(), opts, ans: ai, expl: String(o.expl || '').trim() }); });
+  return { out, bad };
+}
+adAct.bimp = () => { AD.bank.imp = { rows: null }; adRender(); };
+function adBankImport(box){
+  const prompt = 'Generate 30 multiple-choice questions for B.Tech (CSE) — subject: <SUBJECT>, semester: <NUMBER>, level mix: 10 easy, 10 medium, 10 hard. Output ONLY CSV with this header row and no other text:\nsubject,semester,branch,level,question,optionA,optionB,optionC,optionD,answer,explanation\nRules: level is easy/medium/hard; answer is A, B, C or D; exactly one correct option; put fields containing commas in double quotes; numerical answers must be verified; no duplicate options.';
+  box.innerHTML = `<div class="hrp-row"><button class="hrp-tab" data-ad="bcancel">← Back</button><b>Import questions</b></div><p class="hrp-muted">Paste CSV or JSON, or choose a file. Columns: <code>subject, semester, branch, level, question, optionA, optionB, optionC, optionD, answer, explanation</code>. Semester 0 or “general” = placement / aptitude.</p>
+  <textarea class="hrp-ta" id="biT" style="min-height:160px" placeholder="Paste here…"></textarea><div class="hrp-row"><label class="hrp-btn" style="cursor:pointer">📁 Choose file<input type="file" accept=".csv,.json,text/csv,application/json" hidden id="biF"></label><button class="hrp-btn pri" data-ad="bigo">Import</button><button class="hrp-btn" data-ad="btpl">⬇ CSV template</button><button class="hrp-btn" data-ad="bprompt">📋 Copy AI prompt</button></div><div class="hk-msg" id="biM"></div>`;
+  $('#biF', box).addEventListener('change', ev => { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { $('#biT', box).value = String(r.result); }; r.readAsText(f); });
+  AD.aiPrompt = prompt;
+}
+adAct.bprompt = () => copy(AD.aiPrompt || '');
+adAct.bigo = async () => { const c = AD.c, m = $('#biM', c), raw = $('#biT', c).value.trim(); if (!raw) return;
+  try { const { out, bad } = bankParse(raw); if (!out.length) { m.textContent = 'No valid rows found.' + (bad.length ? ' Check rows: ' + bad.slice(0, 15).join(', ') : ''); m.className = 'hk-msg err'; return; }
+    await bankSave(out); AD.bank.imp = null; adRender(); toast(`Imported ${out.length} question(s)` + (bad.length ? `, skipped ${bad.length} invalid row(s)` : ''), 'success', '⬆'); }
+  catch(e){ m.textContent = admErr(e); m.className = 'hk-msg err'; } };
+adAct.btpl = () => download('question-template.csv', toCSV([['subject', 'semester', 'branch', 'level', 'question', 'optionA', 'optionB', 'optionC', 'optionD', 'answer', 'explanation'], ['Data Structures', 3, 'cse', 'medium', 'Which structure follows LIFO?', 'Queue', 'Stack', 'Heap', 'Graph', 'B', 'A stack removes the newest element first.']]), 'text/csv');
+adAct.bexp = () => download('question-bank.json', JSON.stringify(QB.map(q => ({ id: q.id, subject: SUBJ[q.s] || q.s, semester: q.sem, branch: q.br, level: LV[q.d].toLowerCase(), question: q.t, options: q.o, answer: 'ABCD'[q.a], explanation: q.e })), null, 2), 'application/json');
+feat('Admin: add, edit, hide, delete and restore any question (built-in or custom)', () => {});
+feat('Admin: bulk import questions from CSV / JSON with validation', () => {});
+feat('Admin: export the question bank as JSON, download a CSV template, copy an AI prompt to generate more questions', () => {});
+feat('Admin: create new subjects and choose semester, branch and level for each question', () => {});
+
+/* ---------- Setup / SQL ---------- */
+ADV.setup = async box => {
+  box.innerHTML = '<p class="hrp-muted">Checking the database…</p>';
+  const probes = [['hr_events', 'Event settings'], ['hr_registrations', 'Registrations'], ['hr_bank', 'Question bank'], ['hr_quizzes', 'Quizzes'], ['hr_quiz_questions', 'Quiz questions'], ['hr_quiz_keys', 'Quiz answer keys (admin only)'], ['hr_attempts', 'Quiz attempts (admin only)']]; const res = [];
+  for (const [t, l] of probes) { try { await pgrest(t + '?select=*&limit=1'); res.push([l, '✅ ready']); } catch(e){ res.push([l, '❌ ' + (e.status === 404 ? 'not created' : admErr(e))]); } }
+  let fn = '✅ ready'; try { await pgrest('rpc/hr_now', { method: 'POST', body: {} }); } catch(e){ fn = '❌ not created'; }
+  res.push(['Server clock (hr_now)', fn]);
+  box.innerHTML = `${table(res, ['Item', 'Status'])}<div class="hrp-h">How to set up (2 minutes)</div><ol class="hrp-muted" style="padding-left:18px;line-height:1.7"><li>Open your Supabase project → <b>SQL Editor</b> → New query.</li><li>Tap <b>Copy SQL</b> below, paste it and press <b>Run</b>.</li><li>Come back here and reopen this tab — every row should show ✅.</li></ol>
+  <div class="hrp-row"><button class="hrp-btn pri" data-ad="sqlcopy">📋 Copy SQL</button><button class="hrp-btn" data-ad="sqldl">⬇ Download .sql</button><button class="hrp-btn" data-ad="setupre">↻ Re-check</button></div>
+  <p class="hrp-muted">Until the SQL is installed: registrations are emailed through Formspree, admin edits are saved only in this browser, and quizzes are visible only to you. The SQL creates the tables, secure row-level policies (only Admins can write) and the server-side deadline check.</p>`;
+};
+adAct.sqlcopy = () => copy(HK_SQL); adAct.sqldl = () => download('supabase-hackathon.sql', HK_SQL, 'text/plain'); adAct.setupre = async () => { await loadEvent(); await loadBank(); adRender(); };
+feat('Admin: Setup tab checks every database table and gives one-click SQL', () => {});
+
+/* ---------- final wiring ---------- */
+ORDER.splice(1, 0, 'admin'); TABS.sort((a, b) => ORDER.indexOf(a[0]) - ORDER.indexOf(b[0]));
+feat('Command palette: hackathon & admin shortcuts', () => {
+  const cm = window.__hrpCmds; if (!cm) return;
+  cm.push(['🚀 Go to Hackathon', 'g k', () => { const t = hkEl('hackathon'); if (t) t.scrollIntoView({ behavior: 'smooth' }); }], ['📚 Browse questions by semester', '', () => { EXS.view = 'browse'; openHub('exam'); }], ['🛡️ Admin console', '', () => { if (isAdminUI()) openHub('admin'); else toast('Log in as an Admin first', 'warn', '🛡️'); }]);
+});
+
 /* ============ INIT ============ */
 feat('Daily visit tracking (streak, night-owl & early-bird badges)', () => {
   const today = ymd(new Date()); if (!G.days.includes(today)) { G.days.push(today); G.days = G.days.slice(-90); store.set('days', G.days); addXP(3); }
   award('early'); if (new Date().getHours() < 5) award('night'); if (streak() >= 3) award('streak3');
 });
-window.HRPlus = { count: F.length, features: F.slice(), open: openHub, qb: QB, decks: DECKS };
+window.HRPlus = { count: F.length, features: F.slice(), open: openHub, qb: QB, decks: DECKS, hb: HB, evState: evState, bank: BK };
 console.info('%cHR+ loaded: ' + F.length + ' features', 'color:#7c5cff;font-weight:bold');
 
 } catch (err) { console.error('[HR+] fatal', err); }
