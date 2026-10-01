@@ -11789,14 +11789,30 @@ async function fetchQuizzes(){
   HQ.list = store.get('hk:lq', []).filter(q => q.published);
 }
 function quizState(q){ const n = nowMs(), o = q.opens_at ? Date.parse(q.opens_at) : 0, c = q.closes_at ? Date.parse(q.closes_at) : 0; return n < o ? 'upcoming' : (c && n >= c) ? 'closed' : 'open'; }
+const needReg = q => !!q.reg_closes_at;
+const regState = q => { const n = nowMs(), o = q.reg_opens_at ? Date.parse(q.reg_opens_at) : 0, c = Date.parse(q.reg_closes_at); return n < o ? 'upcoming' : n >= c ? 'closed' : 'open'; };
+const isReg = q => !!store.get('hk:regq', {})[q.id];
+function regLine(q){ if (!needReg(q)) return ''; const s = regState(q); return `<p class="hrp-muted">📝 Registration: ${q.reg_opens_at ? 'opens ' + fmtIST(Date.parse(q.reg_opens_at)) + ' · ' : ''}closes ${fmtIST(Date.parse(q.reg_closes_at))} · ${s === 'open' ? '🟢 Open' : s === 'upcoming' ? '⏳ Not open yet' : '🔒 Closed'}${isReg(q) ? ' · ✅ You are registered' : ''}</p><p class="hrp-muted">🕒 Exam: ${q.opens_at ? fmtIST(Date.parse(q.opens_at)) : '—'}${q.closes_at ? ' to ' + fmtIST(Date.parse(q.closes_at)) : ''}</p>`; }
+function regBtn(q){ if (!needReg(q)) return ''; const s = regState(q); return `<button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="reg" ${s !== 'open' || isReg(q) ? 'disabled' : ''}>${isReg(q) ? 'Registered ✔' : 'Register'}</button>`; }
+function openQuizReg(q){
+  const m = qzModal(), B = $('#hkQB', m); $('#hkQT', m).textContent = 'Register — ' + q.title; m.classList.add('open'); const me = store.get('hk:me', { name: '', email: '' });
+  B.innerHTML = `<p class="hrp-muted">Registration closes ${fmtIST(Date.parse(q.reg_closes_at))}. Use the same email when you take the exam.</p><input class="hrp-in" id="rgN" placeholder="Full name" value="${esc(me.name)}" maxlength="80" style="margin-bottom:8px"><input class="hrp-in" id="rgE" type="email" placeholder="Email" value="${esc(me.email)}" maxlength="120" style="margin-bottom:8px"><input class="hrp-in" id="rgP" type="tel" placeholder="Phone" maxlength="16" style="margin-bottom:8px"><input class="hrp-in" id="rgC" placeholder="College" maxlength="120"><div class="hk-msg" id="rgM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="rg">Register</button><button class="hrp-btn" data-a="close">Cancel</button></div>`;
+  m.onclick = async e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') { m.classList.remove('open'); return; } if (a.dataset.a !== 'rg') return;
+    const g = id => $(id, m).value.trim(), name = g('#rgN'), email = g('#rgE').toLowerCase(), phone = g('#rgP'), college = g('#rgC'), msg = $('#rgM', m);
+    if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email) || phone.length < 8 || !college) { msg.textContent = 'Fill name, a valid email, phone and college.'; msg.className = 'hk-msg err'; return; }
+    try { await syncTime(); if (regState(q) !== 'open') throw new Error('Registration is not open.');
+      if (HB.remote) await pgrest('rpc/hr_quiz_register', { method: 'POST', body: { p_quiz: q.id, p_name: name, p_email: email, p_phone: phone, p_college: college } });
+      const r = store.get('hk:regq', {}); r[q.id] = email; store.set('hk:regq', r); store.set('hk:me', { name, email }); msg.textContent = 'Registered ✔'; msg.className = 'hk-msg ok'; renderQuizList(); setTimeout(() => m.classList.remove('open'), 900); }
+    catch(err){ msg.textContent = /CLOSED/.test(err.message) ? 'Registration is closed.' : err.message; msg.className = 'hk-msg err'; } };
+}
 async function renderQuizList(){
   const box = hkEl('hkQuizBox'); if (!box) return; await fetchQuizzes(); const b2 = hkEl('hkQuizBox'); if (!b2) return;
   if (!HQ.list.length) { b2.innerHTML = ''; return; }
   const done = store.get('hk:done', {});
-  b2.innerHTML = `<h3 style="margin:22px 0 8px">📝 Hackathon quizzes</h3><div class="hk-quizzes">${HQ.list.map(q => { const s = quizState(q), d = done[q.id];
+  b2.innerHTML = `<h3 style="margin:22px 0 8px">📝 Exams &amp; papers — registration and schedule</h3><div class="hk-quizzes">${HQ.list.map(q => { const s = quizState(q), d = done[q.id];
     return `<div class="hk-card"><b>${esc(q.title)}</b><p class="hk-sub">${esc(q.description || '')}</p><p class="hrp-muted">${q.duration_min} min · ${s === 'open' ? '🟢 Open' : s === 'upcoming' ? '⏳ Opens ' + fmtIST(Date.parse(q.opens_at)) : '🔒 Closed'}${d ? ` · Your score ${d.score}/${d.max}` : ''}</p>
-    <div class="hrp-row"><button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button></div></div>`; }).join('')}</div>`;
-  b2.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const q = HQ.list.find(x => x.id === b.dataset.q); if (q) (b.dataset.a === 'start' ? openQuiz(q) : openBoard(q)); };
+    ${regLine(q)}<div class="hrp-row">${regBtn(q)}<button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button></div></div>`; }).join('')}</div>`;
+  b2.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const q = HQ.list.find(x => x.id === b.dataset.q); if (q) (b.dataset.a === 'start' ? openQuiz(q) : b.dataset.a === 'reg' ? openQuizReg(q) : openBoard(q)); };
 }
 let qzEl = null;
 function qzModal(){ if (!qzEl) { qzEl = el('div', { class: 'hrp-bg', id: 'hkQuizBg', role: 'dialog', 'aria-modal': 'true', 'data-noesc': '1' }, '<div class="hrp-modal"><div class="hrp-head"><h3 id="hkQT">Quiz</h3><button class="hrp-x" type="button" aria-label="Close" data-a="close">✕</button></div><div class="hrp-body" id="hkQB"></div></div>'); document.body.appendChild(qzEl); }
@@ -11807,6 +11823,7 @@ async function openQuiz(q){
   m.onclick = async e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') { if (HQ.cur && !confirm('Leave the quiz? Your answers will be lost.')) return; clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); return; }
     if (a.dataset.a === 'go') { const name = $('#hqN', m).value.trim(), email = $('#hqE', m).value.trim().toLowerCase(), msg = $('#hqM', m); if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) { msg.textContent = 'Enter your name and a valid email.'; msg.className = 'hk-msg err'; return; }
       store.set('hk:me', { name, email }); await syncTime(); if (quizState(q) !== 'open') { msg.textContent = 'This quiz is not open right now.'; msg.className = 'hk-msg err'; return; }
+      if (needReg(q) && HB.remote) { let ok = true; try { ok = await pgrest('rpc/hr_quiz_registered', { method: 'POST', body: { p_quiz: q.id, p_email: email } }); } catch(_){} if (ok === false) { msg.textContent = 'This email is not registered for this exam.'; msg.className = 'hk-msg err'; return; } }
       try { const qs = await quizQuestions(q); if (!qs.length) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
 }
 async function quizQuestions(q){
@@ -11828,7 +11845,7 @@ function runQuiz(q, qs, name, email){
 async function submitAttempt(q, qs, ans, name, email, secs){
   if (HB.remote) {
     try { return await pgrest('rpc/hr_submit_attempt', { method: 'POST', body: { p_quiz: q.id, p_email: email, p_name: name, p_answers: ans, p_secs: secs } }); }
-    catch(e){ if (/ALREADY_SUBMITTED|duplicate|unique/i.test(e.message)) throw new Error('This email has already submitted this quiz.'); if (/QUIZ_CLOSED/.test(e.message)) throw new Error('The quiz has closed.'); throw new Error(e.message || 'Could not submit'); }
+    catch(e){ if (/ALREADY_SUBMITTED|duplicate|unique/i.test(e.message)) throw new Error('This email has already submitted this quiz.'); if (/QUIZ_CLOSED/.test(e.message)) throw new Error('The quiz has closed.'); if (/NOT_REGISTERED/.test(e.message)) throw new Error('This email is not registered for this exam.'); throw new Error(e.message || 'Could not submit'); }
   }
   const keys = store.get('hk:lqq:' + q.id, []); let score = 0, max = 0, correct = 0; const review = [];
   keys.forEach(k => { max += k.points || 1; const ok = ans[k.id] === k.answer; if (ok) { score += k.points || 1; correct++; } review.push({ id: k.id, answer: k.answer, explanation: k.explanation || '' }); });
@@ -11864,7 +11881,7 @@ function applyBank(rows){
 }
 async function loadBank(){
   let rows = [];
-  try { rows = await pgrest('hr_bank?select=*&order=updated_at'); BK.remote = true; } catch(e){ BK.remote = false; rows = store.get('bankLocal', []); }
+  try { rows = await (async () => { let a = [], o = 0; for (;;) { const r = await pgrest('hr_bank?select=*&order=updated_at,id&limit=1000&offset=' + o); a = a.concat(r || []); if (!r || r.length < 1000) break; o += 1000; } return a; })(); BK.remote = true; } catch(e){ BK.remote = false; rows = store.get('bankLocal', []); }
   BK.rows = rows || []; applyBank(BK.rows); if (EXS.c && EXS.c.isConnected && ['home', 'setup', 'browse', 'stats'].includes(EXS.view)) exDraw();
 }
 feat('Question bank loads admin edits, additions and deletions from the database', () => {});
@@ -11970,8 +11987,8 @@ ADV.quiz = async box => {
   if (AD.qz && AD.qz.mode === 'results') return adQuizResults(box);
   box.innerHTML = '<p class="hrp-muted">Loading…</p>';
   try { const list = await QZ.list(); AD.qzList = list;
-    box.innerHTML = `<div class="hrp-row"><button class="hrp-btn pri" data-ad="qnew">➕ New quiz</button></div>${list.map(q => `<div class="hrp-card" style="margin:8px 0"><b>${esc(q.title)}</b> ${q.published ? '<span class="hk-pill ok">published</span>' : '<span class="hk-pill">draft</span>'}<div class="hrp-muted">${q.duration_min} min${q.opens_at ? ' · opens ' + new Date(q.opens_at).toLocaleString() : ''}${q.closes_at ? ' · closes ' + new Date(q.closes_at).toLocaleString() : ''}</div>
-    <div class="hrp-row" style="margin:8px 0 0"><button class="hrp-mini" data-ad="qopen" data-id="${esc(q.id)}">✏️ Edit & questions</button><button class="hrp-mini" data-ad="qpub" data-id="${esc(q.id)}">${q.published ? 'Unpublish' : 'Publish'}</button><button class="hrp-mini" data-ad="qres" data-id="${esc(q.id)}">📊 Results</button><button class="hrp-mini" data-ad="qdel" data-id="${esc(q.id)}">🗑 Delete</button></div></div>`).join('') || '<p class="hrp-muted">No quizzes yet. Click “New quiz” to create one for your hackathon.</p>'}`; }
+    box.innerHTML = `<div class="hrp-row"><button class="hrp-btn pri" data-ad="qnew">➕ New quiz</button></div>${list.map(q => `<div class="hrp-card" style="margin:8px 0"><b>${esc(q.title)}</b> ${q.published ? '<span class="hk-pill ok">published</span>' : '<span class="hk-pill">draft</span>'}<div class="hrp-muted">${q.duration_min} min${q.opens_at ? ' · opens ' + new Date(q.opens_at).toLocaleString() : ''}${q.closes_at ? ' · closes ' + new Date(q.closes_at).toLocaleString() : ''}${q.reg_closes_at ? ' · registration ' + (q.reg_opens_at ? new Date(q.reg_opens_at).toLocaleString() + ' → ' : 'until ') + new Date(q.reg_closes_at).toLocaleString() : ''}</div>
+    <div class="hrp-row" style="margin:8px 0 0"><button class="hrp-mini" data-ad="qopen" data-id="${esc(q.id)}">✏️ Edit & questions</button><button class="hrp-mini" data-ad="qpub" data-id="${esc(q.id)}">${q.published ? 'Unpublish' : 'Publish'}</button><button class="hrp-mini" data-ad="qres" data-id="${esc(q.id)}">📊 Results</button><button class="hrp-mini" data-ad="qregs" data-id="${esc(q.id)}">📋 Registrations CSV</button><button class="hrp-mini" data-ad="qdel" data-id="${esc(q.id)}">🗑 Delete</button></div></div>`).join('') || '<p class="hrp-muted">No quizzes yet. Click “New quiz” to create one for your hackathon.</p>'}`; }
   catch(e){ box.innerHTML = `<p class="hrp-muted">❌ ${esc(admErr(e))}</p>`; }
 };
 adAct.qnew = () => { AD.qz = { mode: 'edit', quiz: { id: uid(), title: '', description: '', duration_min: 30, opens_at: null, closes_at: null, published: false, isNew: true }, qs: [], editQ: null }; adRender(); };
@@ -11993,6 +12010,7 @@ function adQuizEditor(box){
   box.innerHTML = `<div class="hrp-row"><button class="hrp-tab" data-ad="qback">← Quizzes</button><b>${quiz.isNew ? 'New quiz' : 'Edit quiz'}</b></div>
   <input class="hrp-in" id="aqTitle" placeholder="Quiz title" value="${esc(quiz.title)}" maxlength="120" style="margin-bottom:8px"><textarea class="hrp-ta" id="aqDesc" style="min-height:60px;font-family:inherit" placeholder="Short description / instructions">${esc(quiz.description || '')}</textarea>
   <div class="hrp-row"><label>Duration (min) <input class="hrp-in" id="aqDur" type="number" min="1" max="600" value="${quiz.duration_min}" style="width:90px"></label><label>Opens <input class="hrp-in" id="aqOp" type="datetime-local" value="${quiz.opens_at ? localInput(new Date(quiz.opens_at)) : ''}" style="width:auto"></label><label>Closes <input class="hrp-in" id="aqCl" type="datetime-local" value="${quiz.closes_at ? localInput(new Date(quiz.closes_at)) : ''}" style="width:auto"></label></div>
+  <div class="hrp-row"><label>Registration opens <input class="hrp-in" id="aqRo" type="datetime-local" value="${quiz.reg_opens_at ? localInput(new Date(quiz.reg_opens_at)) : ''}" style="width:auto"></label><label>Registration closes <input class="hrp-in" id="aqRc" type="datetime-local" value="${quiz.reg_closes_at ? localInput(new Date(quiz.reg_closes_at)) : ''}" style="width:auto"></label></div><p class="hrp-muted">Leave both empty if no registration is needed. Exam can only be taken by registered emails when a registration deadline is set.</p>
   <label class="hrp-check"><input type="checkbox" id="aqPub" ${quiz.published ? 'checked' : ''}><span>Published (visible to participants inside its open window)</span></label><div class="hk-msg" id="aqMsg"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="qsave">Save quiz</button></div>
   <div class="hrp-h">Questions (${qs.length})</div><div class="hrp-row"><button class="hrp-btn" data-ad="qqnew">➕ Add question</button><button class="hrp-btn" data-ad="qqimp">⬆ Bulk import</button></div>${form}
   ${qs.map((x, i) => `<div class="hrp-card" style="margin:8px 0"><b>${i + 1}. ${esc(x.text)}</b><div class="hrp-muted">${(x.options || []).map((o, k) => (k === x.answer ? '✅ ' : '') + 'ABCD'[k] + ') ' + esc(o)).join('  ·  ')} · ${x.points} pt</div><div class="hrp-row" style="margin:6px 0 0"><button class="hrp-mini" data-ad="qqedit" data-id="${esc(x.id)}">Edit</button><button class="hrp-mini" data-ad="qqdel" data-id="${esc(x.id)}">Delete</button></div></div>`).join('')}
@@ -12001,7 +12019,9 @@ function adQuizEditor(box){
 }
 adAct.qsave = async () => { const c = AD.c, m = $('#aqMsg', c), q = AD.qz.quiz; const t = $('#aqTitle', c).value.trim(); if (!t) { m.textContent = 'Give the quiz a title.'; m.className = 'hk-msg err'; return; }
   const op = $('#aqOp', c).value, cl = $('#aqCl', c).value; const o = { id: q.id, title: t, description: $('#aqDesc', c).value.trim(), duration_min: Math.min(600, Math.max(1, +$('#aqDur', c).value || 30)), opens_at: op ? new Date(op).toISOString() : null, closes_at: cl ? new Date(cl).toISOString() : null, published: $('#aqPub', c).checked };
+  { const ro = $('#aqRo', c).value, rc = $('#aqRc', c).value; if (ro || rc || q.reg_opens_at || q.reg_closes_at) { o.reg_opens_at = ro ? new Date(ro).toISOString() : null; o.reg_closes_at = rc ? new Date(rc).toISOString() : null; } }
   try { await QZ.save(o); AD.qz.quiz = { ...o }; renderQuizList(); m.textContent = 'Quiz saved ✔ — now add questions below.'; m.className = 'hk-msg ok'; } catch(e){ m.textContent = admErr(e); m.className = 'hk-msg err'; } };
+adAct.qregs = async b => { try { const rows = await pgrest('hr_quiz_regs?quiz_id=eq.' + encodeURIComponent(b.dataset.id) + '&select=name,email,phone,college,created_at&order=created_at'); download('exam-registrations.csv', toCSV([['name', 'email', 'phone', 'college', 'registered_at'], ...rows.map(r => [r.name, r.email, r.phone, r.college, r.created_at])]), 'text/csv'); toast(rows.length + ' registration(s) exported', 'success', '⬇'); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 adAct.qqnew = () => { AD.qz.editQ = { id: uid(), text: '', options: ['', '', '', ''], answer: 0, points: 1, explanation: '', isNew: true }; adRender(); };
 adAct.qqedit = b => { AD.qz.editQ = { ...AD.qz.qs.find(x => x.id === b.dataset.id) }; adRender(); };
 adAct.qqcancel = () => { AD.qz.editQ = null; adRender(); };
@@ -12153,15 +12173,15 @@ const toast=(m,t,i)=>window.showToast?window.showToast(m,t||'info',i||'ℹ️'):
 const SQL=`create table if not exists public.site_content(k text primary key, v jsonb not null, updated_at timestamptz default now());
 alter table public.site_content enable row level security;
 drop policy if exists sc_read on public.site_content;
-create policy sc_read on public.site_content for select using (k in ('brand','notice') or k like 'person:%' or auth.uid() is not null);
+create policy sc_read on public.site_content for select using (k in ('brand','notice') or k like 'person:%' or k like 'res:%' or k like 'resdata:%' or auth.uid() is not null);
 drop policy if exists sc_write on public.site_content;
 create policy sc_write on public.site_content for all using (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='Admin')) with check (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='Admin'));`;
 let U=null,C={},dbOk=true,flag=false,cur='dashboard';
 const lsGet=()=>{try{return JSON.parse(localStorage.getItem('ptc')||'{}')}catch(e){return {}}};
 async function loadC(all){
   C=lsGet();
-  let q=SB.from('site_content').select('k,v');
-  if(!all)q=q.or('k.eq.brand,k.eq.notice,k.like.person:%');
+  let q=SB.from('site_content').select('k,v').not('k','like','resdata:%');
+  if(!all)q=q.or('k.eq.brand,k.eq.notice,k.like.person:%,k.like.res:%');
   const {data,error}=await q;
   if(error){dbOk=false;return}
   dbOk=true;data.forEach(r=>C[r.k]=r.v);
@@ -12192,6 +12212,9 @@ function applyBrand(){
   let nb=$('#siteNotice');const n=C.notice;
   if(n&&n.on&&n.text){if(!nb){nb=document.createElement('div');nb.id='siteNotice';document.body.prepend(nb)}nb.textContent='📢 '+n.text}else if(nb)nb.remove();
   const pl=$('.pt-side .logo');if(pl)pl.innerHTML=(b.logo?`<img src="${b.logo}">`:'<span class="logo-mark">HR</span>')+' '+h(b.name||'Hackathon Rivals');
+  RES.forEach(([id,,label])=>$$('a').forEach(a=>{if(a.closest('#portal')||a.textContent.trim().replace(/\s*→$/,'')!==label)return;
+    const r=C['res:'+id];a.style.display=r?'':'none';
+    if(r){a.href='#';a.onclick=async e=>{e.preventDefault();const {data,error}=await SB.from('site_content').select('v').eq('k','resdata:'+id).maybeSingle();if(error||!data)return toast('File not available','warn','⚠️');openData(data.v.data,r.name,1)}}}));
   const ppl=list('person:');let s=$('#team');
   if(!ppl.length){if(s)s.remove();$('#navTeam')?.remove();return}
   if(!s){s=document.createElement('section');s.className='sec team-sec';s.id='team';$('#contact').before(s);
@@ -12200,21 +12223,23 @@ function applyBrand(){
   s.innerHTML=`<div class="wrap"><div class="sec-head"><span class="eyebrow">Our Team</span><h2>Founders &amp; Organisers</h2></div>${grp('founder','Founders')}${grp('organiser','Organisers')}</div>`;
 }
 /* ---------- portal shell ---------- */
-const PAGES=[['dashboard','📊','Dashboard'],['arena','⚔️','Code Arena'],['register','📝','Registrations'],['papers','📄','Question Papers'],['admin','🛡️','Admin Console',1],['hack','🚀','Hackathon & Quizzes',1],['content','🎛️','Site Content',1]];
+const RES=[['guidelines','Guidelines','Guidelines'],['ppt','PPT Template','PPT Template'],['brochure','Brochure','Download brochure']];
+const PAGES=[['dashboard','📊','Dashboard'],['practice','🗂️','Practice Bank'],['profile','👤','My Profile'],['arena','⚔️','Code Arena'],['register','📝','Registrations'],['papers','📄','Question Papers'],['admin','🛡️','Admin Console',1],['hack','🚀','Hackathon & Quizzes',1],['content','🎛️','Site Content',1]];
 function build(){
   const p=document.createElement('div');p.id='portal';
-  p.innerHTML=`<aside class="pt-side"><a class="logo" href="#"></a>${PAGES.map(([id,i,l,a])=>`<button class="pt-nav" data-p="${id}" ${a?'data-admin="1"':''}><span>${i}</span>${l}</button>`).join('')}<div class="pt-sep"></div><button class="pt-nav" id="ptHome"><span>🏠</span>Back to website</button><button class="pt-nav" id="ptOut"><span>🚪</span>Log out</button><div class="pt-me" id="ptMe"></div></aside><div class="pt-main"><div class="pt-wrap" id="ptPanes"></div></div>`;
+  p.innerHTML=`<aside class="pt-side"><a class="logo" href="#"></a>${PAGES.map(([id,i,l,a])=>`<button class="pt-nav" data-p="${id}" ${a?'data-admin="1"':''}><span>${i}</span>${l}</button>`).join('')}<div class="pt-sep"></div><button class="pt-nav" id="ptHome"><span>🏠</span>Back to website</button><button class="pt-nav" id="ptTheme"><span>🌗</span>Switch theme</button><button class="pt-nav" id="ptOut"><span>🚪</span>Log out</button><div class="pt-me" id="ptMe"></div></aside><div class="pt-main"><div class="pt-wrap" id="ptPanes"></div></div>`;
   document.body.appendChild(p);
   const P=$('#ptPanes');
   PAGES.forEach(([id])=>{const d=document.createElement('div');d.className='pp';d.dataset.page=id;P.appendChild(d)});
   ['arena','register','admin'].forEach(id=>{const s=$('#'+id);if(s)$(`.pp[data-page=${id}]`).appendChild(s)});
   $$('.pt-nav[data-p]').forEach(b=>b.onclick=()=>go(b.dataset.p));
   $('#ptHome').onclick=()=>{location.hash=''};
+  $('#ptTheme').onclick=()=>$('#themeToggle')?.click();
   $('#ptOut').onclick=()=>{const b=$('#ddLogout');b?b.click():SB.auth.signOut()};
   const adm=$$('.admin-hidden');
   const tabs=$('#admin .tabs');if(tabs){const b=document.createElement('button');b.className='tab';b.textContent='🎛️ Site Content';b.onclick=()=>go('content');tabs.appendChild(b);const c=document.createElement('button');c.className='tab';c.textContent='🚀 Hackathon & Quizzes';c.onclick=()=>go('hack');tabs.appendChild(c)}
 }
-const go=p=>{if(!U){toast('Please log in first','info','🔐');$('#loginBtn')?.click();return}location.hash='#/app/'+p};
+const go=p=>{if(p==='practice'&&U){try{localStorage.setItem('hrp:lastTab','"exam"')}catch(e){}$('#hrpHubBtn')?.click();return}if(!U){toast('Please log in first','info','🔐');$('#loginBtn')?.click();return}location.hash='#/app/'+p};
 async function show(p){
   const admin=U.role==='Admin';
   if(!PAGES.some(x=>x[0]===p)||((p==='admin'||p==='content'||p==='hack')&&!admin))p='dashboard';
@@ -12225,7 +12250,7 @@ async function show(p){
   $('#ptMe').innerHTML=`<b>${h(U.name)}</b>${h(U.email)}<br>${h(U.role)}`;
   const pane=$(`.pp[data-page=${p}]`);$$('.reveal',pane).forEach(e=>{e.style.opacity=1;e.style.transform='none'});
   if(p==='admin'){const a=$('#admin');a.style.display='';}
-  if(['papers','content','dashboard','hack'].includes(p)){await loadC(true);applyBrand();({dashboard,papers,content,hack}[p])(pane)}
+  if(['papers','content','dashboard','hack','profile'].includes(p)){await loadC(true);applyBrand();({dashboard,papers,content,hack,profile}[p])(pane)}
   if(p==='admin'&&window.__hrLoadAdmin)window.__hrLoadAdmin();
   $('.pt-main').scrollTop=0;
 }
@@ -12247,6 +12272,17 @@ function papers(el){
   $$('[data-v]',el).forEach(b=>b.onclick=()=>{const p=C[b.dataset.v];openData(p.data,p.name)});
   $$('[data-d]',el).forEach(b=>b.onclick=()=>{const p=C[b.dataset.d];openData(p.data,p.name,1)});
 }
+async function profile(el){
+  const {data:{user}}=await SB.auth.getUser();const {data:p}=await SB.from('profiles').select('*').eq('id',user.id).maybeSingle();
+  el.innerHTML=`<h2 class="pt-h">👤 My Profile</h2><p class="pt-sub">${h(U.email)} · Role: ${h(U.role)}</p>
+  <div class="pt-card"><h4>Details</h4><div class="row"><input type="text" id="pfName" placeholder="Full name" value="${h(p?.full_name||U.name)}"><input type="text" id="pfCol" placeholder="College / Institute" value="${h(p?.college||'')}"></div><div class="row"><button class="btn btn-primary" id="pfSave">Save changes</button></div></div>
+  <div class="pt-card"><h4>Change password</h4><div class="row"><input type="password" id="pfP1" placeholder="New password (min 8 chars)" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;flex:1"><input type="password" id="pfP2" placeholder="Confirm password" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;flex:1"></div><div class="row"><button class="btn btn-ghost" id="pfPw">Update password</button></div></div>`;
+  $('#pfSave',el).onclick=async()=>{const n=$('#pfName',el).value.trim(),c=$('#pfCol',el).value.trim();if(!n)return toast('Name required','warn','⚠️');
+    const {error}=await SB.from('profiles').update({full_name:n,college:c}).eq('id',user.id);
+    if(error){await SB.auth.updateUser({data:{full_name:n,college:c}});toast('Saved to your account','success','✅')}else toast('Profile updated','success','✅');U.name=n;$('#ptMe').innerHTML=`<b>${h(n)}</b>${h(U.email)}<br>${h(U.role)}`};
+  $('#pfPw',el).onclick=async()=>{const a=$('#pfP1',el).value;if(a.length<8)return toast('Use at least 8 characters','warn','⚠️');if(a!==$('#pfP2',el).value)return toast('Passwords do not match','warn','⚠️');
+    const {error}=await SB.auth.updateUser({password:a});error?toast(error.message,'warn','⚠️'):(toast('Password updated','success','🔒'),$('#pfP1',el).value=$('#pfP2',el).value='')};
+}
 function hack(el){
   el.innerHTML='<h2 class="pt-h">🚀 Hackathon &amp; Quizzes</h2><p class="pt-sub">Edit hackathon timing, registrations, upload / edit and the question bank.</p><div class="pt-card" id="hkMount"></div>';
   if(window.__hrMountAdmin)window.__hrMountAdmin($('#hkMount',el));else $('#hkMount',el).textContent='Loading… refresh the page if this stays empty.';
@@ -12257,6 +12293,7 @@ function content(el){
   el.innerHTML=`<h2 class="pt-h">🎛️ Site Content</h2><p class="pt-sub">Logo, founders, organisers, question papers — manage everything here, no code changes needed.</p>
   ${dbOk?'':`<div class="pt-warn">⚠️ One-time setup: run this SQL in Supabase → SQL Editor so uploads are saved for everyone. <button class="btn btn-ghost" id="cpSql">Copy SQL</button></div>`}
   <div class="pt-card"><h4>📢 Announcement bar</h4><div class="row"><input type="text" id="nTxt" placeholder="e.g. Registrations close on 30 April!" value="${h((C.notice||{}).text||'')}"><label><input type="checkbox" id="nOn" ${(C.notice||{}).on?'checked':''}> Show</label><button class="btn btn-primary" id="nSave">Save</button></div></div>
+<div class="pt-card"><h4>📎 Downloads (footer links &amp; brochure button)</h4><p class="pt-sub" style="margin:0 0 6px;font-size:12.5px">A link shows on the website only after you upload its file. Max 4 MB.</p>${RES.map(([id,l])=>{const r=C['res:'+id];return `<div class="pt-item"><div class="g"><b>${l}</b><small>${r?'✅ '+h(r.name):'Not uploaded — hidden on website'}</small></div><input type="file" id="rf_${id}"><button class="btn btn-primary" data-ru="${id}">Upload</button>${r?`<button class="btn btn-ghost" data-rd="${id}">Remove</button>`:''}</div>`}).join('')}</div>
   <div class="pt-card"><h4>🖼️ Logo &amp; site name</h4>${b.logo?`<img src="${b.logo}" style="height:50px;margin-bottom:8px">`:''}<div class="row"><input type="text" id="bName" placeholder="Site name" value="${h(b.name||'Hackathon Rivals')}"><input type="file" id="bLogo" accept="image/*"></div><div class="row"><button class="btn btn-primary" id="bSave">Save</button>${b.logo?'<button class="btn btn-ghost" id="bRm">Remove logo</button>':''}</div></div>
   <div class="pt-card"><h4>👤 Founders &amp; Organisers</h4><div class="row"><select id="pType"><option value="founder">Founder</option><option value="organiser">Organiser</option></select><input type="text" id="pName" placeholder="Name"><input type="text" id="pRole" placeholder="Title / role"></div><div class="row"><input type="text" id="pBio" placeholder="Short bio"><input type="text" id="pLink" placeholder="LinkedIn / website (optional)"><input type="file" id="pPhoto" accept="image/*"></div><div class="row"><button class="btn btn-primary" id="pAdd">+ Add</button></div>${ppl.map(p=>row(p.k,p.name,p.type+' · '+(p.role||''),p.photo)).join('')}</div>
   <div class="pt-card"><h4>📄 Question papers</h4><div class="row"><input type="text" id="qpTitle" placeholder="Title"><input type="text" id="qpSub" placeholder="Subject"><input type="text" id="qpYear" placeholder="Year"></div><div class="row"><input type="file" id="qpFile" accept=".pdf,image/*,.doc,.docx"><button class="btn btn-primary" id="qpAdd">Upload</button></div>${pp.map(p=>row(p.k,p.title,(p.subject||'')+' '+(p.year||''))).join('')}</div>`;
@@ -12265,6 +12302,8 @@ function content(el){
   on('bSave',async()=>{const f=$('#bLogo',el).files[0];await put('brand',{name:$('#bName',el).value.trim(),logo:f?await shrink(f,400):b.logo});re();toast('Branding saved','success','✅')});
   on('nSave',async()=>{await put('notice',{text:$('#nTxt',el).value.trim(),on:$('#nOn',el).checked});re();toast('Announcement saved','success','✅')});
   $$('[data-mv]',el).forEach(x=>x.onclick=async()=>{const [k,d]=[x.dataset.mv.slice(0,x.dataset.mv.lastIndexOf(':')),+x.dataset.mv.split(':').pop()];const s=ppl.filter(p=>p.type===C[k].type).sort((a,b)=>(a.ord||0)-(b.ord||0)),i=s.findIndex(p=>p.k===k),o=s[i+d];if(!o)return;const a=C[k].ord||0,b=C[o.k].ord||0;await put(k,{...C[k],ord:b});await put(o.k,{...C[o.k],ord:a});re()});
+  $$('[data-ru]',el).forEach(x=>x.onclick=async()=>{try{const id=x.dataset.ru,f=$('#rf_'+id,el).files[0];if(!f)throw 'Choose a file first';const d=await readFile(f,4e6);if(!(await put('resdata:'+id,{data:d})))return;await put('res:'+id,{name:f.name,t:Date.now()});re();toast('Uploaded','success','✅')}catch(e){toast(String(e.message||e),'warn','⚠️')}});
+  $$('[data-rd]',el).forEach(x=>x.onclick=async()=>{await del('res:'+x.dataset.rd);await del('resdata:'+x.dataset.rd);re()});
   on('bRm',async()=>{await put('brand',{name:b.name});re()});
   on('pAdd',async()=>{const n=$('#pName',el).value.trim();if(!n)throw 'Name required';const f=$('#pPhoto',el).files[0];await put('person:'+Date.now(),{type:$('#pType',el).value,name:n,role:$('#pRole',el).value,bio:$('#pBio',el).value,link:$('#pLink',el).value,photo:f?await shrink(f,360):'',ord:Date.now()});re()});
   on('qpAdd',async()=>{const f=$('#qpFile',el).files[0],t=$('#qpTitle',el).value.trim();if(!t)throw 'Title required';await put('paper:'+Date.now(),{title:t,subject:$('#qpSub',el).value,year:$('#qpYear',el).value,name:f.name,data:await readFile(f,4e6),t:Date.now()});re();toast('Uploaded','success','✅')});
