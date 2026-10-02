@@ -1107,6 +1107,36 @@
     margin-bottom:14px;display:none;align-items:center;gap:8px}
   .login-error.show{display:flex}
 
+  /* ===== LOGIN CHARACTER ===== */
+  .login-stage{position:relative;width:100%;max-width:440px}
+  .login-stage .login-modal{width:100%}
+  .login-char{position:absolute;left:-132px;bottom:0;width:172px;height:317px;
+    pointer-events:none;z-index:5;animation:charIn .6s cubic-bezier(.2,.9,.3,1.2) .15s both}
+  .login-char::after{content:'';position:absolute;left:18px;right:6px;bottom:-4px;height:10px;
+    border-radius:50%;background:rgba(0,0,0,.45);filter:blur(5px);z-index:-1}
+  .login-char svg{width:100%;height:100%;overflow:visible;animation:charBob 3.6s ease-in-out infinite}
+  .login-char .hd{transition:transform .25s ease-out;transform-origin:60px 70px}
+  .login-char .arm{transition:transform .5s cubic-bezier(.3,1.35,.5,1)}
+  .login-char .arm-l{transform-origin:35px 90px}
+  .login-char .arm-r{transform-origin:85px 90px}
+  .login-stage.cover .arm-l{transform:rotate(-162deg)}
+  .login-stage.cover .arm-r{transform:rotate(161deg)}
+  .login-stage.cover.peek .arm-r{transform:rotate(118deg)}
+  .login-char .sh.shake{animation:charShake .5s ease}
+  @keyframes charBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  @keyframes charIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+  @keyframes charInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+  @keyframes charShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+  @media (max-width:759px){
+    .login-stage{margin-top:78px}
+    .login-stage .login-modal{max-height:calc(94vh - 90px)}
+    .login-char{left:auto;right:22px;bottom:auto;top:-76px;width:96px;height:76px;
+      overflow:hidden;animation:charInUp .6s cubic-bezier(.2,.9,.3,1.2) .15s both}
+    .login-char::after{display:none}
+    .login-char svg{height:189px}
+  }
+
+
   .modal-bg{position:fixed;inset:0;background:rgba(5,6,10,.8);backdrop-filter:blur(8px);
     z-index:200;display:none;align-items:center;justify-content:center;padding:24px}
   .modal-bg.open{display:flex;animation:fadeIn .25s ease}
@@ -3280,6 +3310,41 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 
 <!-- LOGIN MODAL -->
 <div class="login-modal-bg" id="loginModal">
+  <div class="login-stage">
+    <div class="login-char" aria-hidden="true">
+        <svg viewBox="0 0 120 236" xmlns="http://www.w3.org/2000/svg">
+          <!-- legs -->
+          <rect x="44" y="136" width="15" height="76" rx="5" fill="#8a8680"/>
+          <rect x="62" y="136" width="15" height="76" rx="5" fill="#7d7973"/>
+          <ellipse cx="50" cy="216" rx="11" ry="6" fill="#26262c"/>
+          <ellipse cx="70" cy="216" rx="11" ry="6" fill="#26262c"/>
+          <!-- blazer -->
+          <path d="M36 86C36 80 46 77 54 77L66 77C74 77 84 80 84 86L88 142L32 142Z" fill="#7a1f2b"/>
+          <path d="M52 77L60 104L68 77Z" fill="#f4f1ee"/>
+          <path d="M60 104L56 142M60 104L64 142" stroke="#5c1620" stroke-width="1.5" fill="none"/>
+          <!-- neck + head -->
+          <rect x="54" y="64" width="12" height="16" rx="4" fill="#e3b189"/>
+          <g class="sh"><g class="hd">
+            <path d="M36 50C32 22 50 12 62 14C82 14 92 30 85 58L90 90C80 84 75 80 73 70L47 70C45 80 40 84 30 90Z" fill="#e6c36a"/>
+            <ellipse cx="60" cy="48" rx="19" ry="22" fill="#f2c6a0"/>
+            <path d="M39 42C38 24 56 18 66 21C82 24 83 38 81 46C75 35 62 31 50 35C45 37 41 41 39 42Z" fill="#e6c36a"/>
+            <rect x="42" y="42" width="16" height="11" rx="5" fill="#16161d"/>
+            <rect x="62" y="42" width="16" height="11" rx="5" fill="#16161d"/>
+            <path d="M58 46H62" stroke="#16161d" stroke-width="2"/>
+            <path d="M45 45L50 45M65 45L70 45" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>
+            <path d="M54 61Q60 66 66 61" stroke="#b5524b" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </g></g>
+          <!-- arms (in front so hands can cover the face) -->
+          <g class="arm arm-l">
+            <rect x="29" y="84" width="12" height="52" rx="6" fill="#7a1f2b"/>
+            <circle cx="35" cy="138" r="8" fill="#f2c6a0"/>
+          </g>
+          <g class="arm arm-r">
+            <rect x="79" y="84" width="12" height="52" rx="6" fill="#7a1f2b"/>
+            <circle cx="85" cy="138" r="8" fill="#f2c6a0"/>
+          </g>
+        </svg>
+      </div>
   <div class="login-modal" role="dialog" aria-modal="true">
     <div class="login-head">
       <div>
@@ -3391,6 +3456,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
         <a id="authSwitchLink">Create one →</a>
       </div>
     </div>
+  </div>
   </div>
 </div>
 
@@ -11642,7 +11708,7 @@ Object.assign(EXACT, {
 const HK_URL = 'https://awvcorswnzbxsrrzepto.supabase.co', HK_KEY = 'sb_publishable_6GqdbyBWEX7cIkTzcp9yvw_WYNp5GJh', HK_FORM = 'https://formspree.io/f/mppwlbwq';
 const HK_DEFAULT = { id: 'main', name: 'Hackathon Rivals — Live Hackathon', starts_at: '2026-10-01T18:00:00+05:30', reg_closes_at: '2026-10-01T18:00:00+05:30', ends_at: null, reg_open: true, lock_main: true, message: 'Team up, pick a problem and build something great. Register before the countdown hits zero.' };
 const HB = { remote: false, checked: false, off: 0, tsrc: 'device clock', ev: { ...HK_DEFAULT }, lastReg: null, lastPhase: null, rt: 0 };
-function sbToken(){ try { const ref = new URL(HK_URL).hostname.split('.')[0]; const j = JSON.parse(localStorage.getItem('hr-auth-awvcorsw') || localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return j && (j.access_token || (j.currentSession && j.currentSession.access_token)) || null; } catch(e){ return null; } }
+function sbToken(){ try { const ref = new URL(HK_URL).hostname.split('.')[0]; const j = JSON.parse(localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return j && (j.access_token || (j.currentSession && j.currentSession.access_token)) || null; } catch(e){ return null; } }
 async function pgrest(path, o = {}){
   const tok = sbToken(); const h = { apikey: HK_KEY, 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}), ...(o.headers || {}) };
   const r = await fetch(HK_URL + '/rest/v1/' + path, { method: o.method || 'GET', headers: h, body: o.body !== undefined ? JSON.stringify(o.body) : undefined });
@@ -12339,6 +12405,70 @@ Element.prototype.scrollIntoView=function(o){const p=this.closest&&this.closest(
     if(ev==='SIGNED_IN'&&flag){flag=false;location.hash=U.role==='Admin'?'#/app/admin':'#/app/dashboard'}
   });
 })();
+})();
+</script>
+
+<script>
+/* ===== LOGIN CHARACTER: follows cursor / typing, covers eyes on password ===== */
+(function(){
+  const modal = document.getElementById('loginModal');
+  if(!modal) return;
+  const stage = modal.querySelector('.login-stage');
+  const char  = stage.querySelector('.login-char');
+  const head  = char.querySelector('.hd');
+  const shake = char.querySelector('.sh');
+  const pw    = document.getElementById('loginPassword');
+  const err   = document.getElementById('loginError');
+  const clamp = (v) => Math.max(-1, Math.min(1, v));
+
+  function lookAt(x, y){
+    const r = char.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + Math.min(r.height, 120) * 0.35;
+    const dx = clamp((x - cx) / 280), dy = clamp((y - cy) / 280);
+    head.style.transform = 'translate(' + (dx*4).toFixed(1) + 'px,' + (dy*2.5).toFixed(1) + 'px) rotate(' + (dx*7).toFixed(1) + 'deg)';
+  }
+  function lookAtInput(el){
+    const r = el.getBoundingClientRect();
+    const textW = Math.min(r.width - 20, 18 + (el.value ? el.value.length * 9 : 0));
+    lookAt(r.left + textW, r.top + r.height / 2);
+  }
+  function updateCover(){
+    const covering = document.activeElement === pw;
+    stage.classList.toggle('cover', covering);
+    stage.classList.toggle('peek', covering && pw.type !== 'password');
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if(!modal.classList.contains('open')) return;
+    if(document.activeElement && stage.contains(document.activeElement) &&
+       /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+    lookAt(e.clientX, e.clientY);
+  });
+  stage.addEventListener('focusin', (e) => {
+    if(e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') lookAtInput(e.target);
+    updateCover();
+  });
+  stage.addEventListener('focusout', () => setTimeout(updateCover, 0));
+  stage.addEventListener('input', (e) => {
+    if(e.target.tagName === 'INPUT' && e.target !== pw) lookAtInput(e.target);
+  });
+  stage.addEventListener('click', (e) => {
+    if(e.target.closest('#pwToggle')) setTimeout(updateCover, 0);
+  });
+
+  new MutationObserver(() => {
+    if(!modal.classList.contains('open')){
+      stage.classList.remove('cover','peek');
+      head.style.transform = '';
+    }
+  }).observe(modal, {attributes:true, attributeFilter:['class']});
+
+  if(err) new MutationObserver(() => {
+    if(err.classList.contains('show')){
+      shake.classList.remove('shake'); void shake.getBoundingClientRect(); shake.classList.add('shake');
+    }
+  }).observe(err, {attributes:true, attributeFilter:['class']});
 })();
 </script>
 </body>
