@@ -1135,6 +1135,36 @@
     .login-char::after{display:none}
     .login-char svg{height:189px}
   }
+  /* ===== LOGIN INTRO: character + bag -> form pops out of the bag ===== */
+  .login-stage .login-modal{animation:none;
+    transform-origin:268px calc(100% - 22px);
+    transition:scale .8s cubic-bezier(.2,1.15,.3,1),opacity .3s ease}
+  .login-stage.intro .login-modal{scale:.03;opacity:0;pointer-events:none;transition:none}
+  .login-char{transition:translate .9s cubic-bezier(.3,1,.3,1)}
+  .login-stage.intro .login-char{translate:226px 0;transition:none}
+  .login-bag{position:absolute;left:236px;bottom:2px;width:64px;height:56px;z-index:4;
+    pointer-events:none;opacity:0;scale:.6;transition:opacity .35s ease .45s,scale .35s ease .45s}
+  .login-bag svg{width:100%;height:100%;overflow:visible}
+  .login-bag .lid{transform-origin:6px 22px;transition:transform .4s cubic-bezier(.3,1.5,.5,1)}
+  .login-stage:not(.intro) .login-bag .lid{transform:rotate(-24deg)}
+  .login-stage.intro .login-bag{opacity:1;scale:1;transition:none;
+    animation:bagDrop .6s cubic-bezier(.3,1.4,.5,1) .35s both}
+  @keyframes bagDrop{from{opacity:0;transform:translateY(-70px)}to{opacity:1;transform:none}}
+  @media (max-width:759px){
+    .login-stage .login-modal{transform-origin:calc(50% + 62px) calc(50% + 120px)}
+    .login-char{right:auto;left:calc(100% - 118px);
+      transition:left .9s cubic-bezier(.3,1,.3,1),top .9s cubic-bezier(.3,1,.3,1),
+                 width .9s cubic-bezier(.3,1,.3,1),height .9s cubic-bezier(.3,1,.3,1)}
+    .login-char svg{transition:height .9s cubic-bezier(.3,1,.3,1)}
+    .login-stage.intro .login-char{translate:none;left:calc(50% - 150px);top:calc(50% - 170px);
+      width:172px;height:317px;transition:none}
+    .login-stage.intro .login-char svg{height:317px;transition:none}
+    .login-bag{left:calc(50% + 30px);bottom:auto;top:calc(50% + 92px)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .login-stage .login-modal,.login-char,.login-char svg{transition:none !important}
+  }
+
 
 
   .modal-bg{position:fixed;inset:0;background:rgba(5,6,10,.8);backdrop-filter:blur(8px);
@@ -3311,6 +3341,18 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 <!-- LOGIN MODAL -->
 <div class="login-modal-bg" id="loginModal">
   <div class="login-stage">
+    <div class="login-bag" aria-hidden="true">
+        <svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="32" cy="54" rx="28" ry="3" fill="rgba(0,0,0,.35)"/>
+          <rect x="4" y="22" width="56" height="30" rx="5" fill="#7a4a2b"/>
+          <rect x="4" y="34" width="56" height="3" fill="#5e3720"/>
+          <g class="lid">
+            <path d="M24 12V7Q24 3 28 3H36Q40 3 40 7V12" fill="none" stroke="#4a2c18" stroke-width="3" stroke-linecap="round"/>
+            <rect x="4" y="11" width="56" height="12" rx="4" fill="#8f5a36"/>
+            <rect x="28" y="19" width="8" height="8" rx="1.5" fill="#e6c36a"/>
+          </g>
+        </svg>
+      </div>
     <div class="login-char" aria-hidden="true">
         <svg viewBox="0 0 120 236" xmlns="http://www.w3.org/2000/svg">
           <!-- legs -->
@@ -12469,6 +12511,37 @@ Element.prototype.scrollIntoView=function(o){const p=this.closest&&this.closest(
       shake.classList.remove('shake'); void shake.getBoundingClientRect(); shake.classList.add('shake');
     }
   }).observe(err, {attributes:true, attributeFilter:['class']});
+})();
+</script>
+
+<script>
+/* ===== LOGIN INTRO SEQUENCE ===== */
+(function(){
+  const modal = document.getElementById('loginModal');
+  if(!modal) return;
+  const stage = modal.querySelector('.login-stage');
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let t1, t2;
+  new MutationObserver(() => {
+    clearTimeout(t1); clearTimeout(t2);
+    if(modal.classList.contains('open')){
+      if(reduce) return;
+      stage.classList.add('intro');
+      t2 = setTimeout(() => {
+        const a = document.activeElement;
+        if(a && stage.contains(a) && a.blur) a.blur();
+      }, 260);
+      t1 = setTimeout(() => {
+        stage.classList.remove('intro');
+        if(window.matchMedia('(pointer:fine)').matches){
+          const em = document.getElementById('loginEmail');
+          setTimeout(() => { if(modal.classList.contains('open') && em) em.focus(); }, 500);
+        }
+      }, 1500);
+    } else {
+      stage.classList.remove('intro');
+    }
+  }).observe(modal, {attributes:true, attributeFilter:['class']});
 })();
 </script>
 </body>
