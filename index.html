@@ -2305,9 +2305,9 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 
 <div class="marquee">
   <div class="marquee-track">
-    <span class="marquee-item"><span class="tag-new">NEW</span> Season 2026 registrations open — deadline 30 April 2026</span>
+    <span class="marquee-item"><span class="tag-new">NEW</span> Season 2026 registrations open — deadline <span id="evDeadlineMq">30 April 2026</span></span>
     <span class="marquee-item"><span class="dot-live"></span> <span id="mqTeams">—</span> teams registered from <span id="mqColleges">—</span> colleges</span>   
-    <span class="marquee-item"><span class="tag-new">HOT</span> Grand Finale: 15–17 May 2026 · New Delhi</span>
+    <span class="marquee-item"><span class="tag-new">HOT</span> Grand Finale: <span id="evDatesMq">15–17 November 2026</span> · <span id="evVenueMq">New Delhi</span></span>
     <span class="marquee-item">💰 Prize pool: <b>TBA</b> · across all tracks</span>    
     <span class="marquee-item"><span class="tag-new">NEW</span> 17 problem statements released by 12 ministries</span>
     <span class="marquee-item"><span class="dot-live"></span> Live: <span id="mqLive">—</span> teams competing</span>
@@ -2397,7 +2397,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
         <div class="countdown-info">
           <div class="eyebrow">Grand Finale 2026</div>
           <h2>36 hours. One shot. Zero sleep.</h2>
-          <p>Registrations close on 30 April. Lock in your team before the deadline.</p>
+          <p>Registrations close on <span id="evDeadlineTxt">30 April</span>. Lock in your team before the deadline.</p>
           <a href="#register" class="btn btn-primary btn-lg">Register before it's too late →</a>
         </div>
         <div class="countdown-timer">
@@ -2859,8 +2859,8 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
   <h3>Winners will be announced soon</h3>
   <p>The Hall of Fame is reserved for the champions of Hackathon Rivals Season 2026. After the 36-hour Grand Finale, winners across all 17 themes will be featured here with their projects, colleges, and prize details.</p>
   <div class="fcs-meta">
-    <span>📅 Grand Finale:2026</span>
-    <span>📍 Lucknow</span>
+    <span>📅 Grand Finale: <span id="evDatesHof">2026</span></span>
+    <span>📍 <span id="evVenueHof">Lucknow</span></span>
   </div>
   <a href="#register" class="btn btn-primary btn-lg">Register your team →</a>
 </div>
@@ -3980,7 +3980,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
   $$('.mock-bar i').forEach(b => bio.observe(b));
 
   /* ============ COUNTDOWN ============ */
-  const targetDate = new Date('2026-05-15T09:00:00+05:30').getTime();
+  let targetDate = new Date('2026-11-15T09:00:00+05:30').getTime();
   function updateCountdown(){
     const now = Date.now();
     let diff = Math.max(0, targetDate - now);
@@ -3998,6 +3998,33 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
   }
   updateCountdown();
   setInterval(updateCountdown, 1000);
+
+  /* ===== Admin-editable event dates (stored in site_content key 'event') ===== */
+  window.__hrApplyEvent = function(ev){
+    try{
+      if(!ev || typeof ev !== 'object') return;
+      const MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const parse = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v||''); return m ? {y:+m[1], m:+m[2]-1, d:+m[3]} : null; };
+      const one = d => d.d + ' ' + MON[d.m] + ' ' + d.y;
+      const set = (id, txt) => { const e = document.getElementById(id); if(e && txt) e.textContent = txt; };
+      const a = parse(ev.start), b = parse(ev.end);
+      if(a){
+        let range = one(a);
+        if(b && (b.y !== a.y || b.m !== a.m || b.d !== a.d)){
+          range = (b.y === a.y && b.m === a.m) ? a.d + '–' + b.d + ' ' + MON[a.m] + ' ' + a.y
+                : (b.y === a.y) ? a.d + ' ' + MON[a.m] + ' – ' + b.d + ' ' + MON[b.m] + ' ' + a.y
+                : one(a) + ' – ' + one(b);
+        }
+        set('evDatesMq', range); set('evDatesHof', range);
+        const t = /^\d{2}:\d{2}$/.test(ev.time || '') ? ev.time : '09:00';
+        const ts = new Date(ev.start + 'T' + t + ':00+05:30').getTime();
+        if(!isNaN(ts)){ targetDate = ts; updateCountdown(); }
+      }
+      if(ev.venue){ set('evVenueMq', ev.venue); set('evVenueHof', ev.venue); }
+      const dl = parse(ev.deadline);
+      if(dl){ set('evDeadlineMq', one(dl)); set('evDeadlineTxt', dl.d + ' ' + MON[dl.m] + (dl.y !== (a ? a.y : dl.y) ? ' ' + dl.y : '')); }
+    }catch(e){ console.warn('[event dates]', e); }
+  };
 
   /* ============ PROBLEM STATEMENTS ============ */
   const PS = [
@@ -11776,6 +11803,17 @@ async function saveEvent(ev){
   if (HB.remote) await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [row] }); else store.set('hk:ev', row);
   HB.ev = { ...HB.ev, ...row };
 }
+/* hooks so the Site Content "Event dates" card drives this live countdown too */
+window.__hrSetHackTimes = async function(p){
+  await saveEvent({ ...HB.ev, ...p });
+  try { renderHackathon(); applyMainLock(); updateOldBox(); } catch(e){}
+};
+window.__hrGetHackTimes = function(){
+  try {
+    const e = HB.ev, f = ms => new Date(ms + 19800000).toISOString(), s = Date.parse(e.starts_at), c = Date.parse(e.reg_closes_at), en = e.ends_at ? Date.parse(e.ends_at) : 0;
+    return { start: f(s).slice(0,10), time: f(s).slice(11,16), end: en ? f(en).slice(0,10) : '', deadline: (c && c !== s) ? f(c).slice(0,10) : '' };
+  } catch(e){ return null; }
+};
 function evState(){
   const e = HB.ev, n = nowMs(), s = Date.parse(e.starts_at), c = Date.parse(e.reg_closes_at), en = e.ends_at ? Date.parse(e.ends_at) : 0;
   const regOpen = e.reg_open !== false && n < c; const phase = en && n >= en ? 'ended' : n >= s ? 'live' : 'upcoming'; return { n, s, c, en, regOpen, phase };
@@ -12281,7 +12319,7 @@ const toast=(m,t,i)=>window.showToast?window.showToast(m,t||'info',i||'ℹ️'):
 const SQL=`create table if not exists public.site_content(k text primary key, v jsonb not null, updated_at timestamptz default now());
 alter table public.site_content enable row level security;
 drop policy if exists sc_read on public.site_content;
-create policy sc_read on public.site_content for select using (k in ('brand','notice') or k like 'person:%' or k like 'res:%' or k like 'resdata:%' or auth.uid() is not null);
+create policy sc_read on public.site_content for select using (k in ('brand','notice','event') or k like 'person:%' or k like 'res:%' or k like 'resdata:%' or auth.uid() is not null);
 drop policy if exists sc_write on public.site_content;
 create policy sc_write on public.site_content for all using (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='Admin')) with check (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='Admin'));`;
 let U=null,C={},dbOk=true,flag=false,cur='dashboard';
@@ -12289,7 +12327,7 @@ const lsGet=()=>{try{return JSON.parse(localStorage.getItem('ptc')||'{}')}catch(
 async function loadC(all){
   C=lsGet();
   let q=SB.from('site_content').select('k,v').not('k','like','resdata:%');
-  if(!all)q=q.or('k.eq.brand,k.eq.notice,k.like.person:%,k.like.res:%');
+  if(!all)q=q.or('k.eq.brand,k.eq.notice,k.eq.event,k.like.person:%,k.like.res:%');
   const {data,error}=await q;
   if(error){dbOk=false;return}
   dbOk=true;data.forEach(r=>C[r.k]=r.v);
@@ -12313,6 +12351,7 @@ async function parseQuiz(f){
 }
 /* ---------- public site: brand + team ---------- */
 function applyBrand(){
+  if(window.__hrApplyEvent&&C.event)window.__hrApplyEvent(C.event);
   const b=C.brand||{};
   $$('.logo').forEach(a=>{if(a.closest('#portal'))return;a.innerHTML=(b.logo?`<img src="${b.logo}" alt="logo">`:'<span class="logo-mark">HR</span>')+' '+h(b.name||'Hackathon Rivals')});
   if(b.logo){let l=$('link[rel=icon]');if(l)l.href=b.logo}
@@ -12396,11 +12435,11 @@ function hack(el){
   if(window.__hrMountAdmin)window.__hrMountAdmin($('#hkMount',el));else $('#hkMount',el).textContent='Loading… refresh the page if this stays empty.';
 }
 function content(el){
-  const b=C.brand||{},ppl=list('person:'),pp=list('paper:');
+  const b=C.brand||{},ppl=list('person:'),pp=list('paper:');const EV=C.event||(window.__hrGetHackTimes&&window.__hrGetHackTimes())||{};
   const row=(k,t,s,img)=>`<div class="pt-item">${img?`<img src="${img}">`:''}<div class="g"><b>${h(t)}</b><small>${h(s)}</small></div>${k.startsWith('person:')?`<button class="btn btn-ghost" data-mv="${k}:-1">↑</button><button class="btn btn-ghost" data-mv="${k}:1">↓</button>`:''}<button class="btn btn-ghost" data-x="${k}">🗑 Delete</button></div>`;
   el.innerHTML=`<h2 class="pt-h">🎛️ Site Content</h2><p class="pt-sub">Logo, founders, organisers, question papers — manage everything here, no code changes needed.</p>
   ${dbOk?'':`<div class="pt-warn">⚠️ One-time setup: run this SQL in Supabase → SQL Editor so uploads are saved for everyone. <button class="btn btn-ghost" id="cpSql">Copy SQL</button></div>`}
-  <div class="pt-card"><h4>📢 Announcement bar</h4><div class="row"><input type="text" id="nTxt" placeholder="e.g. Registrations close on 30 April!" value="${h((C.notice||{}).text||'')}"><label><input type="checkbox" id="nOn" ${(C.notice||{}).on?'checked':''}> Show</label><button class="btn btn-primary" id="nSave">Save</button></div></div>
+  <div class="pt-card"><h4>🏆 Event dates (Grand Finale &amp; deadline)</h4><p class="pt-sub" style="margin:0 0 8px;font-size:12.5px">One place for everything: banner, countdown timer, registration lock and deadline text. Registration closes at 11:59 PM IST on the deadline date (leave it empty to close when the countdown ends).</p><div class="row"><label>Finale start <input type="date" id="evStart" value="${h(EV.start||'')}"></label><label>Finale end <input type="date" id="evEnd" value="${h(EV.end||'')}"></label><label>Start time (IST) <input type="time" id="evTime" value="${h(EV.time||'09:00')}"></label></div><div class="row"><input type="text" id="evVenue" placeholder="Venue / city" value="${h(EV.venue||'New Delhi')}"><label>Registration deadline <input type="date" id="evDeadline" value="${h(EV.deadline||'')}"></label><button class="btn btn-primary" id="evSave">Save</button></div></div>\r\n  <div class="pt-card"><h4>📢 Announcement bar</h4><div class="row"><input type="text" id="nTxt" placeholder="e.g. Registrations close on 30 April!" value="${h((C.notice||{}).text||'')}"><label><input type="checkbox" id="nOn" ${(C.notice||{}).on?'checked':''}> Show</label><button class="btn btn-primary" id="nSave">Save</button></div></div>
 <div class="pt-card"><h4>📎 Downloads (footer links &amp; brochure button)</h4><p class="pt-sub" style="margin:0 0 6px;font-size:12.5px">A link shows on the website only after you upload its file. Max 4 MB.</p>${RES.map(([id,l])=>{const r=C['res:'+id];return `<div class="pt-item"><div class="g"><b>${l}</b><small>${r?'✅ '+h(r.name):'Not uploaded — hidden on website'}</small></div><input type="file" id="rf_${id}"><button class="btn btn-primary" data-ru="${id}">Upload</button>${r?`<button class="btn btn-ghost" data-rd="${id}">Remove</button>`:''}</div>`}).join('')}</div>
   <div class="pt-card"><h4>🖼️ Logo &amp; site name</h4>${b.logo?`<img src="${b.logo}" style="height:50px;margin-bottom:8px">`:''}<div class="row"><input type="text" id="bName" placeholder="Site name" value="${h(b.name||'Hackathon Rivals')}"><input type="file" id="bLogo" accept="image/*"></div><div class="row"><button class="btn btn-primary" id="bSave">Save</button>${b.logo?'<button class="btn btn-ghost" id="bRm">Remove logo</button>':''}</div></div>
   <div class="pt-card"><h4>👤 Founders &amp; Organisers</h4><div class="row"><select id="pType"><option value="founder">Founder</option><option value="organiser">Organiser</option></select><input type="text" id="pName" placeholder="Name"><input type="text" id="pRole" placeholder="Title / role"></div><div class="row"><input type="text" id="pBio" placeholder="Short bio"><input type="text" id="pLink" placeholder="LinkedIn / website (optional)"><input type="file" id="pPhoto" accept="image/*"></div><div class="row"><button class="btn btn-primary" id="pAdd">+ Add</button></div>${ppl.map(p=>row(p.k,p.name,p.type+' · '+(p.role||''),p.photo)).join('')}</div>
@@ -12408,6 +12447,7 @@ function content(el){
   const re=()=>{content(el);applyBrand()},on=(id,fn)=>{const n=$('#'+id,el);if(n)n.onclick=async()=>{try{await fn()}catch(e){toast(String(e.message||e),'warn','⚠️')}}};
   on('cpSql',()=>navigator.clipboard.writeText(SQL).then(()=>toast('SQL copied','success','📋')));
   on('bSave',async()=>{const f=$('#bLogo',el).files[0];await put('brand',{name:$('#bName',el).value.trim(),logo:f?await shrink(f,400):b.logo});re();toast('Branding saved','success','✅')});
+  on('evSave',async()=>{const st=$('#evStart',el).value,en=$('#evEnd',el).value;if(!st)throw 'Finale start date is required';if(en&&en<st)throw 'End date cannot be before start date';const dl=$('#evDeadline',el).value,tm=$('#evTime',el).value||'09:00',ok=await put('event',{start:st,end:en||st,time:tm,venue:$('#evVenue',el).value.trim(),deadline:dl});let hk=true;if(window.__hrSetHackTimes){try{const iso=x=>new Date(x).toISOString(),s0=iso(st+'T'+tm+':00+05:30');await window.__hrSetHackTimes({starts_at:s0,reg_closes_at:dl?iso(dl+'T23:59:00+05:30'):s0,ends_at:en?iso(en+'T23:59:00+05:30'):null})}catch(e){hk=false;toast('Dates saved, but live countdown not updated: '+(e.message||e),'warn','⚠️')}}re();if(ok&&hk)toast('Event dates saved — live on the website','success','✅')});
   on('nSave',async()=>{await put('notice',{text:$('#nTxt',el).value.trim(),on:$('#nOn',el).checked});re();toast('Announcement saved','success','✅')});
   $$('[data-mv]',el).forEach(x=>x.onclick=async()=>{const [k,d]=[x.dataset.mv.slice(0,x.dataset.mv.lastIndexOf(':')),+x.dataset.mv.split(':').pop()];const s=ppl.filter(p=>p.type===C[k].type).sort((a,b)=>(a.ord||0)-(b.ord||0)),i=s.findIndex(p=>p.k===k),o=s[i+d];if(!o)return;const a=C[k].ord||0,b=C[o.k].ord||0;await put(k,{...C[k],ord:b});await put(o.k,{...C[o.k],ord:a});re()});
   $$('[data-ru]',el).forEach(x=>x.onclick=async()=>{try{const id=x.dataset.ru,f=$('#rf_'+id,el).files[0];if(!f)throw 'Choose a file first';const d=await readFile(f,4e6);if(!(await put('resdata:'+id,{data:d})))return;await put('res:'+id,{name:f.name,t:Date.now()});re();toast('Uploaded','success','✅')}catch(e){toast(String(e.message||e),'warn','⚠️')}});
