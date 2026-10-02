@@ -2249,7 +2249,31 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 .hk-card.ok{border-color:var(--green)}.hk-card.bad{border-color:var(--pink)}
 .hk-quizzes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .hk-off{opacity:.55;pointer-events:none}
-#register.hk-locked .wrap>*:not(.hk-closed){display:none!important}
+#register.hk-locked #rhTeamBody>*:not(.hk-closed){display:none!important}
+/* ===== combined registration hub ===== */
+.rh{display:grid;gap:16px;max-width:1000px;margin:0 auto}
+.rh-item{background:var(--surface);border:1px solid var(--border-strong);border-radius:18px;overflow:hidden;transition:border-color .25s}
+.rh-item[data-state="open"]{border-color:rgba(61,220,132,.5)}
+.rh-item[data-state="closed"]{border-color:rgba(255,77,157,.38)}
+.rh-head{display:flex;align-items:center;gap:14px;width:100%;padding:18px 20px;background:transparent;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.rh-head:hover{background:var(--surface-2)}
+.rh-head:focus-visible{outline:2px solid var(--violet);outline-offset:-2px}
+.rh-ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:var(--surface-3);flex-shrink:0}
+.rh-tt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.rh-tt b{font-family:'Space Grotesk',sans-serif;font-size:18px}
+.rh-tt small{color:var(--muted);font-size:12.5px;line-height:1.4}
+.rh-chev{transition:transform .25s;color:var(--muted);font-size:18px}
+.rh-item.expanded .rh-chev{transform:rotate(180deg)}
+.rh-body{display:none;padding:6px 20px 22px}
+.rh-item.expanded .rh-body{display:block}
+.rh-body .reveal{opacity:1!important;transform:none!important}
+.rh-body .sec-head{margin-top:6px}
+@media (max-width:560px){.rh-head{padding:14px;gap:10px}.rh-body{padding:4px 12px 16px}.rh-head .hk-pill{font-size:11px;padding:4px 9px}.rh-ico{width:38px;height:38px;font-size:19px}}
+/* quiz answer extras */
+.hq-type{width:100%;margin-top:8px;min-height:54px;resize:vertical;font-family:inherit}
+.hq-file{border:1px dashed var(--border-strong)!important}
+.hq-file input[type=file]{display:block;margin:8px 0;max-width:100%;color:var(--text)}
+.hq-or{font-size:12px;color:var(--muted);margin-top:8px}
 @media (max-width:720px){.hk-top{grid-template-columns:1fr}.hk-grid{grid-template-columns:1fr}.hk-box{padding:18px}}
 
 #hrpStick{max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis}
@@ -2681,6 +2705,19 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 
   <section class="sec" id="register">
     <div class="wrap">
+      <div class="sec-head" id="rhHead">
+        <span class="eyebrow">Registration</span>
+        <h2>Register for Hackathon Rivals</h2>
+        <p>Choose what you want to register for. Registrations that are open expand automatically; closed ones stay locked.</p>
+      </div>
+      <div class="rh" id="regHub">
+        <div class="rh-item expanded" id="rhTeam" data-state="">
+          <button type="button" class="rh-head" id="rhTeamBtn" aria-expanded="true" aria-controls="rhTeamBody">
+            <span class="rh-ico" aria-hidden="true">👥</span>
+            <span class="rh-tt"><b>Team Registration</b><small id="rhTeamSub">Register your team in 4 steps</small></span>
+            <span class="hk-pill" id="rhTeamPill">Checking…</span><span class="rh-chev" aria-hidden="true">▾</span>
+          </button>
+          <div class="rh-body" id="rhTeamBody">
       <div class="reg-lock" id="regLock">
         <div class="lock-icon">🔒</div>
         <h3>Login required to register</h3>
@@ -2818,6 +2855,17 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
           <button class="btn btn-ghost" id="prevBtn" disabled>← Back</button>
           <div class="reg-progress">Step <b id="curStep">1</b> of <b>4</b></div>
           <button class="btn btn-primary" id="nextBtn">Next →</button>
+        </div>
+      </div>
+          </div>
+        </div>
+        <div class="rh-item" id="rhQuiz" data-state="">
+          <button type="button" class="rh-head" id="rhQuizBtn" aria-expanded="false" aria-controls="rhQuizBody">
+            <span class="rh-ico" aria-hidden="true">📝</span>
+            <span class="rh-tt"><b>Quiz Registration</b><small id="rhQuizSub">Exams, papers &amp; leaderboards</small></span>
+            <span class="hk-pill" id="rhQuizPill">Checking…</span><span class="rh-chev" aria-hidden="true">▾</span>
+          </button>
+          <div class="rh-body" id="rhQuizBody"><div id="hkQuizBox"><p class="hrp-muted" style="color:var(--muted)">Loading quizzes…</p></div></div>
         </div>
       </div>
     </div>
@@ -3237,6 +3285,52 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
     <button class="btn btn-ghost" id="teamRefresh" type="button">↻ Refresh</button>
     <button class="btn btn-ghost" id="teamExportCSV" type="button">⬇ CSV</button>
    </div>
+
+   <!-- TEAM ANALYTICS -->
+<div class="team-analytics" id="teamAnalytics">
+  <div class="ana-grid">
+    <div class="ana-card">
+      <h4>📊 Status Breakdown <span class="tag">all teams</span></h4>
+      <div class="status-chart" id="statusChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>🎯 Theme-wise Teams <span class="tag">top 6</span></h4>
+      <div class="ana-topic" id="themeChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>🏫 Top Colleges <span class="tag">by team count</span></h4>
+      <div class="ana-topic" id="collegeChart"></div>
+    </div>
+    <div class="ana-card">
+      <h4>📅 Daily Registrations <span class="tag">last 7 days</span></h4>
+      <div class="ana-hist" id="dailyChart"></div>
+    </div>
+  </div>
+</div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+     <thead>
+  <tr>
+    <th style="width:36px;text-align:center"><input type="checkbox" id="teamSelectAll" /></th>
+    <th>Team</th>
+    <th class="hide-sm">College</th>
+    <th class="hide-sm">Theme</th>
+    <th class="hide-sm">Members</th>
+    <th>Status</th>
+    <th style="text-align:right">Actions</th>
+  </tr>
+</thead>
+      <tbody id="teamTbody">
+
+        <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
+      </tbody>
+      <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
+  <span style="font-size:12.5px;color:var(--muted)" id="teamPageInfo">—</span>
+  <div style="display:flex;gap:6px" id="teamPageBtns"></div>
+</div>
+    </table>
+  </div>
   </div>
 
 <!-- TESTIMONIALS SECTION -->
@@ -3743,52 +3837,6 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 </div>
 <!-- TESTIMONIAL EDIT MODAL -->
 
-   <!-- TEAM ANALYTICS -->
-<div class="team-analytics" id="teamAnalytics">
-  <div class="ana-grid">
-    <div class="ana-card">
-      <h4>📊 Status Breakdown <span class="tag">all teams</span></h4>
-      <div class="status-chart" id="statusChart"></div>
-    </div>
-    <div class="ana-card">
-      <h4>🎯 Theme-wise Teams <span class="tag">top 6</span></h4>
-      <div class="ana-topic" id="themeChart"></div>
-    </div>
-    <div class="ana-card">
-      <h4>🏫 Top Colleges <span class="tag">by team count</span></h4>
-      <div class="ana-topic" id="collegeChart"></div>
-    </div>
-    <div class="ana-card">
-      <h4>📅 Daily Registrations <span class="tag">last 7 days</span></h4>
-      <div class="ana-hist" id="dailyChart"></div>
-    </div>
-  </div>
-</div>
-
-  <div class="admin-table-wrap">
-    <table class="admin-table">
-     <thead>
-  <tr>
-    <th style="width:36px;text-align:center"><input type="checkbox" id="teamSelectAll" /></th>
-    <th>Team</th>
-    <th class="hide-sm">College</th>
-    <th class="hide-sm">Theme</th>
-    <th class="hide-sm">Members</th>
-    <th>Status</th>
-    <th style="text-align:right">Actions</th>
-  </tr>
-</thead>
-      <tbody id="teamTbody">
-
-        <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
-      </tbody>
-      <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
-  <span style="font-size:12.5px;color:var(--muted)" id="teamPageInfo">—</span>
-  <div style="display:flex;gap:6px" id="teamPageBtns"></div>
-</div>
-    </table>
-  </div>
-</div>
 
 <!-- CSV IMPORT MODAL -->
 <div class="import-modal-bg" id="importModal">
@@ -5250,16 +5298,8 @@ async function getAIResponse(msg){
     pwToggle.textContent = isPw ? '🙈' : '👁️';
   });
 
-  document.addEventListener('click', async (e) => {
-    const link = e.target.closest('a[href="#register"]');
-    if (!link) return;
-    const user = await getCurrentUser();
-    if (!user){
-      e.preventDefault();
-      showToast('Please log in first to register', 'warn', '🔒');
-      openLogin();
-    }
-  });
+  /* Register links now open the combined Team + Quiz registration hub.
+     The Team panel shows its own "login required" card when the visitor is signed out. */
 
   const lockLoginBtn = document.getElementById('lockLoginBtn');
   const lockSignupBtn = document.getElementById('lockSignupBtn');
@@ -11777,7 +11817,7 @@ Object.assign(EXACT, {
 const HK_URL = 'https://awvcorswnzbxsrrzepto.supabase.co', HK_KEY = 'sb_publishable_6GqdbyBWEX7cIkTzcp9yvw_WYNp5GJh', HK_FORM = 'https://formspree.io/f/mppwlbwq';
 const HK_DEFAULT = { id: 'main', name: 'Hackathon Rivals — Live Hackathon', starts_at: '2026-10-01T18:00:00+05:30', reg_closes_at: '2026-10-01T18:00:00+05:30', ends_at: null, reg_open: true, lock_main: true, message: 'Team up, pick a problem and build something great. Register before the countdown hits zero.' };
 const HB = { remote: false, checked: false, off: 0, tsrc: 'device clock', ev: { ...HK_DEFAULT }, lastReg: null, lastPhase: null, rt: 0 };
-function sbToken(){ try { const ref = new URL(HK_URL).hostname.split('.')[0]; const j = JSON.parse(localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return j && (j.access_token || (j.currentSession && j.currentSession.access_token)) || null; } catch(e){ return null; } }
+function sbToken(){ try { const ref = new URL(HK_URL).hostname.split('.')[0]; const j = JSON.parse(localStorage.getItem('hr-auth-awvcorsw') || localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return j && (j.access_token || (j.currentSession && j.currentSession.access_token)) || null; } catch(e){ return null; } }
 async function pgrest(path, o = {}){
   const tok = sbToken(); const h = { apikey: HK_KEY, 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}), ...(o.headers || {}) };
   const r = await fetch(HK_URL + '/rest/v1/' + path, { method: o.method || 'GET', headers: h, body: o.body !== undefined ? JSON.stringify(o.body) : undefined });
@@ -11858,7 +11898,7 @@ function hkSectionHTML(){
   else body = `<div class="hk-card bad"><h3>🔒 Registration is closed</h3><p>The registration window ended on <b>${fmtIST(st.c)}</b>. Thank you for your interest — follow our channels for the next event.</p></div>`;
   return `<div class="wrap"><div class="hk-box"><div class="hk-top"><div><div class="eyebrow">Live hackathon</div><h2>${esc(e.name)}</h2><p class="hk-sub">${esc(e.message || '')}</p><p class="hk-times">${times}</p><div class="hk-pills">${status}${reg}</div></div>
   <div class="hk-timer" aria-live="off"><div><b id="hkD">00</b><i>Days</i></div><div><b id="hkH">00</b><i>Hours</i></div><div><b id="hkM">00</b><i>Min</i></div><div><b id="hkS">00</b><i>Sec</i></div></div></div>
-  ${body}<div id="hkQuizBox"></div><div class="hk-admin" id="hkAdminBtn" style="display:none"><button class="hrp-btn" data-hk="manage" type="button">🛡️ Manage hackathon (admin)</button></div></div></div>`;
+  ${body}<div class="hk-admin" id="hkAdminBtn" style="display:none"><button class="hrp-btn" data-hk="manage" type="button">🛡️ Manage hackathon (admin)</button></div></div></div>`;
 }
 function renderHackathon(){
   let sec = hkEl('hackathon'); const anchor = document.querySelector('.countdown-sec');
@@ -11897,13 +11937,10 @@ async function submitReg(p){
 function applyMainLock(){
   const st = evState(), lock = HB.ev.lock_main !== false && !st.regOpen; const reg = hkEl('register'); if (!reg) return;
   reg.classList.toggle('hk-locked', lock);
-  let card = $('.hk-closed', reg); const wrap = $('.wrap', reg);
+  let card = $('.hk-closed', reg); const wrap = $('#rhTeamBody', reg) || $('.wrap', reg);
   if (lock && !card && wrap) { card = el('div', { class: 'hk-closed hk-card bad' }, `<h3>🔒 Registration is closed</h3><p>The registration deadline (${fmtIST(st.c)}) has passed, so new registrations can no longer be submitted.</p>`); wrap.prepend(card); }
   if (!lock && card) card.remove();
-  $$('a.btn[href="#register"], a.btn[href="#hackathon"]').forEach(a => {
-    if (a.dataset.hkT === undefined) { a.dataset.hkT = a.textContent; a.dataset.hkH = a.getAttribute('href'); }
-    if (lock) { a.textContent = '🔒 Registration closed'; a.classList.add('hk-off'); a.setAttribute('href', '#hackathon'); } else { a.textContent = a.dataset.hkT; a.setAttribute('href', a.dataset.hkH); a.classList.remove('hk-off'); }
-  });
+  syncRegButtons(); updateRegHub();
 }
 document.addEventListener('click', e => { if (evState().regOpen || HB.ev.lock_main === false) return; if (e.target.closest('#nextBtn, #regShell')) { e.stopImmediatePropagation(); e.preventDefault(); toast('Registration is closed', 'warn', '🔒'); } }, true);
 feat('Registration form locks automatically when the countdown ends', () => {});
@@ -11929,8 +11966,25 @@ feat('"Hackathon" link added to the top navigation', () => {
 });
 
 /* ---- quizzes (participant side) ---- */
-const HQ = { list: [], cur: null };
-async function fetchQuizzes(){
+const HQ = { list: [], cur: null, papers: {}, sig: '' };
+const HK_BUCKET = 'hr-quiz-files', PDF_MAX = 5 * 1024 * 1024;
+async function pdfCheck(f){
+  if (!f) return 'Choose a PDF file first.';
+  if (!(f.type === 'application/pdf' || /\.pdf$/i.test(f.name))) return 'Only PDF files are allowed.';
+  if (f.size === 0) return 'This file is empty.';
+  if (f.size > PDF_MAX) return 'File is too large — maximum is 5 MB (yours is ' + (f.size / 1048576).toFixed(1) + ' MB).';
+  try { if ((await f.slice(0, 5).text()) !== '%PDF-') return 'This does not look like a valid PDF file.'; } catch(e){}
+  return '';
+}
+async function uploadPdf(path, file){
+  if (!HB.remote) throw new Error('PDF upload needs the database setup (Admin → Setup).');
+  const tok = sbToken(); const url = HK_URL + '/storage/v1/object/' + HK_BUCKET + '/' + path.split('/').map(encodeURIComponent).join('/');
+  const r = await fetch(url, { method: 'POST', headers: { apikey: HK_KEY, ...(tok ? { Authorization: 'Bearer ' + tok } : {}), 'Content-Type': 'application/pdf', 'cache-control': '3600' }, body: file });
+  if (!r.ok) { let m = ''; try { const j = await r.json(); m = j.message || j.error || ''; } catch(e){} if (/bucket not found/i.test(m)) m = 'PDF upload is not set up yet — the organiser must run the updated SQL (Admin → Setup).'; else if (/size|exceed|too large/i.test(m)) m = 'File is too large — maximum is 5 MB.'; else if (/mime|type/i.test(m)) m = 'Only PDF files are allowed.'; else if (r.status === 401 || r.status === 403 || /row-level|policy|unauthor/i.test(m)) m = 'Upload is not permitted yet — the organiser must run the updated SQL (Admin → Setup).'; throw new Error(m || 'Upload failed (HTTP ' + r.status + ').'); }
+  return { path, name: file.name.slice(0, 150), size: file.size };
+}
+async function removeObject(path){ try { const tok = sbToken(); await fetch(HK_URL + '/storage/v1/object/' + HK_BUCKET + '/' + String(path).split('/').map(encodeURIComponent).join('/'), { method: 'DELETE', headers: { apikey: HK_KEY, ...(tok ? { Authorization: 'Bearer ' + tok } : {}) } }); } catch(e){} }
+async function fetchQuizzesBase(){
   if (HB.remote) { try { HQ.list = await pgrest('hr_quizzes?published=eq.true&select=*&order=created_at.desc'); return; } catch(e){} }
   HQ.list = store.get('hk:lq', []).filter(q => q.published);
 }
@@ -11951,42 +12005,76 @@ function openQuizReg(q){
       const r = store.get('hk:regq', {}); r[q.id] = email; store.set('hk:regq', r); store.set('hk:me', { name, email }); msg.textContent = 'Registered ✔'; msg.className = 'hk-msg ok'; renderQuizList(); setTimeout(() => m.classList.remove('open'), 900); }
     catch(err){ msg.textContent = /CLOSED/.test(err.message) ? 'Registration is closed.' : err.message; msg.className = 'hk-msg err'; } };
 }
+async function fetchQuizzes(){
+  await fetchQuizzesBase(); HQ.papers = {};
+  if (HB.remote && HQ.list.length) { try { const rows = await pgrest('hr_quiz_files?kind=eq.paper&select=quiz_id,file_path,file_name,file_size'); (rows || []).forEach(r => { HQ.papers[r.quiz_id] = r; }); } catch(e){} }
+}
+const paperUrl = p => HK_URL + '/storage/v1/object/public/' + HK_BUCKET + '/' + String(p).split('/').map(encodeURIComponent).join('/');
+const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+function paperLine(q){ const p = (HQ.papers || {})[q.id]; if (!p) return ''; return `<p class="hrp-muted">📄 <a href="${esc(paperUrl(p.file_path))}" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:underline">Question paper — ${esc(p.file_name || 'PDF')}${p.file_size ? ' (' + fmtSize(p.file_size) + ')' : ''}</a></p>`; }
+function quizSig(){ const done = store.get('hk:done', {}); return (HQ.list || []).map(q => [q.id, quizState(q), needReg(q) ? regState(q) : '-', isReg(q) ? 1 : 0, done[q.id] ? 1 : 0, (HQ.papers || {})[q.id] ? 1 : 0].join(':')).join('|'); }
 async function renderQuizList(){
-  const box = hkEl('hkQuizBox'); if (!box) return; await fetchQuizzes(); const b2 = hkEl('hkQuizBox'); if (!b2) return;
-  if (!HQ.list.length) { b2.innerHTML = ''; return; }
+  const box = hkEl('hkQuizBox'); if (!box) return; await fetchQuizzes(); paintQuizList();
+}
+function paintQuizList(){
+  const b2 = hkEl('hkQuizBox'); if (!b2) return; HQ.sig = quizSig();
+  if (!HQ.list.length) { b2.innerHTML = '<div class="hk-card bad"><h3>🔒 Quiz registration is closed</h3><p>No quiz is open for registration right now. Check back soon — new exams are announced here.</p></div>'; updateRegHub(); return; }
   const done = store.get('hk:done', {});
-  b2.innerHTML = `<h3 style="margin:22px 0 8px">📝 Exams &amp; papers — registration and schedule</h3><div class="hk-quizzes">${HQ.list.map(q => { const s = quizState(q), d = done[q.id];
+  b2.innerHTML = `<div class="hk-quizzes">${HQ.list.map(q => { const s = quizState(q), d = done[q.id];
     return `<div class="hk-card"><b>${esc(q.title)}</b><p class="hk-sub">${esc(q.description || '')}</p><p class="hrp-muted">${q.duration_min} min · ${s === 'open' ? '🟢 Open' : s === 'upcoming' ? '⏳ Opens ' + fmtIST(Date.parse(q.opens_at)) : '🔒 Closed'}${d ? ` · Your score ${d.score}/${d.max}` : ''}</p>
-    ${regLine(q)}<div class="hrp-row">${regBtn(q)}<button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button></div></div>`; }).join('')}</div>`;
+    ${regLine(q)}${paperLine(q)}<div class="hrp-row">${regBtn(q)}<button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button></div></div>`; }).join('')}</div>`;
   b2.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const q = HQ.list.find(x => x.id === b.dataset.q); if (q) (b.dataset.a === 'start' ? openQuiz(q) : b.dataset.a === 'reg' ? openQuizReg(q) : openBoard(q)); };
+  updateRegHub();
 }
 let qzEl = null;
 function qzModal(){ if (!qzEl) { qzEl = el('div', { class: 'hrp-bg', id: 'hkQuizBg', role: 'dialog', 'aria-modal': 'true', 'data-noesc': '1' }, '<div class="hrp-modal"><div class="hrp-head"><h3 id="hkQT">Quiz</h3><button class="hrp-x" type="button" aria-label="Close" data-a="close">✕</button></div><div class="hrp-body" id="hkQB"></div></div>'); document.body.appendChild(qzEl); }
   return qzEl; }
 async function openQuiz(q){
   const m = qzModal(), B = $('#hkQB', m); $('#hkQT', m).textContent = q.title; m.classList.add('open'); const me = store.get('hk:me', { name: '', email: '' });
-  B.innerHTML = `<p class="hrp-muted">${esc(q.description || '')}</p><p><b>${q.duration_min} minutes</b> · one attempt per email. Once you start, the timer runs.</p><label class="hrp-muted">Your name</label><input class="hrp-in" id="hqN" value="${esc(me.name)}" maxlength="80" style="margin-bottom:8px"><label class="hrp-muted">Email (same as registration)</label><input class="hrp-in" id="hqE" type="email" value="${esc(me.email)}" maxlength="120"><div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="go">Start now</button><button class="hrp-btn" data-a="close">Cancel</button></div>`;
+  B.innerHTML = `<p class="hrp-muted">${esc(q.description || '')}</p><p><b>${q.duration_min} minutes</b> · one attempt per email. Once you start, the timer runs.</p>${paperLine(q)}<p class="hrp-muted">You can pick an option <b>or type your answer</b>, and you may also upload an answer sheet as a <b>PDF (max 5 MB)</b>.</p><label class="hrp-muted">Your name</label><input class="hrp-in" id="hqN" value="${esc(me.name)}" maxlength="80" style="margin-bottom:8px"><label class="hrp-muted">Email (same as registration)</label><input class="hrp-in" id="hqE" type="email" value="${esc(me.email)}" maxlength="120"><div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="go">Start now</button><button class="hrp-btn" data-a="close">Cancel</button></div>`;
   m.onclick = async e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') { if (HQ.cur && !confirm('Leave the quiz? Your answers will be lost.')) return; clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); return; }
     if (a.dataset.a === 'go') { const name = $('#hqN', m).value.trim(), email = $('#hqE', m).value.trim().toLowerCase(), msg = $('#hqM', m); if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) { msg.textContent = 'Enter your name and a valid email.'; msg.className = 'hk-msg err'; return; }
       store.set('hk:me', { name, email }); await syncTime(); if (quizState(q) !== 'open') { msg.textContent = 'This quiz is not open right now.'; msg.className = 'hk-msg err'; return; }
       if (needReg(q) && HB.remote) { let ok = true; try { ok = await pgrest('rpc/hr_quiz_registered', { method: 'POST', body: { p_quiz: q.id, p_email: email } }); } catch(_){} if (ok === false) { msg.textContent = 'This email is not registered for this exam.'; msg.className = 'hk-msg err'; return; } }
-      try { const qs = await quizQuestions(q); if (!qs.length) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
+      try { const qs = await quizQuestions(q); if (!qs.length && !HQ.papers[q.id]) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
 }
 async function quizQuestions(q){
   if (HB.remote) return await pgrest(`hr_quiz_questions?quiz_id=eq.${encodeURIComponent(q.id)}&select=id,pos,text,options,points&order=pos`);
   return (store.get('hk:lqq:' + q.id, [])).map(x => ({ id: x.id, pos: x.pos, text: x.text, options: x.options, points: x.points }));
 }
 function runQuiz(q, qs, name, email){
-  const m = qzModal(), B = $('#hkQB', m); const ans = {}; const t0 = Date.now(), end = t0 + q.duration_min * 60000; HQ.cur = { q, ans };
-  B.innerHTML = `<div class="hrp-row" style="justify-content:space-between"><b>${qs.length} questions</b><span class="hrp-kbd" id="hqT">--:--</span></div>${qs.map((x, i) => `<div class="hrp-card" style="margin:10px 0"><b>${i + 1}. ${esc(x.text)}</b> <span class="hrp-muted">(${x.points || 1} pt)</span>${x.options.map((o, k) => `<label class="hrp-check"><input type="radio" name="hq${i}" data-q="${esc(x.id)}" value="${k}"><span>${esc(o)}</span></label>`).join('')}</div>`).join('')}<div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="sub">Submit answers</button></div>`;
+  const m = qzModal(), B = $('#hkQB', m); const ans = {}, typed = {}; let file = null; const t0 = Date.now(), end = t0 + q.duration_min * 60000; HQ.cur = { q, ans };
+  const paperMode = !qs.length;
+  const fileBlock = `<div class="hrp-card hq-file" style="margin:10px 0"><b>📎 Upload answer sheet (PDF, max 5 MB)</b> <span class="hrp-muted">— optional</span>${HB.remote ? `<input type="file" id="hqF" accept="application/pdf,.pdf"><div class="hk-msg" id="hqFi"></div>` : '<p class="hrp-muted">PDF upload becomes available once the organiser finishes the database setup.</p>'}</div>`;
+  B.innerHTML = `<div class="hrp-row" style="justify-content:space-between"><b>${paperMode ? 'Paper-based exam' : qs.length + ' questions'}</b><span class="hrp-kbd" id="hqT">--:--</span></div>${paperLine(q)}
+  ${paperMode ? `<div class="hrp-card" style="margin:10px 0"><b>✍️ Type your answers</b><textarea class="hrp-ta hq-type" data-t="_paper" maxlength="20000" style="min-height:180px" placeholder="Write your answers here…"></textarea></div>` : qs.map((x, i) => `<div class="hrp-card" style="margin:10px 0"><b>${i + 1}. ${esc(x.text)}</b> <span class="hrp-muted">(${x.points || 1} pt)</span>${x.options.map((o, k) => `<label class="hrp-check"><input type="radio" name="hq${i}" data-q="${esc(x.id)}" value="${k}"><span>${esc(o)}</span></label>`).join('')}<div class="hq-or">…or type your answer (A / B / C / D, or in your own words):</div><textarea class="hrp-ta hq-type" data-t="${esc(x.id)}" maxlength="2000" rows="2" placeholder="✍️ Type your answer here"></textarea></div>`).join('')}
+  ${fileBlock}<div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="sub">Submit answers</button></div>`;
+  const setMsg = (t, c) => { const msg = $('#hqM', m); if (msg) { msg.textContent = t; msg.className = 'hk-msg' + (c ? ' ' + c : ''); } };
+  const tick = () => { const l = Math.max(0, (end - Date.now()) / 1000), t = $('#hqT', m); if (t) t.textContent = '⏱ ' + fmtClock(l); if (l <= 0) { toast('Time is up — submitting', 'warn', '⏰'); submit(true); } };
+  const startTimer = () => { clearInterval(HQ.iv); HQ.iv = setInterval(tick, 500); };
   const submit = async auto => {
-    clearInterval(HQ.iv); const secs = Math.round((Date.now() - t0) / 1000); const msg = $('#hqM', m); if (msg) { msg.textContent = 'Submitting…'; msg.className = 'hk-msg'; }
-    try { const r = await submitAttempt(q, qs, ans, name, email, secs); const d = store.get('hk:done', {}); d[q.id] = { score: r.score, max: r.max }; store.set('hk:done', d); HQ.cur = null; showQuizResult(q, r, auto); renderQuizList(); }
-    catch(err){ if (msg) { msg.textContent = err.message; msg.className = 'hk-msg err'; } if (/already/i.test(err.message)) HQ.cur = null; }
+    clearInterval(HQ.iv); const secs = Math.round((Date.now() - t0) / 1000); setMsg('Submitting…');
+    /* typed "A/B/C/D" or exact option text counts as that option when nothing was clicked */
+    qs.forEach(x => { const t = (typed[x.id] || '').trim(); if (t && ans[x.id] === undefined) { const L = 'ABCD'.indexOf(t.toUpperCase()); const k = (t.length === 1 && L >= 0 && L < x.options.length) ? L : x.options.findIndex(o => String(o).trim().toLowerCase() === t.toLowerCase()); if (k >= 0) ans[x.id] = k; } });
+    const typedClean = {}; Object.keys(typed).forEach(k => { const v = (typed[k] || '').trim(); if (v) typedClean[k] = v.slice(0, 20000); });
+    let up = null, warn = '';
+    if (file) { try { setMsg('Uploading PDF…'); up = await uploadPdf('answers/' + q.id + '/' + uid() + '.pdf', file); } catch(err){ if (!auto) { setMsg(err.message + ' You can remove the file and submit without it.', 'err'); startTimer(); return; } warn = 'Your PDF could not be uploaded: ' + err.message; } }
+    try { setMsg('Submitting…'); const r = await submitAttempt(q, qs, ans, name, email, secs); const d = store.get('hk:done', {}); d[q.id] = { score: r.score, max: r.max }; store.set('hk:done', d);
+      if (Object.keys(typedClean).length || up) { try { await saveExtras(q, name, email, typedClean, up); } catch(e){ warn = warn || ('Your typed answers / PDF could not be saved: ' + (e.message || e)); } }
+      HQ.cur = null; showQuizResult(q, r, auto, { typed: Object.keys(typedClean).length, pdf: up ? up.name : '', warn }); renderQuizList(); }
+    catch(err){ setMsg(err.message, 'err'); if (/already/i.test(err.message)) HQ.cur = null; else if (!auto) startTimer(); }
   };
-  m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'sub') { const un = qs.length - Object.keys(ans).length; if (!un || confirm(un + ' question(s) unanswered. Submit anyway?')) submit(false); } else if (a.dataset.a === 'close') { if (confirm('Leave the quiz? Your answers will be lost.')) { clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); } } };
-  m.onchange = e => { if (e.target.type === 'radio') ans[e.target.dataset.q] = +e.target.value; };
-  clearInterval(HQ.iv); HQ.iv = setInterval(() => { const l = Math.max(0, (end - Date.now()) / 1000), t = $('#hqT', m); if (t) t.textContent = '⏱ ' + fmtClock(l); if (l <= 0) { toast('Time is up — submitting', 'warn', '⏰'); submit(true); } }, 500);
+  m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'sub') { const answered = new Set([...Object.keys(ans), ...Object.keys(typed).filter(k => (typed[k] || '').trim())]); const un = paperMode ? 0 : qs.filter(x => !answered.has(x.id)).length; if (!un || confirm(un + ' question(s) unanswered. Submit anyway?')) submit(false); } else if (a.dataset.a === 'close') { if (confirm('Leave the quiz? Your answers will be lost.')) { clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); } } };
+  m.oninput = e => { const t = e.target; if (t && t.dataset && t.dataset.t) typed[t.dataset.t] = t.value; };
+  m.onchange = async e => { const t = e.target; if (t.type === 'radio') ans[t.dataset.q] = +t.value; else if (t.id === 'hqF') { const f = t.files && t.files[0]; if (!f) { file = null; const i0 = $('#hqFi', m); if (i0) { i0.textContent = ''; } return; } const err = await pdfCheck(f); const info = $('#hqFi', m); if (err) { file = null; t.value = ''; if (info) { info.textContent = '❌ ' + err; info.className = 'hk-msg err'; } return; } file = f; if (info) { info.textContent = '✅ ' + f.name + ' (' + fmtSize(f.size) + ') — will be uploaded when you submit'; info.className = 'hk-msg ok'; } } };
+  startTimer();
+}
+async function saveExtras(q, name, email, typed, up){
+  if (HB.remote) {
+    try { await pgrest('rpc/hr_save_extra', { method: 'POST', body: { p_quiz: q.id, p_email: email, p_name: name, p_typed: typed, p_path: up ? up.path : null, p_fname: up ? up.name : null, p_size: up ? up.size : null } }); return; }
+    catch(e){ if (e.status === 404) throw new Error('the organiser must run the updated SQL (Admin → Setup) first.'); throw e; }
+  }
+  const l = store.get('hk:lx:' + q.id, []); l.push({ name, email, typed, created_at: new Date().toISOString() }); store.set('hk:lx:' + q.id, l);
 }
 async function submitAttempt(q, qs, ans, name, email, secs){
   if (HB.remote) {
@@ -11998,10 +12086,11 @@ async function submitAttempt(q, qs, ans, name, email, secs){
   const lb = store.get('hk:latt:' + q.id, []); lb.push({ name, email, score, max_score: max, secs }); lb.sort((x, y) => y.score - x.score || x.secs - y.secs); store.set('hk:latt:' + q.id, lb);
   return { score, max, correct, total: keys.length, review };
 }
-function showQuizResult(q, r, auto){
+function showQuizResult(q, r, auto, ex){
   const m = qzModal(), B = $('#hkQB', m); confetti(50);
   const qs = store.get('hk:lqq:' + q.id, []);
-  B.innerHTML = `<div class="hrp-card" style="text-align:center"><div class="hrp-big" style="margin:0">${r.score}/${r.max}</div><b>${auto ? 'Time is up — answers submitted' : 'Answers submitted'}</b>${r.correct}/${r.total} correct</div><p class="hrp-muted">Your score is recorded. Check the leaderboard for your rank.</p><div class="hrp-row"><button class="hrp-btn pri" data-a="lb">🏆 Leaderboard</button><button class="hrp-btn" data-a="close">Close</button></div>`;
+  ex = ex || {}; m.oninput = null; m.onchange = null;
+  B.innerHTML = `<div class="hrp-card" style="text-align:center">${r.total ? `<div class="hrp-big" style="margin:0">${r.score}/${r.max}</div>` : ''}<b>${auto ? 'Time is up — answers submitted' : 'Answers submitted'}</b>${r.total ? ' ' + r.correct + '/' + r.total + ' correct' : ''}</div>${ex.typed ? `<p class="hrp-muted">✍️ ${ex.typed} typed answer(s) saved for the organisers to review.</p>` : ''}${ex.pdf ? `<p class="hrp-muted">📎 PDF uploaded: ${esc(ex.pdf)}</p>` : ''}${ex.warn ? `<p class="hk-msg err">⚠️ ${esc(ex.warn)}</p>` : ''}<p class="hrp-muted">Your score is recorded. Check the leaderboard for your rank.</p><div class="hrp-row"><button class="hrp-btn pri" data-a="lb">🏆 Leaderboard</button><button class="hrp-btn" data-a="close">Close</button></div>`;
   m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') m.classList.remove('open'); else if (a.dataset.a === 'lb') openBoard(q); };
 }
 async function openBoard(q){
@@ -12011,6 +12100,40 @@ async function openBoard(q){
   B.innerHTML = rows.length ? table(rows.slice(0, 30).map((r, i) => [String(i + 1), r.name, String(r.score), fmtClock(r.secs || 0)]), ['#', 'Name', 'Score', 'Time']) : '<p class="hrp-muted">No submissions yet.</p>';
 }
 feat('Hackathon quizzes: participants can take timed quizzes and see a leaderboard', () => {});
+/* ---- combined registration hub: Team + Quiz in one place ---- */
+function teamLocked(){ return HB.ev.lock_main !== false && !evState().regOpen; }
+function quizRegOpenAny(){ try { return (HQ.list || []).some(q => needReg(q) && regState(q) === 'open'); } catch(e){ return false; } }
+function quizExamLive(){ try { const done = store.get('hk:done', {}); return (HQ.list || []).some(q => quizState(q) === 'open' && !done[q.id] && (!needReg(q) || isReg(q))); } catch(e){ return false; } }
+function quizAnyOpen(){ return quizRegOpenAny() || quizExamLive(); }
+function rhExpand(it, on){ if (!it) return; it.classList.toggle('expanded', !!on); const b = it.querySelector('.rh-head'); if (b) b.setAttribute('aria-expanded', on ? 'true' : 'false'); }
+function rhSet(id, state, cls, txt, sub){
+  const it = hkEl(id); if (!it) return; const was = it.dataset.state; it.dataset.state = state;
+  const p = hkEl(id + 'Pill'); if (p) { p.className = 'hk-pill ' + cls; p.textContent = txt; }
+  const s = hkEl(id + 'Sub'); if (s && sub) s.innerHTML = sub;
+  if (was !== state) rhExpand(it, state === 'open');
+}
+function updateRegHub(){
+  if (!HB.checked || !hkEl('regHub')) return; const st = evState();
+  const locked = teamLocked();
+  rhSet('rhTeam', locked ? 'closed' : 'open', locked ? 'bad' : 'ok', locked ? '🔒 Closed' : '🟢 Open', locked ? `Registration closed on ${fmtIST(st.c)}` : `Register your team in 4 steps · closes ${fmtIST(st.c)}`);
+  const list = HQ.list || [], regOpen = quizRegOpenAny(), live = quizExamLive();
+  if (!list.length) rhSet('rhQuiz', 'closed', 'bad', '🔒 Closed', 'No quiz is open for registration right now');
+  else if (regOpen) { const n = list.filter(q => needReg(q) && regState(q) === 'open').length; rhSet('rhQuiz', 'open', 'ok', '🟢 Open', `${n} quiz registration${n > 1 ? 's' : ''} open`); }
+  else if (live) rhSet('rhQuiz', 'open', '', '🟡 Exam live', 'Registration is closed — registered participants can start their exam');
+  else rhSet('rhQuiz', 'closed', 'bad', '🔒 Closed', 'Quiz registration is closed');
+  syncRegButtons();
+}
+function syncRegButtons(){
+  const lock = teamLocked() && !quizAnyOpen();
+  $$('a.btn[href="#register"], a.btn[href="#hackathon"]').forEach(a => {
+    if (a.dataset.hkT === undefined) { a.dataset.hkT = a.textContent; a.dataset.hkH = a.getAttribute('href'); }
+    if (lock) { a.textContent = '🔒 Registration closed'; a.classList.add('hk-off'); a.setAttribute('href', '#hackathon'); } else { a.textContent = a.dataset.hkT; a.setAttribute('href', a.dataset.hkH); a.classList.remove('hk-off'); }
+  });
+}
+document.addEventListener('click', e => { const b = e.target.closest('.rh-head'); if (!b) return; const it = b.closest('.rh-item'); rhExpand(it, !it.classList.contains('expanded')); });
+setInterval(() => { if (!HB.checked || document.hidden) return; if (HQ.list && quizSig() !== HQ.sig) paintQuizList(); else updateRegHub(); }, 4000);
+feat('One Registration hub: Team and Quiz registration together — open ones expand, closed ones stay locked', () => {});
+
 
 /* ---- load admin-managed question bank ---- */
 const BK = { rows: [], remote: false };
@@ -12052,6 +12175,66 @@ function parseCSV(t){
 }
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 24) || 'general';
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+const HK_SQL_FILES = `
+-- ============================================================
+-- PART 2 — typed answers + PDF uploads (max 5 MB) for quizzes
+-- Safe to run again.
+-- ============================================================
+
+-- Storage bucket for PDFs (public links, PDF only, 5 MB limit)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('hr-quiz-files', 'hr-quiz-files', true, 5242880, array['application/pdf'])
+on conflict (id) do update set public = true, file_size_limit = 5242880, allowed_mime_types = array['application/pdf'];
+
+drop policy if exists hr_files_insert_answers on storage.objects;
+create policy hr_files_insert_answers on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'hr-quiz-files' and name like 'answers/%');
+drop policy if exists hr_files_admin_all on storage.objects;
+create policy hr_files_admin_all on storage.objects for all to authenticated
+  using (bucket_id = 'hr-quiz-files' and public.hr_is_admin())
+  with check (bucket_id = 'hr-quiz-files' and public.hr_is_admin());
+
+-- One row per question paper (kind = 'paper') and per participant submission (kind = 'answer')
+create table if not exists public.hr_quiz_files (
+  id uuid primary key default gen_random_uuid(),
+  quiz_id uuid not null references public.hr_quizzes(id) on delete cascade,
+  kind text not null check (kind in ('paper', 'answer')),
+  email text,
+  name text,
+  typed jsonb,
+  file_path text,
+  file_name text,
+  file_size int check (file_size is null or file_size <= 5242880),
+  created_at timestamptz not null default now()
+);
+create unique index if not exists hr_quiz_files_paper_uq on public.hr_quiz_files (quiz_id) where kind = 'paper';
+create unique index if not exists hr_quiz_files_answer_uq on public.hr_quiz_files (quiz_id, lower(email)) where kind = 'answer';
+alter table public.hr_quiz_files enable row level security;
+drop policy if exists hr_qf_read_paper on public.hr_quiz_files;
+drop policy if exists hr_qf_admin on public.hr_quiz_files;
+create policy hr_qf_read_paper on public.hr_quiz_files for select
+  using (public.hr_is_admin() or (kind = 'paper' and exists (select 1 from public.hr_quizzes z where z.id = quiz_id and z.published)));
+create policy hr_qf_admin on public.hr_quiz_files for all using (public.hr_is_admin()) with check (public.hr_is_admin());
+
+-- Participants save typed answers / PDF only AFTER a real quiz attempt exists for their email
+create or replace function public.hr_save_extra(p_quiz uuid, p_email text, p_name text, p_typed jsonb, p_path text, p_fname text, p_size int)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.hr_attempts where quiz_id = p_quiz and lower(email) = lower(trim(p_email))) then
+    raise exception 'NO_ATTEMPT';
+  end if;
+  if p_path is not null and (p_path not like ('answers/' || p_quiz::text || '/%') or coalesce(p_size, 0) > 5242880) then
+    raise exception 'BAD_FILE';
+  end if;
+  insert into public.hr_quiz_files (quiz_id, kind, email, name, typed, file_path, file_name, file_size)
+  values (p_quiz, 'answer', lower(trim(p_email)), left(trim(p_name), 80), p_typed, p_path, left(p_fname, 150), p_size)
+  on conflict (quiz_id, lower(email)) where kind = 'answer' do nothing;
+  return jsonb_build_object('ok', true);
+end $$;
+grant execute on function public.hr_save_extra(uuid, text, text, jsonb, text, text, int) to anon, authenticated;
+`;
+const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES;
+
 const AD = { sub: store.get('adminSub', 'hack'), c: null, qz: null, bank: { subj: 'all', sem: '-1', lvl: '0', q: '', lim: 25, edit: null, imp: null } };
 const ADV = {};
 const admErr = e => (e && e.status === 401 || e && e.status === 403 || /permission|policy|jwt|row-level/i.test(e && e.message || '')) ? 'Permission denied — log in as an Admin and make sure the SQL policies are installed.' : (e && e.message) || 'Something went wrong';
@@ -12132,19 +12315,19 @@ ADV.quiz = async box => {
   if (AD.qz && AD.qz.mode === 'edit') return adQuizEditor(box);
   if (AD.qz && AD.qz.mode === 'results') return adQuizResults(box);
   box.innerHTML = '<p class="hrp-muted">Loading…</p>';
-  try { const list = await QZ.list(); AD.qzList = list;
-    box.innerHTML = `<div class="hrp-row"><button class="hrp-btn pri" data-ad="qnew">➕ New quiz</button></div>${list.map(q => `<div class="hrp-card" style="margin:8px 0"><b>${esc(q.title)}</b> ${q.published ? '<span class="hk-pill ok">published</span>' : '<span class="hk-pill">draft</span>'}<div class="hrp-muted">${q.duration_min} min${q.opens_at ? ' · opens ' + new Date(q.opens_at).toLocaleString() : ''}${q.closes_at ? ' · closes ' + new Date(q.closes_at).toLocaleString() : ''}${q.reg_closes_at ? ' · registration ' + (q.reg_opens_at ? new Date(q.reg_opens_at).toLocaleString() + ' → ' : 'until ') + new Date(q.reg_closes_at).toLocaleString() : ''}</div>
+  try { const list = await QZ.list(); AD.qzList = list; AD.papers = {}; if (HB.remote) { try { (await pgrest('hr_quiz_files?kind=eq.paper&select=quiz_id,file_name')).forEach(r => { AD.papers[r.quiz_id] = r; }); } catch(e){} }
+    box.innerHTML = `<div class="hrp-row"><button class="hrp-btn pri" data-ad="qnew">➕ New quiz</button></div>${list.map(q => `<div class="hrp-card" style="margin:8px 0"><b>${esc(q.title)}</b> ${q.published ? '<span class="hk-pill ok">published</span>' : '<span class="hk-pill">draft</span>'}<div class="hrp-muted">${q.duration_min} min${AD.papers[q.id] ? ' · 📄 paper attached' : ''}${q.opens_at ? ' · opens ' + new Date(q.opens_at).toLocaleString() : ''}${q.closes_at ? ' · closes ' + new Date(q.closes_at).toLocaleString() : ''}${q.reg_closes_at ? ' · registration ' + (q.reg_opens_at ? new Date(q.reg_opens_at).toLocaleString() + ' → ' : 'until ') + new Date(q.reg_closes_at).toLocaleString() : ''}</div>
     <div class="hrp-row" style="margin:8px 0 0"><button class="hrp-mini" data-ad="qopen" data-id="${esc(q.id)}">✏️ Edit & questions</button><button class="hrp-mini" data-ad="qpub" data-id="${esc(q.id)}">${q.published ? 'Unpublish' : 'Publish'}</button><button class="hrp-mini" data-ad="qres" data-id="${esc(q.id)}">📊 Results</button><button class="hrp-mini" data-ad="qregs" data-id="${esc(q.id)}">📋 Registrations CSV</button><button class="hrp-mini" data-ad="qdel" data-id="${esc(q.id)}">🗑 Delete</button></div></div>`).join('') || '<p class="hrp-muted">No quizzes yet. Click “New quiz” to create one for your hackathon.</p>'}`; }
   catch(e){ box.innerHTML = `<p class="hrp-muted">❌ ${esc(admErr(e))}</p>`; }
 };
 adAct.qnew = () => { AD.qz = { mode: 'edit', quiz: { id: uid(), title: '', description: '', duration_min: 30, opens_at: null, closes_at: null, published: false, isNew: true }, qs: [], editQ: null }; adRender(); };
-adAct.qopen = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { AD.qz = { mode: 'edit', quiz: { ...q }, qs: await QZ.qs(q.id), editQ: null }; adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.qopen = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { AD.qz = { mode: 'edit', quiz: { ...q }, qs: await QZ.qs(q.id), editQ: null, paper: await FILES.paper(q.id) }; adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 adAct.qpub = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { await QZ.save({ ...q, published: !q.published }); renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 adAct.qdel = async b => { if (!confirm('Delete this quiz and all its questions and results?')) return; try { await QZ.del(b.dataset.id); renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
-adAct.qres = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { AD.qz = { mode: 'results', quiz: q, rows: await QZ.attempts(q.id) }; adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.qres = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { AD.qz = { mode: 'results', quiz: q, rows: await QZ.attempts(q.id), files: await FILES.answers(q.id), qs: await QZ.qs(q.id).catch(() => []) }; adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 function adQuizResults(box){
   const { quiz, rows } = AD.qz;
-  box.innerHTML = `<div class="hrp-row"><button class="hrp-tab" data-ad="qback">← Quizzes</button><b>${esc(quiz.title)} — results (${rows.length})</b><button class="hrp-btn" data-ad="qcsv">⬇ CSV</button></div>${rows.length ? table(rows.map((r, i) => [String(i + 1), r.name, r.email, r.score + '/' + r.max_score, fmtClock(r.secs || 0)]), ['#', 'Name', 'Email', 'Score', 'Time']) : '<p class="hrp-muted">No submissions yet.</p>'}`;
+  box.innerHTML = `<div class="hrp-row"><button class="hrp-tab" data-ad="qback">← Quizzes</button><b>${esc(quiz.title)} — results (${rows.length})</b><button class="hrp-btn" data-ad="qcsv">⬇ CSV</button></div>${rows.length ? table(rows.map((r, i) => [String(i + 1), r.name, r.email, r.score + '/' + r.max_score, fmtClock(r.secs || 0)]), ['#', 'Name', 'Email', 'Score', 'Time']) : '<p class="hrp-muted">No submissions yet.</p>'}${filesResultsHtml()}`;
 }
 adAct.qback = () => { AD.qz = null; adRender(); };
 adAct.qcsv = () => { const { quiz, rows } = AD.qz; download('quiz-results.csv', toCSV([['Rank', 'Name', 'Email', 'Score', 'Max', 'Seconds', 'Submitted']].concat(rows.map((r, i) => [i + 1, r.name, r.email, r.score, r.max_score, r.secs, r.created_at]))), 'text/csv'); };
@@ -12158,6 +12341,7 @@ function adQuizEditor(box){
   <div class="hrp-row"><label>Duration (min) <input class="hrp-in" id="aqDur" type="number" min="1" max="600" value="${quiz.duration_min}" style="width:90px"></label><label>Opens <input class="hrp-in" id="aqOp" type="datetime-local" value="${quiz.opens_at ? localInput(new Date(quiz.opens_at)) : ''}" style="width:auto"></label><label>Closes <input class="hrp-in" id="aqCl" type="datetime-local" value="${quiz.closes_at ? localInput(new Date(quiz.closes_at)) : ''}" style="width:auto"></label></div>
   <div class="hrp-row"><label>Registration opens <input class="hrp-in" id="aqRo" type="datetime-local" value="${quiz.reg_opens_at ? localInput(new Date(quiz.reg_opens_at)) : ''}" style="width:auto"></label><label>Registration closes <input class="hrp-in" id="aqRc" type="datetime-local" value="${quiz.reg_closes_at ? localInput(new Date(quiz.reg_closes_at)) : ''}" style="width:auto"></label></div><p class="hrp-muted">Leave both empty if no registration is needed. Exam can only be taken by registered emails when a registration deadline is set.</p>
   <label class="hrp-check"><input type="checkbox" id="aqPub" ${quiz.published ? 'checked' : ''}><span>Published (visible to participants inside its open window)</span></label><div class="hk-msg" id="aqMsg"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="qsave">Save quiz</button></div>
+  <div class="hrp-h">Question paper / file upload</div>${paperCardHtml()}
   <div class="hrp-h">Questions (${qs.length})</div><div class="hrp-row"><button class="hrp-btn" data-ad="qqnew">➕ Add question</button><button class="hrp-btn" data-ad="qqimp">⬆ Bulk import</button></div>${form}
   ${qs.map((x, i) => `<div class="hrp-card" style="margin:8px 0"><b>${i + 1}. ${esc(x.text)}</b><div class="hrp-muted">${(x.options || []).map((o, k) => (k === x.answer ? '✅ ' : '') + 'ABCD'[k] + ') ' + esc(o)).join('  ·  ')} · ${x.points} pt</div><div class="hrp-row" style="margin:6px 0 0"><button class="hrp-mini" data-ad="qqedit" data-id="${esc(x.id)}">Edit</button><button class="hrp-mini" data-ad="qqdel" data-id="${esc(x.id)}">Delete</button></div></div>`).join('')}
   <div id="qImp"></div>`;
@@ -12190,6 +12374,48 @@ adAct.qimpgo = async () => { const c = AD.c, m = $('#qImpM', c), raw = $('#qImpT
     await QZ.saveQ(AD.qz.quiz.id, arr); AD.qz.qs = await QZ.qs(AD.qz.quiz.id); AD.qz.imp = false; adRender(); toast(`Imported ${arr.length} question(s)` + (bad.length ? `, skipped ${bad.length}` : ''), 'success', '⬆'); }
   catch(e){ m.textContent = admErr(e); m.className = 'hk-msg err'; } };
 feat('Admin: create hackathon quizzes, add questions one by one or by CSV/JSON import, publish, view results', () => {});
+/* ---------- Quiz files: question paper (admin upload) + participant typed answers / PDFs ---------- */
+const FILES = {
+  async paper(id){ if (!HB.remote) return null; try { const r = await pgrest(`hr_quiz_files?quiz_id=eq.${encodeURIComponent(id)}&kind=eq.paper&select=*`); return (r && r[0]) || null; } catch(e){ return null; } },
+  async answers(id){ if (!HB.remote) return []; try { return await pgrest(`hr_quiz_files?quiz_id=eq.${encodeURIComponent(id)}&kind=eq.answer&select=*&order=created_at`); } catch(e){ return []; } }
+};
+function paperCardHtml(){
+  const p = AD.qz.paper;
+  const cur = p ? `<p>📄 <a href="${esc(paperUrl(p.file_path))}" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:underline">${esc(p.file_name || 'Question paper')}</a> <span class="hrp-muted">(${p.file_size ? fmtSize(p.file_size) : 'PDF'})</span> <button class="hrp-mini" data-ad="pdel" type="button">🗑 Remove</button></p>` : '<p class="hrp-muted">No question paper uploaded yet.</p>';
+  return `<div class="hrp-card" id="aqPaper">${cur}${HB.remote ? `<input type="file" id="aqPF" accept="application/pdf,.pdf" style="display:block;margin:8px 0;max-width:100%;color:var(--text)"><div class="hrp-row"><button class="hrp-btn pri" data-ad="pupload" type="button">⬆ ${p ? 'Replace PDF' : 'Upload PDF'}</button></div>` : '<p class="hrp-muted">PDF upload needs the database — run the SQL in the Setup tab first.</p>'}<div class="hk-msg" id="aqPM"></div><p class="hrp-muted">PDF only, max 5 MB. Participants can open it from the quiz card and inside the exam. Participants can answer by choosing an option, typing, or uploading their own PDF (max 5 MB). A quiz with only a paper and no questions works as a paper-based exam.</p></div>`;
+}
+async function ensureQuizSaved(){
+  const q = AD.qz.quiz; const ex = await QZ.list(); if (ex.some(x => x.id === q.id)) return;
+  await QZ.save({ id: q.id, title: q.title || 'Untitled quiz', description: q.description || '', duration_min: q.duration_min || 30, opens_at: q.opens_at, closes_at: q.closes_at, published: false });
+}
+adAct.pupload = async () => {
+  const c = AD.c, m = $('#aqPM', c), f = ($('#aqPF', c).files || [])[0]; const say = (t, k) => { m.textContent = t; m.className = 'hk-msg' + (k ? ' ' + k : ''); };
+  const err = await pdfCheck(f); if (err) { say(err, 'err'); return; }
+  try { say('Uploading…'); await ensureQuizSaved(); const quiz = AD.qz.quiz, old = AD.qz.paper;
+    const path = 'papers/' + quiz.id + '/' + Date.now() + '-' + uid() + '.pdf'; await uploadPdf(path, f);
+    const row = { id: uid(), quiz_id: quiz.id, kind: 'paper', file_path: path, file_name: f.name.slice(0, 150), file_size: f.size };
+    if (old) await pgrest('hr_quiz_files?id=eq.' + encodeURIComponent(old.id), { method: 'DELETE' });
+    await pgrest('hr_quiz_files', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: [row] });
+    if (old) removeObject(old.file_path);
+    AD.qz.paper = row; renderQuizList(); adRender(); toast('Question paper uploaded', 'success', '📄'); }
+  catch(e){ say(admErr(e), 'err'); }
+};
+adAct.pdel = async () => {
+  const p = AD.qz.paper; if (!p || !confirm('Remove this question paper?')) return;
+  try { await pgrest('hr_quiz_files?id=eq.' + encodeURIComponent(p.id), { method: 'DELETE' }); removeObject(p.file_path); AD.qz.paper = null; renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); }
+};
+function typedHtml(r){
+  const qm = {}; ((AD.qz && AD.qz.qs) || []).forEach((x, i) => { qm[x.id] = i + 1; }); const t = r.typed || {}; const keys = Object.keys(t); if (!keys.length) return '<span class="hrp-muted">—</span>';
+  return `<details><summary>${keys.length} answer(s)</summary>${keys.map(k => `<div style="margin:4px 0"><b>${k === '_paper' ? 'Answer' : 'Q' + (qm[k] || '?')}:</b> ${esc(t[k])}</div>`).join('')}</details>`;
+}
+function filesResultsHtml(){
+  const files = (AD.qz && AD.qz.files) || []; if (!files.length) return '<div class="hrp-h">✍️ Typed answers &amp; 📎 PDF uploads</div><p class="hrp-muted">No typed answers or PDFs submitted yet.</p>';
+  return `<div class="hrp-h">✍️ Typed answers &amp; 📎 PDF uploads (${files.length})</div><div class="hrp-row"><button class="hrp-btn" data-ad="fcsv" type="button">⬇ Typed answers CSV</button></div><div style="overflow:auto"><table class="hrp-table"><tr><th>Name</th><th>Email</th><th>Typed answers</th><th>PDF</th><th>When</th></tr>${files.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td>${typedHtml(r)}</td><td>${r.file_path ? `<a href="${esc(paperUrl(r.file_path))}" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:underline">📎 ${esc(r.file_name || 'PDF')}</a> <span class="hrp-muted">${r.file_size ? fmtSize(r.file_size) : ''}</span>` : '<span class="hrp-muted">—</span>'}</td><td>${new Date(r.created_at).toLocaleString()}</td></tr>`).join('')}</table></div>`;
+}
+adAct.fcsv = () => { const qm = {}; (AD.qz.qs || []).forEach((x, i) => { qm[x.id] = i + 1; }); const rows = (AD.qz.files || []).map(r => [r.name, r.email, Object.keys(r.typed || {}).map(k => (k === '_paper' ? 'Answer' : 'Q' + (qm[k] || '?')) + ': ' + r.typed[k]).join(' | '), r.file_path ? paperUrl(r.file_path) : '', r.created_at]); download('typed-answers.csv', toCSV([['Name', 'Email', 'Typed answers', 'PDF link', 'Submitted']].concat(rows)), 'text/csv'); };
+feat('Admin: upload a question-paper PDF per quiz (max 5 MB) and review participants’ typed answers & PDF uploads', () => {});
+feat('Quiz: answer by option, by typing, or by uploading a PDF (max 5 MB)', () => {});
+
 feat('Quiz answers stay on the server — participants only receive the score after submitting', () => {});
 
 /* ---------- Question bank manager ---------- */
@@ -12280,15 +12506,16 @@ feat('Admin: create new subjects and choose semester, branch and level for each 
 /* ---------- Setup / SQL ---------- */
 ADV.setup = async box => {
   box.innerHTML = '<p class="hrp-muted">Checking the database…</p>';
-  const probes = [['hr_events', 'Event settings'], ['hr_registrations', 'Registrations'], ['hr_bank', 'Question bank'], ['hr_quizzes', 'Quizzes'], ['hr_quiz_questions', 'Quiz questions'], ['hr_quiz_keys', 'Quiz answer keys (admin only)'], ['hr_attempts', 'Quiz attempts (admin only)']]; const res = [];
+  const probes = [['hr_events', 'Event settings'], ['hr_registrations', 'Registrations'], ['hr_bank', 'Question bank'], ['hr_quizzes', 'Quizzes'], ['hr_quiz_questions', 'Quiz questions'], ['hr_quiz_keys', 'Quiz answer keys (admin only)'], ['hr_attempts', 'Quiz attempts (admin only)'], ['hr_quiz_files', 'Quiz PDFs & typed answers']]; const res = [];
   for (const [t, l] of probes) { try { await pgrest(t + '?select=*&limit=1'); res.push([l, '✅ ready']); } catch(e){ res.push([l, '❌ ' + (e.status === 404 ? 'not created' : admErr(e))]); } }
   let fn = '✅ ready'; try { await pgrest('rpc/hr_now', { method: 'POST', body: {} }); } catch(e){ fn = '❌ not created'; }
   res.push(['Server clock (hr_now)', fn]);
+  { let st = '✅ ready'; try { const r = await fetch(HK_URL + '/storage/v1/object/public/' + HK_BUCKET + '/_probe', { headers: { apikey: HK_KEY } }); const j = await r.json().catch(() => ({})); if (/bucket not found/i.test(j.message || j.error || '')) st = '❌ not created'; } catch(e){ st = '❌ ' + (e.message || 'unreachable'); } res.push(['PDF storage bucket (hr-quiz-files)', st]); }
   box.innerHTML = `${table(res, ['Item', 'Status'])}<div class="hrp-h">How to set up (2 minutes)</div><ol class="hrp-muted" style="padding-left:18px;line-height:1.7"><li>Open your Supabase project → <b>SQL Editor</b> → New query.</li><li>Tap <b>Copy SQL</b> below, paste it and press <b>Run</b>.</li><li>Come back here and reopen this tab — every row should show ✅.</li></ol>
   <div class="hrp-row"><button class="hrp-btn pri" data-ad="sqlcopy">📋 Copy SQL</button><button class="hrp-btn" data-ad="sqldl">⬇ Download .sql</button><button class="hrp-btn" data-ad="setupre">↻ Re-check</button></div>
   <p class="hrp-muted">Until the SQL is installed: registrations are emailed through Formspree, admin edits are saved only in this browser, and quizzes are visible only to you. The SQL creates the tables, secure row-level policies (only Admins can write) and the server-side deadline check.</p>`;
 };
-adAct.sqlcopy = () => copy(HK_SQL); adAct.sqldl = () => download('supabase-hackathon.sql', HK_SQL, 'text/plain'); adAct.setupre = async () => { await loadEvent(); await loadBank(); adRender(); };
+adAct.sqlcopy = () => copy(HK_SQL_ALL); adAct.sqldl = () => download('supabase-hackathon.sql', HK_SQL_ALL, 'text/plain'); adAct.setupre = async () => { await loadEvent(); await loadBank(); adRender(); };
 feat('Admin: Setup tab checks every database table and gives one-click SQL', () => {});
 
 /* ---------- final wiring ---------- */
