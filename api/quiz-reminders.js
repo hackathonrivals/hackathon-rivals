@@ -37,16 +37,14 @@ export default async function handler(req, res) {
       // or the CRON_SECRET env var if you set one
       const given = bearer || String((req.query && req.query.key) || '');
       let ok = !!given && !!SECRET && safeEq(given, SECRET);
-      let dbSecret = '';
+      let dbSecret = '', dbErr = '';
       if (!ok && given) {
         const dr = await (await sb('hr_cron_secret?id=eq.1&select=secret')).json().catch(() => null);
         dbSecret = Array.isArray(dr) && dr[0] ? String(dr[0].secret || '') : '';
+        if (!dbSecret) dbErr = Array.isArray(dr) ? 'table is empty' : String((dr && dr.message) || 'cannot read table').slice(0, 80);
         ok = !!dbSecret && safeEq(given, dbSecret);
       }
-      if (!ok) {
-        if (!SECRET && !dbSecret && !given) return res.status(401).json({ error: 'Unauthorized' });
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
+      if (!ok) return res.status(401).json({ error: 'Unauthorized', v: 3, env: !!SECRET, db: !!dbSecret, dbErr, given: given.length, dbLen: dbSecret.length });
     }
 
     if (manual) {
