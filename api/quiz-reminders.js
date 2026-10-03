@@ -20,9 +20,11 @@ const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(Str
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
   try {
-    const API_KEY = process.env.RESEND_API_KEY, SB_URL = process.env.SUPABASE_URL, SRV = process.env.SUPABASE_SERVICE_ROLE_KEY, SECRET = process.env.CRON_SECRET;
-    if (!SECRET) return res.status(500).json({ error: 'CRON_SECRET is not set in Vercel' });
+    const API_KEY = process.env.RESEND_API_KEY, SB_URL = process.env.SUPABASE_URL, SRV = process.env.SUPABASE_SERVICE_ROLE_KEY, SECRET = process.env.CRON_SECRET || '';
     if (!API_KEY || !SB_URL || !SRV) return res.status(500).json({ error: 'RESEND_API_KEY / SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set' });
+    const sbH = { apikey: SRV, 'Content-Type': 'application/json' };
+    if (SRV.startsWith('eyJ')) sbH.Authorization = 'Bearer ' + SRV;
+    const sb = (path, opt) => fetch(SB_URL + '/rest/v1/' + path, Object.assign({}, opt, { headers: Object.assign({}, sbH, (opt && opt.headers) || {}) }));
     const bearer = String(req.headers.authorization || '').replace('Bearer ', '');
     const body = (req.body && typeof req.body === 'object') ? req.body : {};
     const manual = req.method === 'POST' && !!body.quiz_id;
@@ -30,11 +32,22 @@ export default async function handler(req, res) {
       const ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_6GqdbyBWEX7cIkTzcp9yvw_WYNp5GJh';
       const ar = bearer ? await fetch(SB_URL + '/rest/v1/rpc/hr_is_admin', { method: 'POST', headers: { apikey: ANON, Authorization: 'Bearer ' + bearer, 'Content-Type': 'application/json' }, body: '{}' }) : null;
       if (!ar || !ar.ok || (await ar.json()) !== true) return res.status(403).json({ ok: false, error: 'Admins only' });
-    } else if (!safeEq(bearer || String((req.query && req.query.key) || ''), SECRET)) return res.status(401).json({ error: 'Unauthorized' });
-
-    const sbH = { apikey: SRV, 'Content-Type': 'application/json' };
-    if (SRV.startsWith('eyJ')) sbH.Authorization = 'Bearer ' + SRV;
-    const sb = (path, opt) => fetch(SB_URL + '/rest/v1/' + path, Object.assign({}, opt, { headers: Object.assign({}, sbH, (opt && opt.headers) || {}) }));
+    } else {
+      // scheduler: accepts the secret stored in the database table hr_cron_secret (no copy-paste needed),
+      // or the CRON_SECRET env var if you set one
+      const given = bearer || String((req.query && req.query.key) || '');
+      let ok = !!given && !!SECRET && safeEq(given, SECRET);
+      let dbSecret = '';
+      if (!ok && given) {
+        const dr = await (await sb('hr_cron_secret?id=eq.1&select=secret')).json().catch(() => null);
+        dbSecret = Array.isArray(dr) && dr[0] ? String(dr[0].secret || '') : '';
+        ok = !!dbSecret && safeEq(given, dbSecret);
+      }
+      if (!ok) {
+        if (!SECRET && !dbSecret && !given) return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+    }
 
     if (manual) {
       const kind = ['start', 'remind', 'changed'].includes(body.kind) ? body.kind : 'start';
