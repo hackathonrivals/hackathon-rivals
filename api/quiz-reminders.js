@@ -1,0 +1,113 @@
+// api/quiz-reminders.js — emails registered students: 5 min before start, at start, and when the schedule changes.
+// Vercel env vars: RESEND_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, CRON_SECRET (any long random text)
+// A scheduler must call this URL every minute with header  Authorization: Bearer <CRON_SECRET>
+// (Supabase pg_cron setup is in quiz-reminders.sql; Vercel Cron also works on a paid plan).
+import crypto from 'node:crypto';
+
+const FROM = 'Hackathon Rivals <noreply@hackathonrivals.in>';
+const SITE = 'https://hackathonrivals.in';
+const enc = encodeURIComponent;
+const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const clean = s => String(s || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
+const goodMail = e => { const s = String(e || '').trim(), a = s.indexOf('@'); return a > 0 && s.indexOf('.', a) > a + 1 && s.indexOf(' ') < 0 && s.length > 5; };
+const fmt = ms => new Date(ms).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) + ' IST';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const same = (a, b) => !!a && !!b && Date.parse(a) === Date.parse(b);
+const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  try {
+    const API_KEY = process.env.RESEND_API_KEY, SB_URL = process.env.SUPABASE_URL, SRV = process.env.SUPABASE_SERVICE_ROLE_KEY, SECRET = process.env.CRON_SECRET;
+    if (!SECRET) return res.status(500).json({ error: 'CRON_SECRET is not set in Vercel' });
+    if (!API_KEY || !SB_URL || !SRV) return res.status(500).json({ error: 'RESEND_API_KEY / SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set' });
+    if (!safeEq(String(req.headers.authorization || '').replace('Bearer ', ''), SECRET)) return res.status(401).json({ error: 'Unauthorized' });
+
+    const sbH = { apikey: SRV, 'Content-Type': 'application/json' };
+    if (SRV.startsWith('eyJ')) sbH.Authorization = 'Bearer ' + SRV;
+    const sb = (path, opt) => fetch(SB_URL + '/rest/v1/' + path, Object.assign({}, opt, { headers: Object.assign({}, sbH, (opt && opt.headers) || {}) }));
+
+    const quizzes = await (await sb('hr_quizzes?published=eq.true&opens_at=not.is.null&select=id,title,opens_at,closes_at,duration_min,remind_sent_for,start_sent_for,time_changed_at,change_notified_at')).json();
+    if (!Array.isArray(quizzes)) return res.status(500).json({ error: 'Run the PART 5 SQL first (' + (quizzes && quizzes.message || 'unknown') + ')' });
+
+    const now = Date.now(), report = [];
+    for (const q of quizzes) {
+      const start = Date.parse(q.opens_at), close = q.closes_at ? Date.parse(q.closes_at) : 0;
+      if (close && now > close) continue;
+      const jobs = [];
+      if (q.time_changed_at) {
+        const tc = Date.parse(q.time_changed_at);
+        if ((!q.change_notified_at || tc > Date.parse(q.change_notified_at)) && now - tc >= 120000) jobs.push('changed');   // wait 2 min so the final edit is what gets emailed
+      }
+      if (now >= start - 300000 && now < start && !same(q.remind_sent_for, q.opens_at)) jobs.push('remind');
+      if (now >= start && now < start + 900000 && !same(q.start_sent_for, q.opens_at)) jobs.push('start');
+
+      for (const kind of jobs) {
+        // claim first, so two overlapping scheduler calls can never double-send
+        const col = kind === 'remind' ? 'remind_sent_for' : kind === 'start' ? 'start_sent_for' : 'change_notified_at';
+        const cond = kind === 'changed'
+          ? 'or=(change_notified_at.is.null,change_notified_at.lt.' + enc(q.time_changed_at) + ')'
+          : 'or=(' + col + '.is.null,' + col + '.neq.' + enc(q.opens_at) + ')';
+        const claim = await sb('hr_quizzes?id=eq.' + q.id + '&' + cond, { method: 'PATCH', headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({ [col]: kind === 'changed' ? new Date().toISOString() : q.opens_at }) });
+        const got = claim.ok ? await claim.json() : [];
+        if (!Array.isArray(got) || got.length !== 1) { report.push({ quiz: q.title, kind, skipped: 'already handled' }); continue; }
+
+        const to = await recipients(sb, q, kind);
+        let sent = 0, failed = 0;
+        for (let i = 0; i < to.length; i += 100) {
+          if (i > 0) await sleep(600);
+          const chunk = to.slice(i, i + 100);
+          const rr = await fetch('https://api.resend.com/emails/batch', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API_KEY },
+            body: JSON.stringify(chunk.map(r => mail(kind, q, r, now))) });
+          if (rr.ok) sent += chunk.length; else failed += chunk.length;
+        }
+        if (to.length && !sent) await sb('hr_quizzes?id=eq.' + q.id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ [col]: q[col] || null }) }); // nothing went out: retry next minute
+        report.push({ quiz: q.title, kind, recipients: to.length, sent, failed });
+      }
+    }
+    return res.status(200).json({ ok: true, checked: quizzes.length, report });
+  } catch (e) {
+    console.error('quiz-reminders error:', e);
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
+
+async function recipients(sb, q, kind) {
+  const regs = await (await sb('hr_quiz_regs?quiz_id=eq.' + q.id + '&select=name,email,created_at&order=created_at')).json();
+  let rows = (Array.isArray(regs) ? regs : []).filter(r => goodMail(r.email));
+  if (kind === 'changed') {
+    const tc = Date.parse(q.time_changed_at);              // people who registered after the change already saw the new time
+    rows = rows.filter(r => !r.created_at || Date.parse(r.created_at) < tc);
+  } else {
+    const att = await (await sb('hr_attempts?quiz_id=eq.' + q.id + '&select=email')).json();
+    const done = new Set((Array.isArray(att) ? att : []).map(a => String(a.email || '').trim().toLowerCase()));
+    rows = rows.filter(r => !done.has(String(r.email).trim().toLowerCase()));
+  }
+  const seen = new Set();
+  return rows.filter(r => { const k = String(r.email).trim().toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+function mail(kind, q, r, now) {
+  const start = Date.parse(q.opens_at), title = clean(q.title);
+  const mins = Math.max(1, Math.ceil((start - now) / 60000));
+  const lines = [];
+  lines.push('<b>Starts:</b> ' + esc(fmt(start)));
+  if (q.closes_at) lines.push('<b>Window closes:</b> ' + esc(fmt(Date.parse(q.closes_at))));
+  lines.push('<b>Duration:</b> ' + esc(q.duration_min) + ' minutes');
+  const head = kind === 'remind' ? '⏰ Starting in ' + mins + ' minute' + (mins > 1 ? 's' : '')
+    : kind === 'start' ? '🚀 The quiz is live now' : '📅 The quiz schedule has changed';
+  const subject = kind === 'remind' ? '⏰ ' + title + ' starts in ' + mins + ' min'
+    : kind === 'start' ? '🚀 ' + title + ' has started' : '📅 Schedule changed: ' + title;
+  const intro = kind === 'changed' ? 'The time for <b style="color:#22d3ee">' + esc(title) + '</b> has been updated. Please note the new schedule:'
+    : kind === 'start' ? '<b style="color:#22d3ee">' + esc(title) + '</b> is open now. Log in and start your attempt.'
+    : '<b style="color:#22d3ee">' + esc(title) + '</b> is about to begin. Keep your email handy — you will verify it with a 6-digit code.';
+  return {
+    from: FROM, to: [String(r.email).trim()], subject,
+    html: '<div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0f1119;color:#e9ebf2;border-radius:12px">'
+      + '<h1 style="color:#7c5cff;font-size:22px">' + head + '</h1><p>Hi <b>' + esc(clean(r.name) || 'there') + '</b>,</p><p>' + intro + '</p>'
+      + '<p>' + lines.join('<br>') + '</p>'
+      + '<p><a href="' + SITE + '" style="display:inline-block;background:#7c5cff;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600">Open Hackathon Rivals</a></p>'
+      + '<p style="color:#9aa0b4;font-size:13px">You are receiving this because you registered for this exam.</p><p><b>— Team Hackathon Rivals</b></p></div>'
+  };
+}
