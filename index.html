@@ -12072,10 +12072,10 @@ function qzModal(){ if (!qzEl) { qzEl = el('div', { class: 'hrp-bg', id: 'hkQuiz
   return qzEl; }
 async function openQuiz(q){
   const m = qzModal(), B = $('#hkQB', m); $('#hkQT', m).textContent = q.title; m.classList.add('open'); const me = store.get('hk:me', { name: '', email: '' });
-  B.innerHTML = `<p class="hrp-muted">${esc(q.description || '')}</p><p><b>${q.duration_min} minutes</b> · one attempt per email. Once you start, the timer runs.</p>${paperLine(q)}<p class="hrp-muted">You can pick an option <b>or type your answer</b>, and you may also upload an answer sheet as a <b>PDF (max 5 MB)</b>.</p><label class="hrp-muted">Your name</label><input class="hrp-in" id="hqN" value="${esc(me.name)}" maxlength="80" style="margin-bottom:8px"><label class="hrp-muted">Email (same as registration)</label><input class="hrp-in" id="hqE" type="email" value="${esc(me.email)}" maxlength="120"><div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="go">Start now</button><button class="hrp-btn" data-a="close">Cancel</button></div>`;
+  B.innerHTML = `<p class="hrp-muted">${esc(q.description || '')}</p><p><b>${q.duration_min} minutes</b> · one attempt per email. Once you start, the timer runs.</p>${paperLine(q)}<p class="hrp-muted">You can pick an option <b>or type your answer</b>, and you may also upload an answer sheet as a <b>PDF (max 5 MB)</b>.</p><label class="hrp-muted">Your name</label><input class="hrp-in" id="hqN" value="${esc(me.name)}" maxlength="80" style="margin-bottom:8px"><label class="hrp-muted">Email (same as registration — we will email a 6-digit code to verify it)</label><input class="hrp-in" id="hqE" type="email" value="${esc(me.email)}" maxlength="120"><div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="go">Start now</button><button class="hrp-btn" data-a="close">Cancel</button></div>`;
   m.onclick = async e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') { if (HQ.cur && !confirm('Leave the quiz? Your answers will be lost.')) return; clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); return; }
     if (a.dataset.a === 'go') { const name = $('#hqN', m).value.trim(), email = $('#hqE', m).value.trim().toLowerCase(), msg = $('#hqM', m); if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) { msg.textContent = 'Enter your name and a valid email.'; msg.className = 'hk-msg err'; return; }
-      store.set('hk:me', { name, email }); await syncTime(); if (quizState(q) !== 'open') { msg.textContent = 'This quiz is not open right now.'; msg.className = 'hk-msg err'; return; }
+      store.set('hk:me', { name, email }); if (!(await ensureVerified(msg, email))) return; await syncTime(); if (quizState(q) !== 'open') { msg.textContent = 'This quiz is not open right now.'; msg.className = 'hk-msg err'; return; }
       if (needReg(q) && HB.remote) { let ok = true; try { ok = await pgrest('rpc/hr_quiz_registered', { method: 'POST', body: { p_quiz: q.id, p_email: email } }); } catch(_){} if (ok === false) { msg.textContent = 'This email is not registered for this exam.'; msg.className = 'hk-msg err'; return; } }
       try { const qs = await quizQuestions(q); if (!qs.length && !HQ.papers[q.id]) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
 }
@@ -12112,15 +12112,15 @@ function runQuiz(q, qs, name, email){
 }
 async function saveExtras(q, name, email, typed, up){
   if (HB.remote) {
-    try { await pgrest('rpc/hr_save_extra', { method: 'POST', body: { p_quiz: q.id, p_email: email, p_name: name, p_typed: typed, p_path: up ? up.path : null, p_fname: up ? up.name : null, p_size: up ? up.size : null } }); return; }
-    catch(e){ if (e.status === 404) throw new Error('the organiser must run the updated SQL (Admin → Setup) first.'); throw e; }
+    try { await pgrest('rpc/hr_save_extra', { method: 'POST', headers: vtHdr(email), body: { p_quiz: q.id, p_email: email, p_name: name, p_typed: typed, p_path: up ? up.path : null, p_fname: up ? up.name : null, p_size: up ? up.size : null } }); return; }
+    catch(e){ if (/EMAIL_NOT_VERIFIED/.test(e.message)) throw new Error('Email verification expired. Verify again and resubmit.'); if (e.status === 404) throw new Error('the organiser must run the updated SQL (Admin → Setup) first.'); throw e; }
   }
   const l = store.get('hk:lx:' + q.id, []); l.push({ name, email, typed, created_at: new Date().toISOString() }); store.set('hk:lx:' + q.id, l);
 }
 async function submitAttempt(q, qs, ans, name, email, secs){
   if (HB.remote) {
-    try { return await pgrest('rpc/hr_submit_attempt', { method: 'POST', body: { p_quiz: q.id, p_email: email, p_name: name, p_answers: ans, p_secs: secs } }); }
-    catch(e){ if (/ALREADY_SUBMITTED|duplicate|unique/i.test(e.message)) throw new Error('This email has already submitted this quiz.'); if (/QUIZ_CLOSED/.test(e.message)) throw new Error('The quiz has closed.'); if (/NOT_REGISTERED/.test(e.message)) throw new Error('This email is not registered for this exam.'); throw new Error(e.message || 'Could not submit'); }
+    try { return await pgrest('rpc/hr_submit_attempt', { method: 'POST', headers: vtHdr(email), body: { p_quiz: q.id, p_email: email, p_name: name, p_answers: ans, p_secs: secs } }); }
+    catch(e){ if (/EMAIL_NOT_VERIFIED/.test(e.message)) { store.set('hk:vt', null); throw new Error('Email verification expired. Verify your email again, then submit.'); } if (/ALREADY_SUBMITTED|duplicate|unique/i.test(e.message)) throw new Error('This email has already submitted this quiz.'); if (/QUIZ_CLOSED/.test(e.message)) throw new Error('The quiz has closed.'); if (/NOT_REGISTERED/.test(e.message)) throw new Error('This email is not registered for this exam.'); throw new Error(e.message || 'Could not submit'); }
   }
   const keys = store.get('hk:lqq:' + q.id, []); let score = 0, max = 0, correct = 0; const review = [];
   keys.forEach(k => { max += k.points || 1; const ok = ans[k.id] === k.answer; if (ok) { score += k.points || 1; correct++; } review.push({ id: k.id, answer: k.answer, explanation: k.explanation || '' }); });
@@ -12135,6 +12135,37 @@ function showQuizResult(q, r, auto, ex){
   m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') m.classList.remove('open'); else if (a.dataset.a === 'lb') openBoard(q); };
 }
 /* ---- v2: students see their rank, live quiz rankings on the home page ---- */
+/* ---- email verification: 6-digit code before a quiz can be started / submitted ---- */
+const vtGet = email => { const v = store.get('hk:vt', null); return v && v.email === email && v.exp > Date.now() ? v.token : ''; };
+const vtHdr = email => { const k = vtGet(email); return k ? { 'x-quiz-token': k } : {}; };
+async function verifyApi(body){
+  const r = await fetch('/api/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) throw new Error(j.error || (r.status === 404 ? 'Email verification is not installed yet (organiser: deploy api/verify-email.js).' : 'Verification failed'));
+  return j;
+}
+async function ensureVerified(box, email){
+  if (!HB.remote || vtGet(email)) return true;
+  if (box.dataset.pending === email) return new Promise(() => {});
+  const say = (x, ok) => { box.className = 'hk-msg' + (ok === true ? ' ok' : ok === false ? ' err' : ''); box.textContent = x; };
+  say('Sending a 6-digit code to ' + email + '…');
+  try { await verifyApi({ action: 'send', email }); } catch(e){ say(e.message, false); return false; }
+  return new Promise(done => {
+    box.dataset.pending = email; box.className = 'hk-msg';
+    box.innerHTML = '✉️ Enter the 6-digit code we emailed to <b>' + esc(email) + '</b> (valid 10 minutes — check spam too).<input class="hrp-in" id="hqC" inputmode="numeric" maxlength="6" placeholder="123456" style="margin:8px 0"><div class="hrp-row"><button class="hrp-btn pri" id="hqCv">Verify &amp; start</button><button class="hrp-mini" id="hqCr">Resend code</button></div><div id="hqCm" class="hrp-muted"></div>';
+    const cm = box.querySelector('#hqCm'), inp = box.querySelector('#hqC');
+    box.querySelector('#hqCv').onclick = async () => {
+      try {
+        cm.textContent = 'Checking…';
+        const j = await verifyApi({ action: 'check', email, code: inp.value });
+        try { await pgrest('rpc/hr_now', { method: 'POST', body: {}, headers: { 'x-quiz-token': j.token } }); }
+        catch(e){ cm.textContent = '❌ Your browser could not reach the quiz server with the verification header. Tell the organiser.'; return; }
+        store.set('hk:vt', { email, token: j.token, exp: Date.parse(j.expires_at) }); box.dataset.pending = ''; done(true);
+      } catch(e){ cm.textContent = '❌ ' + e.message; }
+    };
+    box.querySelector('#hqCr').onclick = async () => { try { cm.textContent = 'Sending…'; await verifyApi({ action: 'send', email }); cm.textContent = '✅ New code sent.'; } catch(e){ cm.textContent = '❌ ' + e.message; } };
+  });
+}
 const LQ = { id: '', iv: 0 };
 const LB_COL = ['#7c5cff', '#22d3ee', '#ff4d9d', '#4ade80', '#fbbf24'];
 async function boardRows(q, email){
@@ -12353,10 +12384,7 @@ grant execute on function public.hr_leaderboard(uuid, text) to anon, authenticat
 const HK_EDGE = `// File: api/send-results.js  (Vercel serverless function, same style as api/send-email.js)
 // Vercel env vars needed: RESEND_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method === 'GET') {
     const k = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     return res.status(200).json({
@@ -12408,14 +12436,18 @@ export default async function handler(req, res) {
     rows.forEach((r, i) => { const k = r.total + ':' + r.secs; if (k !== last) { pos = i + 1; last = k; } r.pos = pos; });
 
     const FROM = 'Hackathon Rivals <noreply@hackathonrivals.in>';
-    const todo = rows.filter(r => body.force || !r.emailed_at);
-    let sent = 0; const errors = [];
+    const goodMail = e => { const s = String(e || '').trim(), a = s.indexOf('@'); return a > 0 && s.indexOf('.', a) > a + 1 && s.indexOf(' ') < 0 && s.length > 5; };
+    const wanted = rows.filter(r => body.force || !r.emailed_at);
+    const todo = wanted.filter(r => goodMail(r.email));          // one bad address would fail the whole batch, so skip it
+    const bad = wanted.filter(r => !goodMail(r.email));
+    let sent = 0; const errors = bad.slice(0, 3).map(r => 'invalid email skipped: ' + String(r.email || '(empty)').slice(0, 40));
 
     // 3) send in batches of 100 (one Resend call per batch = fast enough for Vercel)
     for (let i = 0; i < todo.length; i += 100) {
+      if (i > 0) await new Promise(ok => setTimeout(ok, 600));   // stay under Resend's rate limit
       const chunk = todo.slice(i, i + 100);
       const mails = chunk.map(r => ({
-        from: FROM, to: [r.email], subject: 'Your result - ' + quiz.title,
+        from: FROM, to: [String(r.email).trim()], subject: 'Your result - ' + quiz.title,
         html: '<div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0f1119;color:#e9ebf2;border-radius:12px">'
           + '<h1 style="color:#7c5cff">Results are out! 🏆</h1>'
           + '<p>Hi <b>' + esc(r.name) + '</b>,</p>'
@@ -12436,7 +12468,7 @@ export default async function handler(req, res) {
         errors.push('batch ' + (i / 100 + 1) + ': ' + (m || 'HTTP ' + rr.status));
       }
     }
-    return res.status(200).json({ sent, failed: todo.length - sent, errors: errors.slice(0, 5), total: todo.length });
+    return res.status(200).json({ sent, failed: wanted.length - sent, errors: errors.slice(0, 5), total: wanted.length });
   } catch (err) {
     console.error('send-results error:', err);
     return res.status(500).json({ error: String(err.message || err) });
@@ -12447,7 +12479,95 @@ function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 `;
-const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS;
+const HK_SQL_VERIFY = `-- ============================================================
+-- PART 4 — email verification for quizzes. Safe to run again.
+-- RUN THIS LAST: deploy api/verify-email.js and the new index.html first,
+-- because after this runs, quiz submissions need a verified email.
+-- To switch it off again:
+--   drop trigger if exists hr_attempts_verify on public.hr_attempts;
+--   drop trigger if exists hr_quiz_files_verify on public.hr_quiz_files;
+-- ============================================================
+create table if not exists public.hr_email_codes (
+  id bigserial primary key,
+  email text not null,
+  code_hash text not null,
+  tries int not null default 0,
+  used boolean not null default false,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists hr_email_codes_email_idx on public.hr_email_codes (email, created_at desc);
+create table if not exists public.hr_verified (
+  token_hash text primary key,
+  email text not null,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+alter table public.hr_email_codes enable row level security;
+alter table public.hr_verified enable row level security;
+revoke all on public.hr_email_codes from anon, authenticated;
+revoke all on public.hr_verified from anon, authenticated;
+
+create or replace function public.hr_token_ok(p_email text, p_token text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.hr_verified v
+    where v.token_hash = encode(sha256(convert_to(coalesce(p_token, ''), 'utf8')), 'hex')
+      and v.email = lower(trim(coalesce(p_email, '')))
+      and v.expires_at > now());
+$$;
+revoke all on function public.hr_token_ok(text, text) from public, anon, authenticated;
+
+create or replace function public.hr_require_verified()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare tok text;
+begin
+  if public.hr_is_admin() then return new; end if;
+  begin
+    tok := (nullif(current_setting('request.headers', true), '')::json) ->> 'x-quiz-token';
+  exception when others then tok := null;
+  end;
+  if tok is null then tok := current_setting('request.header.x-quiz-token', true); end if;
+  if not public.hr_token_ok(new.email, tok) then raise exception 'EMAIL_NOT_VERIFIED'; end if;
+  return new;
+end $$;
+
+drop trigger if exists hr_attempts_verify on public.hr_attempts;
+create trigger hr_attempts_verify before insert on public.hr_attempts
+  for each row execute function public.hr_require_verified();
+
+do $do$
+begin
+  if to_regclass('public.hr_quiz_files') is not null then
+    execute 'drop trigger if exists hr_quiz_files_verify on public.hr_quiz_files';
+    execute 'create trigger hr_quiz_files_verify before insert on public.hr_quiz_files for each row when (new.kind = ''answer'') execute function public.hr_require_verified()';
+  end if;
+end $do$;
+`;
+const HK_SQL_REMIND = `-- ============================================================
+-- PART 5 — quiz reminder / schedule-change emails. Safe to run again.
+-- ============================================================
+alter table public.hr_quizzes add column if not exists remind_sent_for timestamptz;
+alter table public.hr_quizzes add column if not exists start_sent_for timestamptz;
+alter table public.hr_quizzes add column if not exists time_changed_at timestamptz;
+alter table public.hr_quizzes add column if not exists change_notified_at timestamptz;
+
+-- remember when the exam schedule was edited (start, end or duration)
+create or replace function public.hr_quiz_time_changed()
+returns trigger language plpgsql as $$
+begin
+  if new.opens_at is distinct from old.opens_at
+     or new.closes_at is distinct from old.closes_at
+     or new.duration_min is distinct from old.duration_min then
+    new.time_changed_at := now();
+  end if;
+  return new;
+end $$;
+drop trigger if exists hr_quiz_time_changed on public.hr_quizzes;
+create trigger hr_quiz_time_changed before update on public.hr_quizzes
+  for each row execute function public.hr_quiz_time_changed();
+`;
+const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS + '\n' + HK_SQL_VERIFY + '\n' + HK_SQL_REMIND;
 
 const AD = { sub: store.get('adminSub', 'hack'), c: null, qz: null, bank: { subj: 'all', sem: '-1', lvl: '0', q: '', lim: 25, edit: null, imp: null } };
 const ADV = {};
@@ -12782,6 +12902,8 @@ ADV.setup = async box => {
   let fn = '✅ ready'; try { await pgrest('rpc/hr_now', { method: 'POST', body: {} }); } catch(e){ fn = '❌ not created'; }
   res.push(['Server clock (hr_now)', fn]);
   { let mk = '✅ ready'; try { await pgrest('hr_attempts?select=marks,bonus,emailed_at&limit=1'); await pgrest('hr_quizzes?select=results_published&limit=1'); } catch(e){ mk = '❌ run the updated SQL (Part 3)'; } res.push(['Marks & results upload (Part 3)', mk]); }
+  { let vf = '✅ ready'; try { await pgrest('hr_verified?select=token_hash&limit=1'); } catch(e){ vf = '❌ run Part 4 SQL (email verification)'; } res.push(['Email verification (Part 4)', vf]); }
+  { let rm = '✅ ready'; try { await pgrest('hr_quizzes?select=remind_sent_for,start_sent_for,time_changed_at,change_notified_at&limit=1'); } catch(e){ rm = '❌ run Part 5 SQL (quiz reminders)'; } res.push(['Quiz reminder emails (Part 5)', rm]); }
   { let st = '✅ ready'; try { const r = await fetch(HK_URL + '/storage/v1/object/public/' + HK_BUCKET + '/_probe', { headers: { apikey: HK_KEY } }); const j = await r.json().catch(() => ({})); if (/bucket not found/i.test(j.message || j.error || '')) st = '❌ not created'; } catch(e){ st = '❌ ' + (e.message || 'unreachable'); } res.push(['PDF storage bucket (hr-quiz-files)', st]); }
   box.innerHTML = `${table(res, ['Item', 'Status'])}<div class="hrp-h">How to set up (2 minutes)</div><ol class="hrp-muted" style="padding-left:18px;line-height:1.7"><li>Open your Supabase project → <b>SQL Editor</b> → New query.</li><li>Tap <b>Copy SQL</b> below, paste it and press <b>Run</b>.</li><li>Come back here and reopen this tab — every row should show ✅.</li></ol>
   <div class="hrp-row"><button class="hrp-btn pri" data-ad="sqlcopy">📋 Copy SQL</button><button class="hrp-btn" data-ad="sqldl">⬇ Download .sql</button><button class="hrp-btn" data-ad="setupre">↻ Re-check</button><button class="hrp-btn" data-ad="edgecopy">✉️ Copy email function</button></div>
