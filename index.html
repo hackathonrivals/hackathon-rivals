@@ -2884,6 +2884,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
             <button class="tab active" data-board="live">Live</button>
             <button class="tab" data-board="week">This Week</button>
             <button class="tab" data-board="submissions">Most Active</button>
+            <button class="tab" data-board="quiz">📝 Quizzes</button>
           </div>
          <span class="info">● Showing top 5 of <span id="lbTotalTeams">—</span> teams</span>      
         </div>
@@ -4177,6 +4178,7 @@ const rowsEl = $('#boardRows');
 const inits = n => escapeHtml((n || '?').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || '??');
 
 async function loadLeaderboard(period = 'live'){
+  if (period === 'quiz' && window.__hkQuizBoard){ rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading quiz rankings…</div>'; return window.__hkQuizBoard(rowsEl); }
   rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading leaderboard…</div>';
 
   try {
@@ -12087,18 +12089,64 @@ async function submitAttempt(q, qs, ans, name, email, secs){
   return { score, max, correct, total: keys.length, review };
 }
 function showQuizResult(q, r, auto, ex){
-  const m = qzModal(), B = $('#hkQB', m); confetti(50);
+  const m = qzModal(), B = $('#hkQB', m); confetti(50); setTimeout(() => fillMyRank(q), 80);
   const qs = store.get('hk:lqq:' + q.id, []);
   ex = ex || {}; m.oninput = null; m.onchange = null;
-  B.innerHTML = `<div class="hrp-card" style="text-align:center">${r.total ? `<div class="hrp-big" style="margin:0">${r.score}/${r.max}</div>` : ''}<b>${auto ? 'Time is up — answers submitted' : 'Answers submitted'}</b>${r.total ? ' ' + r.correct + '/' + r.total + ' correct' : ''}</div>${ex.typed ? `<p class="hrp-muted">✍️ ${ex.typed} typed answer(s) saved for the organisers to review.</p>` : ''}${ex.pdf ? `<p class="hrp-muted">📎 PDF uploaded: ${esc(ex.pdf)}</p>` : ''}${ex.warn ? `<p class="hk-msg err">⚠️ ${esc(ex.warn)}</p>` : ''}<p class="hrp-muted">Your score is recorded. Check the leaderboard for your rank.</p><div class="hrp-row"><button class="hrp-btn pri" data-a="lb">🏆 Leaderboard</button><button class="hrp-btn" data-a="close">Close</button></div>`;
+  B.innerHTML = `<div class="hrp-card" style="text-align:center">${r.total ? `<div class="hrp-big" style="margin:0">${r.score}/${r.max}</div>` : ''}<b>${auto ? 'Time is up — answers submitted' : 'Answers submitted'}</b>${r.total ? ' ' + r.correct + '/' + r.total + ' correct' : ''}</div>${ex.typed ? `<p class="hrp-muted">✍️ ${ex.typed} typed answer(s) saved for the organisers to review.</p>` : ''}${ex.pdf ? `<p class="hrp-muted">📎 PDF uploaded: ${esc(ex.pdf)}</p>` : ''}${ex.warn ? `<p class="hk-msg err">⚠️ ${esc(ex.warn)}</p>` : ''}<p class="hrp-muted" id="hqRank">Your score is recorded. Finding your rank…</p><div class="hrp-row"><button class="hrp-btn pri" data-a="lb">🏆 Leaderboard</button><button class="hrp-btn" data-a="close">Close</button></div>`;
   m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'close') m.classList.remove('open'); else if (a.dataset.a === 'lb') openBoard(q); };
 }
-async function openBoard(q){
-  const m = qzModal(), B = $('#hkQB', m); $('#hkQT', m).textContent = '🏆 ' + q.title; m.classList.add('open'); B.innerHTML = '<p class="hrp-muted">Loading…</p>';
-  m.onclick = e => { if (e.target.closest('[data-a=close]')) m.classList.remove('open'); };
-  let rows = []; try { rows = HB.remote ? await pgrest('rpc/hr_leaderboard', { method: 'POST', body: { p_quiz: q.id } }) : store.get('hk:latt:' + q.id, []); } catch(e){ B.innerHTML = '<p class="hrp-muted">Leaderboard is not available yet.</p>'; return; }
-  B.innerHTML = rows.length ? table(rows.slice(0, 30).map((r, i) => [String(i + 1), r.name, String(r.score), fmtClock(r.secs || 0)]), ['#', 'Name', 'Score', 'Time']) : '<p class="hrp-muted">No submissions yet.</p>';
+/* ---- v2: students see their rank, live quiz rankings on the home page ---- */
+const LQ = { id: '', iv: 0 };
+const LB_COL = ['#7c5cff', '#22d3ee', '#ff4d9d', '#4ade80', '#fbbf24'];
+async function boardRows(q, email){
+  const me = String(email || '').trim().toLowerCase();
+  if (!HB.remote) return store.get('hk:latt:' + q.id, []).map((r, i) => ({ pos: i + 1, name: r.name, score: r.score, max_score: r.max_score, secs: r.secs, is_me: !!me && String(r.email || '').toLowerCase() === me, final: false }));
+  let rows;
+  try { rows = await pgrest('rpc/hr_leaderboard', { method: 'POST', body: { p_quiz: q.id, p_email: me || null } }); }
+  catch(e){ rows = await pgrest('rpc/hr_leaderboard', { method: 'POST', body: { p_quiz: q.id } }); }
+  return (rows || []).map((r, i) => ({ ...r, pos: r.pos ?? i + 1, final: r.final ?? !!q.results_published }));
 }
+function rankLine(rows){
+  const m = rows.find(r => r.is_me); if (!m) return '';
+  return 'Your rank: <b>#' + m.pos + '</b> of ' + (rows.length >= 50 ? '50+' : rows.length) + ' · <b>' + m.score + (m.max_score ? '/' + m.max_score : '') + '</b> marks · ' + (m.final ? '✅ final' : '⏳ provisional — changes as typed answers get marked');
+}
+async function fillMyRank(q){
+  const p = document.getElementById('hqRank'); if (!p) return; const me = (store.get('hk:me', {}) || {}).email;
+  try { const l = rankLine(await boardRows(q, me)); p.innerHTML = l || 'Your score is recorded. Open the leaderboard to see the rankings.'; }
+  catch(e){ p.textContent = 'Your score is recorded. Open the leaderboard to see your rank.'; }
+}
+async function openBoard(q){
+  const m = qzModal(), B = $('#hkQB', m); $('#hkQT', m).textContent = '🏆 ' + q.title; m.classList.add('open');
+  B.innerHTML = '<div id="hqBW" data-q="' + esc(q.id) + '"><p class="hrp-muted">Loading…</p></div>';
+  clearInterval(LQ.iv2);
+  m.onclick = e => { if (e.target.closest('[data-a=close]')) { clearInterval(LQ.iv2); m.classList.remove('open'); } };
+  const draw = async () => {
+    const w = $('#hqBW', B); if (!m.classList.contains('open') || !w || w.dataset.q !== q.id) { clearInterval(LQ.iv2); return; }
+    const me = (store.get('hk:me', {}) || {}).email; let rows;
+    try { rows = await boardRows(q, me); } catch(e){ w.innerHTML = '<p class="hrp-muted">Leaderboard is not available yet.</p>'; return; }
+    if (!rows.length) { w.innerHTML = '<p class="hrp-muted">No submissions yet.</p>'; return; }
+    const l = rankLine(rows);
+    w.innerHTML = '<p class="hrp-muted">' + (rows[0].final ? '✅ Final results' : '⏳ Live — updates automatically as marks are added') + '</p>' + (l ? '<div class="hrp-card" style="margin:8px 0">' + l + '</div>' : '') + table(rows.map(r => [String(r.pos) + (r.is_me ? ' ◀' : ''), r.name + (r.is_me ? ' (You)' : ''), r.score + (r.max_score ? '/' + r.max_score : ''), fmtClock(r.secs || 0)]), ['#', 'Name', 'Marks', 'Time']);
+  };
+  await draw(); LQ.iv2 = setInterval(draw, 15000);
+}
+window.__hkQuizBoard = async function(host){
+  host = host || document.getElementById('boardRows'); if (!host) return;
+  const note = x => { host.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">' + x + '</div>'; };
+  try {
+    await fetchQuizzesBase(); const list = HQ.list || [];
+    if (!list.length) return note('No quiz has been published yet.');
+    if (!list.some(x => x.id === LQ.id)) LQ.id = list[0].id;
+    const q = list.find(x => x.id === LQ.id), me = (store.get('hk:me', {}) || {}).email;
+    const rows = await boardRows(q, me), l = rankLine(rows);
+    const head = '<div style="padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border)"><select id="lqSel" class="hrp-sel" style="width:auto;max-width:100%">' + list.map(x => '<option value="' + esc(x.id) + '"' + (x.id === q.id ? ' selected' : '') + '>' + esc(x.title) + '</option>').join('') + '</select><span style="font-size:12px;color:var(--muted)">' + (rows[0] && rows[0].final ? '✅ Final results' : '⏳ Live · updates as marks are added') + '</span></div>' + (l ? '<div style="padding:10px 16px;font-size:13px">' + l + '</div>' : '');
+    const top = rows.filter(r => r.pos <= 10 || r.is_me);
+    host.innerHTML = head + (top.length ? top.map((r, i) => '<div class="row ' + (r.pos <= 3 ? 'top3' : '') + '"' + (r.is_me ? ' style="outline:1px solid var(--cyan);outline-offset:-1px"' : '') + '><div class="rank ' + (r.pos === 1 ? 'gold' : r.pos === 2 ? 'silver' : r.pos === 3 ? 'bronze' : '') + '">' + (['🥇', '🥈', '🥉'][r.pos - 1] || '#' + r.pos) + '</div><div class="team"><span class="avatar" style="background:' + LB_COL[i % 5] + '">' + esc((r.name || '?').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase()) + '</span><div>' + esc(r.name) + (r.is_me ? ' (You)' : '') + '<small>' + fmtClock(r.secs || 0) + '</small></div></div><div class="pts">' + r.score + (r.max_score ? '/' + r.max_score : '') + '</div><div class="trend flat">' + (r.final ? 'final' : 'live') + '</div></div>').join('') : '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">No submissions yet.</div>');
+    const s = host.querySelector('#lqSel'); if (s) s.onchange = () => { LQ.id = s.value; window.__hkQuizBoard(host); };
+  } catch(e){ note('Could not load quiz rankings.'); }
+};
+setInterval(() => { const a = document.querySelector('[data-board].active'); if (a && a.dataset.board === 'quiz' && !document.hidden) window.__hkQuizBoard(); }, 20000);
+feat('Quiz ranks: students see their own rank, a "Quizzes" tab in Live Rankings, auto-refreshing', () => {});
 feat('Hackathon quizzes: participants can take timed quizzes and see a leaderboard', () => {});
 /* ---- combined registration hub: Team + Quiz in one place ---- */
 function teamLocked(){ return HB.ev.lock_main !== false && !evState().regOpen; }
@@ -12233,7 +12281,73 @@ begin
 end $$;
 grant execute on function public.hr_save_extra(uuid, text, text, jsonb, text, text, int) to anon, authenticated;
 `;
-const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES;
+const HK_SQL_MARKS = `
+-- ============================================================
+-- PART 3 — typed-answer marks, "upload results", live ranks for students
+-- Safe to run again.
+-- ============================================================
+alter table public.hr_quizzes add column if not exists results_published boolean not null default false;
+alter table public.hr_quizzes add column if not exists results_published_at timestamptz;
+alter table public.hr_attempts add column if not exists marks jsonb not null default '{}'::jsonb;
+alter table public.hr_attempts add column if not exists bonus int not null default 0;
+alter table public.hr_attempts add column if not exists emailed_at timestamptz;
+
+-- Ranking = auto score + marks the admin added for typed answers. Anyone can read it (names only, no emails).
+drop function if exists public.hr_leaderboard(uuid);
+drop function if exists public.hr_leaderboard(uuid, text);
+create or replace function public.hr_leaderboard(p_quiz uuid, p_email text default null)
+returns table (pos bigint, name text, score int, max_score int, secs int, is_me boolean, final boolean)
+language sql stable security definer set search_path = public as $$
+  with r as (
+    select a.name, (a.score + coalesce(a.bonus, 0))::int as sc, a.max_score, a.secs,
+           lower(a.email) = lower(trim(coalesce(p_email, ''))) as me,
+           rank() over (order by (a.score + coalesce(a.bonus, 0)) desc, a.secs asc) as rk
+    from public.hr_attempts a
+    where a.quiz_id = p_quiz and exists (select 1 from public.hr_quizzes z where z.id = p_quiz and z.published)
+  )
+  select r.rk, r.name, r.sc, r.max_score, r.secs, r.me,
+         coalesce((select z.results_published from public.hr_quizzes z where z.id = p_quiz), false)
+  from r where r.rk <= 50 or r.me order by r.rk, r.secs;
+$$;
+grant execute on function public.hr_leaderboard(uuid, text) to anon, authenticated;
+`;
+const HK_EDGE = `// Supabase Edge Function: send-results
+// 1) supabase functions new send-results   (paste this file as index.ts)
+// 2) supabase secrets set RESEND_API_KEY=re_xxx MAIL_FROM="Hackathon Rivals <results@your-domain.com>"
+// 3) supabase functions deploy send-results
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Content-Type": "application/json" };
+const esc = (s: string) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const out = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: cors });
+  try {
+    const url = Deno.env.get("SUPABASE_URL")!;
+    const me = await createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } }).auth.getUser();
+    if (!me.data.user) return out({ error: "Login required" }, 401);
+    const db = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const prof = await db.from("profiles").select("role").eq("id", me.data.user.id).maybeSingle();
+    if (!prof.data || prof.data.role !== "Admin") return out({ error: "Admins only" }, 403);
+    const { quiz_id, force } = await req.json();
+    const quiz = (await db.from("hr_quizzes").select("title,results_published").eq("id", quiz_id).single()).data;
+    if (!quiz || !quiz.results_published) return out({ error: "Upload the results first" }, 400);
+    const att = (await db.from("hr_attempts").select("id,name,email,score,bonus,max_score,secs,emailed_at").eq("quiz_id", quiz_id)).data || [];
+    const rows = att.map((a) => ({ ...a, total: a.score + (a.bonus || 0), pos: 0 })).sort((a, b) => b.total - a.total || (a.secs || 0) - (b.secs || 0));
+    let pos = 0, last = "";
+    rows.forEach((r, i) => { const k = r.total + ":" + r.secs; if (k !== last) { pos = i + 1; last = k; } r.pos = pos; });
+    let sent = 0; const errors: string[] = [];
+    for (const r of rows) {
+      if (r.emailed_at && !force) continue;
+      const html = "<p>Hi " + esc(r.name) + ",</p><p>The results for <b>" + esc(quiz.title) + "</b> are final.</p><p>Your marks: <b>" + r.total + (r.max_score ? " / " + r.max_score : "") + "</b><br>Your rank: <b>#" + r.pos + " of " + rows.length + "</b></p><p>You can also see the live rankings on the website.</p>";
+      const res = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: "Bearer " + Deno.env.get("RESEND_API_KEY"), "Content-Type": "application/json" }, body: JSON.stringify({ from: Deno.env.get("MAIL_FROM"), to: [r.email], subject: "Your result — " + quiz.title, html }) });
+      if (res.ok) { sent++; await db.from("hr_attempts").update({ emailed_at: new Date().toISOString() }).eq("id", r.id); } else errors.push(r.email + ": " + (await res.text()).slice(0, 100));
+      await new Promise((ok) => setTimeout(ok, 600));
+    }
+    return out({ sent, failed: errors.length, errors: errors.slice(0, 5), total: rows.length });
+  } catch (e) { return out({ error: String(e) }, 500); }
+});
+`;
+const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS;
 
 const AD = { sub: store.get('adminSub', 'hack'), c: null, qz: null, bank: { subj: 'all', sem: '-1', lvl: '0', q: '', lim: 25, edit: null, imp: null } };
 const ADV = {};
@@ -12325,12 +12439,7 @@ adAct.qopen = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id);
 adAct.qpub = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { await QZ.save({ ...q, published: !q.published }); renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 adAct.qdel = async b => { if (!confirm('Delete this quiz and all its questions and results?')) return; try { await QZ.del(b.dataset.id); renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 adAct.qres = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { AD.qz = { mode: 'results', quiz: q, rows: await QZ.attempts(q.id), files: await FILES.answers(q.id), qs: await QZ.qs(q.id).catch(() => []) }; adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
-function adQuizResults(box){
-  const { quiz, rows } = AD.qz;
-  box.innerHTML = `<div class="hrp-row"><button class="hrp-tab" data-ad="qback">← Quizzes</button><b>${esc(quiz.title)} — results (${rows.length})</b><button class="hrp-btn" data-ad="qcsv">⬇ CSV</button></div>${rows.length ? table(rows.map((r, i) => [String(i + 1), r.name, r.email, r.score + '/' + r.max_score, fmtClock(r.secs || 0)]), ['#', 'Name', 'Email', 'Score', 'Time']) : '<p class="hrp-muted">No submissions yet.</p>'}${filesResultsHtml()}`;
-}
 adAct.qback = () => { AD.qz = null; adRender(); };
-adAct.qcsv = () => { const { quiz, rows } = AD.qz; download('quiz-results.csv', toCSV([['Rank', 'Name', 'Email', 'Score', 'Max', 'Seconds', 'Submitted']].concat(rows.map((r, i) => [i + 1, r.name, r.email, r.score, r.max_score, r.secs, r.created_at]))), 'text/csv'); };
 function adQuizEditor(box){
   const { quiz, qs, editQ } = AD.qz;
   const form = editQ ? `<div class="hrp-card" style="margin:10px 0"><b>${editQ.isNew ? 'New question' : 'Edit question'}</b><textarea class="hrp-ta" id="aqT" style="min-height:70px;font-family:inherit;margin:6px 0" placeholder="Question">${esc(editQ.text)}</textarea>${[0, 1, 2, 3].map(i => `<input class="hrp-in" id="aqO${i}" placeholder="Option ${'ABCD'[i]}" value="${esc((editQ.options || [])[i] || '')}" style="margin-bottom:6px">`).join('')}
@@ -12417,6 +12526,68 @@ feat('Admin: upload a question-paper PDF per quiz (max 5 MB) and review particip
 feat('Quiz: answer by option, by typing, or by uploading a PDF (max 5 MB)', () => {});
 
 feat('Quiz answers stay on the server — participants only receive the score after submitting', () => {});
+/* ---- v2 admin: marks for typed answers, upload results, email everyone ---- */
+const MK_PAPER = 100;
+const mkTotal = r => (r.score || 0) + (r.bonus || 0);
+const mkMapped = (q, x) => { const L = 'ABCD'.indexOf(x.toUpperCase()); return (x.length === 1 && L >= 0 && L < (q.options || []).length) || (q.options || []).some(o => String(o).trim().toLowerCase() === x.toLowerCase()); };
+function mkNeed(r){
+  const qs = (AD.qz && AD.qz.qs) || [], em = String(r.email || '').toLowerCase();
+  const f = ((AD.qz && AD.qz.files) || []).find(x => String(x.email || '').toLowerCase() === em); if (!f) return [];
+  const t = f.typed || {}, a = r.answers || {}, need = [];
+  Object.keys(t).forEach(k => { const x = String(t[k] || '').trim(); if (!x) return;
+    if (k === '_paper') { need.push({ k, label: 'Typed answer sheet', text: x, max: MK_PAPER, pdf: f.file_path ? f : null }); return; }
+    const i = qs.findIndex(z => z.id === k); if (i < 0) return; const q = qs[i];
+    if ((a[k] !== undefined && +a[k] === q.answer) || mkMapped(q, x)) return;
+    need.push({ k, label: 'Q' + (i + 1) + '. ' + q.text, text: x, max: q.points || 1 }); });
+  if (f.file_path && !need.some(n => n.k === '_paper')) need.push({ k: '_paper', label: 'PDF answer sheet', text: '', max: MK_PAPER, pdf: f });
+  return need;
+}
+const mkPending = r => mkNeed(r).filter(n => (r.marks || {})[n.k] == null).length;
+const mkSorted = () => AD.qz.rows.slice().sort((a, b) => mkTotal(b) - mkTotal(a) || (a.secs || 0) - (b.secs || 0));
+function adQuizResults(box){
+  const { quiz } = AD.qz, rows = mkSorted(), pend = rows.reduce((s, r) => s + mkPending(r), 0), who = rows.filter(r => mkPending(r)).length, pub = !!quiz.results_published;
+  const status = pub ? '✅ <b>Results uploaded</b> — rankings are final.' : pend ? '✍️ <b>' + pend + ' typed answer(s)</b> from ' + who + ' participant(s) still need marks. Add them below; the live rankings update on every save.' : '✅ All typed answers are marked — you can upload the results now.';
+  const btns = pub ? '<button class="hrp-btn pri" data-ad="mkmail">📧 Email remaining</button><button class="hrp-btn" data-ad="mkmail" data-force="1">📧 Email everyone again</button><button class="hrp-mini" data-ad="mkunpub">↩ Mark as not final</button>' : '<button class="hrp-btn pri" data-ad="mkpublish"' + (pend ? ' disabled' : '') + '>⬆ Upload results &amp; email everyone</button>';
+  const marking = rows.filter(r => mkNeed(r).length).map(r => { const need = mkNeed(r), mk = r.marks || {}, p = mkPending(r);
+    return '<details class="hrp-card" style="margin:6px 0" data-mkc="' + esc(r.id) + '"' + (AD.qz.open === r.id ? ' open' : '') + '><summary><b>' + esc(r.name) + '</b> <span class="hrp-muted">' + esc(r.email) + ' · ' + (p ? '⏳ ' + p + ' pending' : '✅ marked') + '</span></summary>'
+      + need.map(n => '<div style="margin:10px 0"><div><b>' + esc(n.label) + '</b></div>' + (n.text ? '<div class="hrp-muted" style="white-space:pre-wrap">' + esc(n.text) + '</div>' : '') + (n.pdf ? '<a href="' + esc(paperUrl(n.pdf.file_path)) + '" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:underline">📎 Open PDF</a>' : '') + '<div><label class="hrp-muted">Marks (0–' + n.max + ') <input class="hrp-in mk-in" data-k="' + esc(n.k) + '" data-max="' + n.max + '" type="number" min="0" max="' + n.max + '" step="1" value="' + (mk[n.k] ?? '') + '" style="width:90px;display:inline-block"></label></div></div>').join('')
+      + '<button class="hrp-btn pri" data-ad="mksave" data-id="' + esc(r.id) + '">💾 Save marks</button></details>'; }).join('');
+  box.innerHTML = '<div class="hrp-row"><button class="hrp-tab" data-ad="qback">← Quizzes</button><b>' + esc(quiz.title) + ' — results (' + rows.length + ')</b><button class="hrp-btn" data-ad="qcsv">⬇ CSV</button></div>'
+    + '<div class="hrp-card" style="margin:8px 0">' + (HB.remote ? status : '⚠️ Marks, upload and email need the database (Setup tab).') + '<div class="hrp-row" style="margin-top:8px">' + (HB.remote ? btns : '') + '<button class="hrp-mini" data-ad="mkcopy">📋 Copy emails</button></div><div class="hk-msg" id="mkMsg"></div></div>'
+    + (rows.length ? table(rows.map((r, i) => [String(i + 1), r.name, r.email, String(r.score), String(r.bonus || 0), mkTotal(r) + (r.max_score ? '/' + r.max_score : ''), fmtClock(r.secs || 0), mkNeed(r).length ? (mkPending(r) ? '⏳ ' + mkPending(r) + ' pending' : '✅ marked') : '—']), ['#', 'Name', 'Email', 'Auto', 'Typed marks', 'Total', 'Time', 'Marking']) : '<p class="hrp-muted">No submissions yet.</p>')
+    + (HB.remote && marking ? '<div class="hrp-h">✍️ Add marks for typed answers</div>' + marking : '') + filesResultsHtml();
+}
+adAct.qcsv = () => { download('quiz-results.csv', toCSV([['Rank', 'Name', 'Email', 'Auto score', 'Typed-answer marks', 'Total', 'Max', 'Seconds', 'Submitted']].concat(mkSorted().map((r, i) => [i + 1, r.name, r.email, r.score, r.bonus || 0, mkTotal(r), r.max_score, r.secs, r.created_at]))), 'text/csv'); };
+adAct.mkcopy = () => copy(AD.qz.rows.map(r => r.email).join(', '));
+adAct.mksave = async b => {
+  const r = AD.qz.rows.find(x => x.id === b.dataset.id); if (!r) return; const card = b.closest('[data-mkc]'), marks = { ...(r.marks || {}) }; let bad = '';
+  $$('.mk-in', card).forEach(i => { if (i.value === '') { delete marks[i.dataset.k]; return; } const v = Math.round(+i.value), mx = +i.dataset.max; if (!isFinite(v) || v < 0 || v > mx) bad = 'Marks must be between 0 and ' + mx + '.'; else marks[i.dataset.k] = v; });
+  if (bad) { toast(bad, 'warn', '⚠️'); return; }
+  const need = new Set(mkNeed(r).map(n => n.k)); Object.keys(marks).forEach(k => { if (!need.has(k)) delete marks[k]; });
+  const bonus = Object.values(marks).reduce((s, v) => s + (+v || 0), 0);
+  try { await pgrest('hr_attempts?id=eq.' + encodeURIComponent(r.id), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { marks, bonus } }); Object.assign(r, { marks, bonus }); AD.qz.open = r.id; adRender(); toast('Marks saved — live rankings updated', 'success', '✅'); }
+  catch(e){ toast(/column|marks|bonus/i.test(e.message || '') ? 'Run the updated SQL first (Admin → Setup).' : admErr(e), 'warn', '⚠️'); }
+};
+async function mkSendMails(quizId, force){
+  const tok = sbToken();
+  try { const r = await fetch(HK_URL + '/functions/v1/send-results', { method: 'POST', headers: { apikey: HK_KEY, 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify({ quiz_id: quizId, force: !!force }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 404) return { ok: false, msg: 'Results are uploaded, but the email function is not installed yet (Admin → Setup → Copy email function). Use “Copy emails” meanwhile.' };
+    if (!r.ok) return { ok: false, msg: 'Results are uploaded, but emails failed: ' + (j.error || 'HTTP ' + r.status) };
+    return { ok: !j.failed, msg: '📧 Emails sent: ' + j.sent + ' of ' + j.total + (j.failed ? ' · failed: ' + j.failed + ' (' + (j.errors || []).join('; ') + ')' : '') }; }
+  catch(e){ return { ok: false, msg: 'Results are uploaded, but the email service could not be reached: ' + (e.message || e) }; }
+}
+const mkSay = (t, ok) => { const m = $('#mkMsg', AD.c); if (m) { m.textContent = t; m.className = 'hk-msg' + (ok === true ? ' ok' : ok === false ? ' err' : ''); } };
+adAct.mkpublish = async () => {
+  const q = AD.qz.quiz; if (AD.qz.rows.some(r => mkPending(r))) { mkSay('Add marks for every typed answer first.', false); return; }
+  if (!confirm('Upload the final results and email every participant their marks and rank?')) return;
+  try { mkSay('Publishing…'); const o = { ...q, results_published: true, results_published_at: new Date().toISOString() }; await QZ.save(o); AD.qz.quiz = o; renderQuizList(); adRender(); mkSay('Sending emails…');
+    const r = await mkSendMails(q.id, false); toast('Results uploaded', 'success', '🏆'); mkSay(r.msg, r.ok); }
+  catch(e){ mkSay(/column|results_published/i.test(e.message || '') ? 'Run the updated SQL first (Admin → Setup).' : admErr(e), false); }
+};
+adAct.mkmail = async b => { mkSay('Sending…'); const r = await mkSendMails(AD.qz.quiz.id, b.dataset.force === '1'); mkSay(r.msg, r.ok); };
+adAct.mkunpub = async () => { if (!confirm('Mark these results as not final? Rankings will show as live again.')) return; try { const o = { ...AD.qz.quiz, results_published: false, results_published_at: null }; await QZ.save(o); AD.qz.quiz = o; renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+feat('Admin: add marks to typed / PDF answers, upload final results, email every participant', () => {});
 
 /* ---------- Question bank manager ---------- */
 const lvlNum = v => { v = String(v ?? '').trim().toLowerCase(); return ({ easy: 1, medium: 2, moderate: 2, hard: 3, difficult: 3, '1': 1, '2': 2, '3': 3 })[v] || 0; };
@@ -12510,12 +12681,14 @@ ADV.setup = async box => {
   for (const [t, l] of probes) { try { await pgrest(t + '?select=*&limit=1'); res.push([l, '✅ ready']); } catch(e){ res.push([l, '❌ ' + (e.status === 404 ? 'not created' : admErr(e))]); } }
   let fn = '✅ ready'; try { await pgrest('rpc/hr_now', { method: 'POST', body: {} }); } catch(e){ fn = '❌ not created'; }
   res.push(['Server clock (hr_now)', fn]);
+  { let mk = '✅ ready'; try { await pgrest('hr_attempts?select=marks,bonus,emailed_at&limit=1'); await pgrest('hr_quizzes?select=results_published&limit=1'); } catch(e){ mk = '❌ run the updated SQL (Part 3)'; } res.push(['Marks & results upload (Part 3)', mk]); }
   { let st = '✅ ready'; try { const r = await fetch(HK_URL + '/storage/v1/object/public/' + HK_BUCKET + '/_probe', { headers: { apikey: HK_KEY } }); const j = await r.json().catch(() => ({})); if (/bucket not found/i.test(j.message || j.error || '')) st = '❌ not created'; } catch(e){ st = '❌ ' + (e.message || 'unreachable'); } res.push(['PDF storage bucket (hr-quiz-files)', st]); }
   box.innerHTML = `${table(res, ['Item', 'Status'])}<div class="hrp-h">How to set up (2 minutes)</div><ol class="hrp-muted" style="padding-left:18px;line-height:1.7"><li>Open your Supabase project → <b>SQL Editor</b> → New query.</li><li>Tap <b>Copy SQL</b> below, paste it and press <b>Run</b>.</li><li>Come back here and reopen this tab — every row should show ✅.</li></ol>
-  <div class="hrp-row"><button class="hrp-btn pri" data-ad="sqlcopy">📋 Copy SQL</button><button class="hrp-btn" data-ad="sqldl">⬇ Download .sql</button><button class="hrp-btn" data-ad="setupre">↻ Re-check</button></div>
+  <div class="hrp-row"><button class="hrp-btn pri" data-ad="sqlcopy">📋 Copy SQL</button><button class="hrp-btn" data-ad="sqldl">⬇ Download .sql</button><button class="hrp-btn" data-ad="setupre">↻ Re-check</button><button class="hrp-btn" data-ad="edgecopy">✉️ Copy email function</button></div>
+  <p class="hrp-muted">Result emails: deploy the <b>send-results</b> Edge Function (button above) and set the secrets <b>RESEND_API_KEY</b> and <b>MAIL_FROM</b> — the browser alone cannot email other people.</p>
   <p class="hrp-muted">Until the SQL is installed: registrations are emailed through Formspree, admin edits are saved only in this browser, and quizzes are visible only to you. The SQL creates the tables, secure row-level policies (only Admins can write) and the server-side deadline check.</p>`;
 };
-adAct.sqlcopy = () => copy(HK_SQL_ALL); adAct.sqldl = () => download('supabase-hackathon.sql', HK_SQL_ALL, 'text/plain'); adAct.setupre = async () => { await loadEvent(); await loadBank(); adRender(); };
+adAct.edgecopy = () => copy(HK_EDGE); adAct.sqlcopy = () => copy(HK_SQL_ALL); adAct.sqldl = () => download('supabase-hackathon.sql', HK_SQL_ALL, 'text/plain'); adAct.setupre = async () => { await loadEvent(); await loadBank(); adRender(); };
 feat('Admin: Setup tab checks every database table and gives one-click SQL', () => {});
 
 /* ---------- final wiring ---------- */
