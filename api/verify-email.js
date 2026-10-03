@@ -24,6 +24,16 @@ const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method === 'GET') {   // open /api/verify-email in a browser to check the setup (shows no secrets)
+    const k = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    let role = '';
+    if (k.startsWith('eyJ')) { try { role = JSON.parse(Buffer.from(k.split('.')[1], 'base64url').toString()).role; } catch (e) { role = '?'; } }
+    return res.status(200).json({
+      version: 'v2', RESEND_API_KEY: !!process.env.RESEND_API_KEY, SUPABASE_URL: !!process.env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: !!k,
+      keyType: !k ? 'missing' : k.startsWith('eyJ') ? (role === 'service_role' ? 'legacy service_role (ok)' : 'WRONG: this key has role "' + role + '" - use the service_role key')
+        : k.startsWith('sb_secret_') ? 'new secret key (ok)' : k.startsWith('sb_publishable_') ? 'WRONG: publishable key' : 'unknown format'
+    });
+  }
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
   try {
     const API_KEY = process.env.RESEND_API_KEY, SB_URL = process.env.SUPABASE_URL, SRV = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -47,7 +57,7 @@ export default async function handler(req, res) {
       const code = String(crypto.randomInt(100000, 1000000));
       const ins = await sb('hr_email_codes', { method: 'POST', headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ email, code_hash: sha(code + ':' + email), expires_at: new Date(Date.now() + 600000).toISOString() }) });
-      if (!ins.ok) return res.status(500).json({ ok: false, error: 'Database write failed - run the PART 4 SQL first' });
+      if (!ins.ok) { const d = await ins.text().catch(() => ''); return res.status(500).json({ ok: false, error: 'Database write failed (' + ins.status + '): ' + d.slice(0, 160) }); }
 
       const mr = await fetch('https://api.resend.com/emails', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API_KEY },
@@ -84,7 +94,7 @@ export default async function handler(req, res) {
       const token = crypto.randomBytes(24).toString('hex');
       const expires = new Date(Date.now() + 12 * 3600000).toISOString();
       const ins = await sb('hr_verified', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ token_hash: sha(token), email, expires_at: expires }) });
-      if (!ins.ok) return res.status(500).json({ ok: false, error: 'Database write failed' });
+      if (!ins.ok) { const d = await ins.text().catch(() => ''); return res.status(500).json({ ok: false, error: 'Database write failed (' + ins.status + '): ' + d.slice(0, 160) }); }
       return res.status(200).json({ ok: true, token, expires_at: expires });
     }
     return res.status(400).json({ ok: false, error: 'Unknown action' });
