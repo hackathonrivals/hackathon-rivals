@@ -12311,41 +12311,86 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.hr_leaderboard(uuid, text) to anon, authenticated;
 `;
-const HK_EDGE = `// Supabase Edge Function: send-results
-// 1) supabase functions new send-results   (paste this file as index.ts)
-// 2) supabase secrets set RESEND_API_KEY=re_xxx MAIL_FROM="Hackathon Rivals <results@your-domain.com>"
-// 3) supabase functions deploy send-results
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Content-Type": "application/json" };
-const esc = (s: string) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  const out = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: cors });
+const HK_EDGE = `// File: api/send-results.js  (Vercel serverless function, same style as api/send-email.js)
+// Vercel env vars needed: RESEND_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
   try {
-    const url = Deno.env.get("SUPABASE_URL")!;
-    const me = await createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } }).auth.getUser();
-    if (!me.data.user) return out({ error: "Login required" }, 401);
-    const db = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const prof = await db.from("profiles").select("role").eq("id", me.data.user.id).maybeSingle();
-    if (!prof.data || prof.data.role !== "Admin") return out({ error: "Admins only" }, 403);
-    const { quiz_id, force } = await req.json();
-    const quiz = (await db.from("hr_quizzes").select("title,results_published").eq("id", quiz_id).single()).data;
-    if (!quiz || !quiz.results_published) return out({ error: "Upload the results first" }, 400);
-    const att = (await db.from("hr_attempts").select("id,name,email,score,bonus,max_score,secs,emailed_at").eq("quiz_id", quiz_id)).data || [];
-    const rows = att.map((a) => ({ ...a, total: a.score + (a.bonus || 0), pos: 0 })).sort((a, b) => b.total - a.total || (a.secs || 0) - (b.secs || 0));
-    let pos = 0, last = "";
-    rows.forEach((r, i) => { const k = r.total + ":" + r.secs; if (k !== last) { pos = i + 1; last = k; } r.pos = pos; });
-    let sent = 0; const errors: string[] = [];
-    for (const r of rows) {
-      if (r.emailed_at && !force) continue;
-      const html = "<p>Hi " + esc(r.name) + ",</p><p>The results for <b>" + esc(quiz.title) + "</b> are final.</p><p>Your marks: <b>" + r.total + (r.max_score ? " / " + r.max_score : "") + "</b><br>Your rank: <b>#" + r.pos + " of " + rows.length + "</b></p><p>You can also see the live rankings on the website.</p>";
-      const res = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: "Bearer " + Deno.env.get("RESEND_API_KEY"), "Content-Type": "application/json" }, body: JSON.stringify({ from: Deno.env.get("MAIL_FROM"), to: [r.email], subject: "Your result — " + quiz.title, html }) });
-      if (res.ok) { sent++; await db.from("hr_attempts").update({ emailed_at: new Date().toISOString() }).eq("id", r.id); } else errors.push(r.email + ": " + (await res.text()).slice(0, 100));
-      await new Promise((ok) => setTimeout(ok, 600));
+    const API_KEY = process.env.RESEND_API_KEY;
+    const SB_URL = process.env.SUPABASE_URL;
+    const SRV = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!API_KEY) return res.status(500).json({ error: 'RESEND_API_KEY not set' });
+    if (!SB_URL || !SRV) return res.status(500).json({ error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set' });
+
+    // 1) caller must be a logged-in Admin
+    const token = String(req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Login required' });
+    const ur = await fetch(SB_URL + '/auth/v1/user', { headers: { apikey: SRV, Authorization: 'Bearer ' + token } });
+    if (!ur.ok) return res.status(401).json({ error: 'Login required' });
+    const user = await ur.json();
+    const sb = (path, opt) => fetch(SB_URL + '/rest/v1/' + path, Object.assign({}, opt, {
+      headers: Object.assign({ apikey: SRV, Authorization: 'Bearer ' + SRV, 'Content-Type': 'application/json' }, (opt && opt.headers) || {})
+    }));
+    const prof = await (await sb('profiles?id=eq.' + encodeURIComponent(user.id) + '&select=role')).json();
+    if (!prof || !prof[0] || prof[0].role !== 'Admin') return res.status(403).json({ error: 'Admins only' });
+
+    // 2) quiz + attempts
+    const body = req.body || {};
+    const quizId = String(body.quiz_id || '');
+    if (!/^[0-9a-f-]{36}$/i.test(quizId)) return res.status(400).json({ error: 'quiz_id required' });
+    const quiz = (await (await sb('hr_quizzes?id=eq.' + quizId + '&select=title,results_published')).json())[0];
+    if (!quiz || !quiz.results_published) return res.status(400).json({ error: 'Upload the results first' });
+    const att = await (await sb('hr_attempts?quiz_id=eq.' + quizId + '&select=id,name,email,score,bonus,max_score,secs,emailed_at')).json();
+
+    const rows = att.map(a => Object.assign({}, a, { total: a.score + (a.bonus || 0), pos: 0 }))
+      .sort((a, b) => b.total - a.total || (a.secs || 0) - (b.secs || 0));
+    let pos = 0, last = '';
+    rows.forEach((r, i) => { const k = r.total + ':' + r.secs; if (k !== last) { pos = i + 1; last = k; } r.pos = pos; });
+
+    const FROM = 'Hackathon Rivals <noreply@hackathonrivals.in>';
+    const todo = rows.filter(r => body.force || !r.emailed_at);
+    let sent = 0; const errors = [];
+
+    // 3) send in batches of 100 (one Resend call per batch = fast enough for Vercel)
+    for (let i = 0; i < todo.length; i += 100) {
+      const chunk = todo.slice(i, i + 100);
+      const mails = chunk.map(r => ({
+        from: FROM, to: [r.email], subject: 'Your result - ' + quiz.title,
+        html: '<div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#0f1119;color:#e9ebf2;border-radius:12px">'
+          + '<h1 style="color:#7c5cff">Results are out! 🏆</h1>'
+          + '<p>Hi <b>' + esc(r.name) + '</b>,</p>'
+          + '<p>The results for <b style="color:#22d3ee">' + esc(quiz.title) + '</b> are final.</p>'
+          + '<p><b>Your marks:</b> ' + r.total + (r.max_score ? ' / ' + r.max_score : '') + '<br><b>Your rank:</b> #' + r.pos + ' of ' + rows.length + '</p>'
+          + '<p>You can also see the live rankings on the website.</p><p><b>— Team Hackathon Rivals</b></p></div>'
+      }));
+      const rr = await fetch('https://api.resend.com/emails/batch', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + API_KEY }, body: JSON.stringify(mails)
+      });
+      if (rr.ok) {
+        sent += chunk.length;
+        await sb('hr_attempts?id=in.(' + chunk.map(r => r.id).join(',') + ')', {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ emailed_at: new Date().toISOString() })
+        });
+      } else {
+        let m = ''; try { m = (await rr.json()).message; } catch (e) {}
+        errors.push('batch ' + (i / 100 + 1) + ': ' + (m || 'HTTP ' + rr.status));
+      }
     }
-    return out({ sent, failed: errors.length, errors: errors.slice(0, 5), total: rows.length });
-  } catch (e) { return out({ error: String(e) }, 500); }
-});
+    return res.status(200).json({ sent, failed: todo.length - sent, errors: errors.slice(0, 5), total: todo.length });
+  } catch (err) {
+    console.error('send-results error:', err);
+    return res.status(500).json({ error: String(err.message || err) });
+  }
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 `;
 const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS;
 
@@ -12570,9 +12615,9 @@ adAct.mksave = async b => {
 };
 async function mkSendMails(quizId, force){
   const tok = sbToken();
-  try { const r = await fetch(HK_URL + '/functions/v1/send-results', { method: 'POST', headers: { apikey: HK_KEY, 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify({ quiz_id: quizId, force: !!force }) });
+  try { const r = await fetch('/api/send-results', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify({ quiz_id: quizId, force: !!force }) });
     const j = await r.json().catch(() => ({}));
-    if (r.status === 404) return { ok: false, msg: 'Results are uploaded, but the email function is not installed yet (Admin → Setup → Copy email function). Use “Copy emails” meanwhile.' };
+    if (r.status === 404) return { ok: false, msg: 'Results are uploaded, but the /api/send-results file is not deployed yet (Admin → Setup → Copy email function → save as api/send-results.js). Use “Copy emails” meanwhile.' };
     if (!r.ok) return { ok: false, msg: 'Results are uploaded, but emails failed: ' + (j.error || 'HTTP ' + r.status) };
     return { ok: !j.failed, msg: '📧 Emails sent: ' + j.sent + ' of ' + j.total + (j.failed ? ' · failed: ' + j.failed + ' (' + (j.errors || []).join('; ') + ')' : '') }; }
   catch(e){ return { ok: false, msg: 'Results are uploaded, but the email service could not be reached: ' + (e.message || e) }; }
@@ -12685,7 +12730,7 @@ ADV.setup = async box => {
   { let st = '✅ ready'; try { const r = await fetch(HK_URL + '/storage/v1/object/public/' + HK_BUCKET + '/_probe', { headers: { apikey: HK_KEY } }); const j = await r.json().catch(() => ({})); if (/bucket not found/i.test(j.message || j.error || '')) st = '❌ not created'; } catch(e){ st = '❌ ' + (e.message || 'unreachable'); } res.push(['PDF storage bucket (hr-quiz-files)', st]); }
   box.innerHTML = `${table(res, ['Item', 'Status'])}<div class="hrp-h">How to set up (2 minutes)</div><ol class="hrp-muted" style="padding-left:18px;line-height:1.7"><li>Open your Supabase project → <b>SQL Editor</b> → New query.</li><li>Tap <b>Copy SQL</b> below, paste it and press <b>Run</b>.</li><li>Come back here and reopen this tab — every row should show ✅.</li></ol>
   <div class="hrp-row"><button class="hrp-btn pri" data-ad="sqlcopy">📋 Copy SQL</button><button class="hrp-btn" data-ad="sqldl">⬇ Download .sql</button><button class="hrp-btn" data-ad="setupre">↻ Re-check</button><button class="hrp-btn" data-ad="edgecopy">✉️ Copy email function</button></div>
-  <p class="hrp-muted">Result emails: deploy the <b>send-results</b> Edge Function (button above) and set the secrets <b>RESEND_API_KEY</b> and <b>MAIL_FROM</b> — the browser alone cannot email other people.</p>
+  <p class="hrp-muted">Result emails: save the copied code as <b>api/send-results.js</b> in your project (next to send-email.js) and add the Vercel env vars <b>SUPABASE_URL</b> and <b>SUPABASE_SERVICE_ROLE_KEY</b> (RESEND_API_KEY you already have), then redeploy.</p>
   <p class="hrp-muted">Until the SQL is installed: registrations are emailed through Formspree, admin edits are saved only in this browser, and quizzes are visible only to you. The SQL creates the tables, secure row-level policies (only Admins can write) and the server-side deadline check.</p>`;
 };
 adAct.edgecopy = () => copy(HK_EDGE); adAct.sqlcopy = () => copy(HK_SQL_ALL); adAct.sqldl = () => download('supabase-hackathon.sql', HK_SQL_ALL, 'text/plain'); adAct.setupre = async () => { await loadEvent(); await loadBank(); adRender(); };
