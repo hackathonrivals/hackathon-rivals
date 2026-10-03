@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Hackathon Rivals — India's National Hackathon Arena</title>
 <!-- ===== SEO & SOCIAL SHARING ===== -->
-<meta name="keywords" content="hackathon, India, student, innovation, SIH, hackathon rivals, coding, hackathon 2026" />
+<meta name="keywords" content="hackathon, India, student, innovation, hackathon rivals, coding, hackathon 2026" />
 <meta name="author" content="Hackathon Rivals" />
 <meta name="theme-color" content="#7c5cff" />
 
@@ -34,6 +34,7 @@
 <meta name="description" content="Hackathon Rivals is India's national hackathon arena for student innovators. Season 2026 with 17 themes, prize pool to be announced, and a 36-hour Grand Finale. Register your team free today!" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://awvcorswnzbxsrrzepto.supabase.co" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -2219,6 +2220,22 @@ body{overflow-x:clip}
 }
 @media (max-width:480px){.nav-cta a.btn-primary{display:none}}
 
+/* header layout fix: no wrapping, menu collapses before it gets crowded */
+.govt-bar .wrap{justify-content:flex-end}
+.logo,.nav-links a,.nav-cta .btn,.nav-cta .hk-pill{white-space:nowrap}
+.logo{flex:0 0 auto}
+.nav{gap:12px}
+.nav-cta{flex:0 0 auto}
+@media (max-width:1200px){.nav-links{gap:14px}.nav-links a{font-size:13.5px}.logo{font-size:16px}}
+@media (max-width:1000px){
+  .nav-links{position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:0;background:var(--surface);border-bottom:1px solid var(--border);padding:8px 0;display:none}
+  .nav-links.open{display:flex}
+  .nav-links a{padding:14px 24px;font-size:14.5px}
+  .nav-links a.active::after{display:none}
+  .burger{display:block}
+}
+@media (max-width:420px){.logo{font-size:15px;gap:8px}.nav-cta .btn-ghost{display:none}}
+
 /* focus mode */
 html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp-focus #hrpTopBtn,html.hrp-focus #hrpShareBtn,html.hrp-focus #hrpStick{display:none!important}
 
@@ -2341,7 +2358,6 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 <header id="header">
   <div class="govt-bar">
     <div class="wrap">
-      <div class="emblem"><span class="emblem-dot"></span><span>An Initiative Inspired by Smart India Hackathon</span></div>
       <div class="right"><a href="#">हिंदी</a><a href="#">A- A A+</a></div>
     </div>
   </div>
@@ -3407,7 +3423,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
     <div class="foot-grid">
       <div class="foot-brand">
         <a href="#" class="logo"><span class="logo-mark">HR</span> Hackathon Rivals</a>
-        <p>India's national hackathon arena for student innovators. Inspired by Smart India Hackathon.</p>
+        <p>India's national hackathon arena for student innovators.</p>
       </div>
       <div class="foot-col">
         <h4>Portal</h4>
@@ -3425,7 +3441,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© <span id="year"></span> Hackathon Rivals. Inspired by Smart India Hackathon.</span>
+      <span>© <span id="year"></span> Hackathon Rivals.</span>
       <span>Built for builders 🚀</span>
     </div>
   </div>
@@ -3920,8 +3936,21 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 </div>
 
 <!-- ============ CDN SCRIPTS ============ -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script>
+/* heavy libraries load on demand (saves ~1.3 MB on every first visit) */
+window.__libs = {};
+window.loadLib = function(src, globalName){
+  if (window[globalName]) return Promise.resolve();
+  if (!window.__libs[src]) window.__libs[src] = new Promise(function(ok, no){
+    var s = document.createElement('script'); s.src = src; s.onload = ok;
+    s.onerror = function(){ delete window.__libs[src]; no(new Error('Could not load library')); };
+    document.head.appendChild(s);
+  });
+  return window.__libs[src];
+};
+window.needXLSX = function(){ return window.loadLib('https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js', 'XLSX'); };
+window.needPDF = function(){ return window.loadLib('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', 'pdfjsLib'); };
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -6002,7 +6031,7 @@ showToast(successMsg, 'success', '✓');
 // Send emails (background)
 fetch('/api/send-email', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ((await supabase.auth.getSession()).data.session?.access_token || '') },
   body: JSON.stringify({
     registration: {
       ...spoc,
@@ -7284,6 +7313,7 @@ _start:
     arenaDrop.querySelector('.s').innerHTML = 'Text extracted · click to replace';
   }
   async function extractPdfText(file){
+    try { await window.needPDF(); } catch(e){}
     if (!window.pdfjsLib) throw new Error('PDF library not loaded');
     pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER;
     const buf = await file.arrayBuffer();
@@ -8227,7 +8257,8 @@ async function loadAdminData(){
     showToast(`Exported ${rows.length} rows`, 'success', '⬇');
   }
 
-  function downloadXLSX(){
+  async function downloadXLSX(){
+    try { await window.needXLSX(); } catch(e){}
     if (!window.XLSX){ showToast('Excel library not loaded', 'warn', '⚠️'); return; }
     const rows = rowsForExport();
     if (!rows.length){ showToast('Nothing to export', 'warn', '⚠️'); return; }
@@ -8299,7 +8330,7 @@ async function loadAdminData(){
   try {
     const res = await fetch('/api/notify-webhook', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ((await supabase.auth.getSession()).data.session?.access_token || '') },
       body: JSON.stringify({ row, isTest: !!isTest })
     });
     const data = await res.json();
@@ -12819,7 +12850,7 @@ function applyBrand(){
   if(b.name)document.title=b.name+' — Hackathon Arena';
   let nb=$('#siteNotice');const n=C.notice;
   if(n&&n.on&&n.text){if(!nb){nb=document.createElement('div');nb.id='siteNotice';document.body.prepend(nb)}nb.textContent='📢 '+n.text}else if(nb)nb.remove();
-  const pl=$('.pt-side .logo');if(pl)pl.innerHTML=(b.logo?`<img src="${b.logo}">`:'<span class="logo-mark">HR</span>')+' '+h(b.name||'Hackathon Rivals');
+  const pl=$('.pt-side .logo');if(pl)pl.innerHTML=(b.logo?`<img src="${b.logo}" alt="" loading="lazy" decoding="async">`:'<span class="logo-mark">HR</span>')+' '+h(b.name||'Hackathon Rivals');
   RES.forEach(([id,,label])=>$$('a').forEach(a=>{if(a.closest('#portal')||a.textContent.trim().replace(/\s*→$/,'')!==label)return;
     const r=C['res:'+id];a.style.display=r?'':'none';
     if(r){a.href='#';a.onclick=async e=>{e.preventDefault();const {data,error}=await SB.from('site_content').select('v').eq('k','resdata:'+id).maybeSingle();if(error||!data)return toast('File not available','warn','⚠️');openData(data.v.data,r.name,1)}}}));
@@ -12897,12 +12928,12 @@ function hack(el){
 }
 function content(el){
   const b=C.brand||{},ppl=list('person:'),pp=list('paper:');const EV=C.event||(window.__hrGetHackTimes&&window.__hrGetHackTimes())||{};
-  const row=(k,t,s,img)=>`<div class="pt-item">${img?`<img src="${img}">`:''}<div class="g"><b>${h(t)}</b><small>${h(s)}</small></div>${k.startsWith('person:')?`<button class="btn btn-ghost" data-mv="${k}:-1">↑</button><button class="btn btn-ghost" data-mv="${k}:1">↓</button>`:''}<button class="btn btn-ghost" data-x="${k}">🗑 Delete</button></div>`;
+  const row=(k,t,s,img)=>`<div class="pt-item">${img?`<img src="${img}" alt="" loading="lazy" decoding="async">`:''}<div class="g"><b>${h(t)}</b><small>${h(s)}</small></div>${k.startsWith('person:')?`<button class="btn btn-ghost" data-mv="${k}:-1">↑</button><button class="btn btn-ghost" data-mv="${k}:1">↓</button>`:''}<button class="btn btn-ghost" data-x="${k}">🗑 Delete</button></div>`;
   el.innerHTML=`<h2 class="pt-h">🎛️ Site Content</h2><p class="pt-sub">Logo, founders, organisers, question papers — manage everything here, no code changes needed.</p>
   ${dbOk?'':`<div class="pt-warn">⚠️ One-time setup: run this SQL in Supabase → SQL Editor so uploads are saved for everyone. <button class="btn btn-ghost" id="cpSql">Copy SQL</button></div>`}
   <div class="pt-card"><h4>🏆 Event dates (Grand Finale &amp; deadline)</h4><p class="pt-sub" style="margin:0 0 8px;font-size:12.5px">One place for everything: banner, countdown timer, registration lock and deadline text. Registration closes at 11:59 PM IST on the deadline date (leave it empty to close when the countdown ends).</p><div class="row"><label>Finale start <input type="date" id="evStart" value="${h(EV.start||'')}"></label><label>Finale end <input type="date" id="evEnd" value="${h(EV.end||'')}"></label><label>Start time (IST) <input type="time" id="evTime" value="${h(EV.time||'09:00')}"></label></div><div class="row"><input type="text" id="evVenue" placeholder="Venue / city" value="${h(EV.venue||'New Delhi')}"><label>Registration deadline <input type="date" id="evDeadline" value="${h(EV.deadline||'')}"></label><button class="btn btn-primary" id="evSave">Save</button></div></div>\r\n  <div class="pt-card"><h4>📢 Announcement bar</h4><div class="row"><input type="text" id="nTxt" placeholder="e.g. Registrations close on 30 April!" value="${h((C.notice||{}).text||'')}"><label><input type="checkbox" id="nOn" ${(C.notice||{}).on?'checked':''}> Show</label><button class="btn btn-primary" id="nSave">Save</button></div></div>
 <div class="pt-card"><h4>📎 Downloads (footer links &amp; brochure button)</h4><p class="pt-sub" style="margin:0 0 6px;font-size:12.5px">A link shows on the website only after you upload its file. Max 4 MB.</p>${RES.map(([id,l])=>{const r=C['res:'+id];return `<div class="pt-item"><div class="g"><b>${l}</b><small>${r?'✅ '+h(r.name):'Not uploaded — hidden on website'}</small></div><input type="file" id="rf_${id}"><button class="btn btn-primary" data-ru="${id}">Upload</button>${r?`<button class="btn btn-ghost" data-rd="${id}">Remove</button>`:''}</div>`}).join('')}</div>
-  <div class="pt-card"><h4>🖼️ Logo &amp; site name</h4>${b.logo?`<img src="${b.logo}" style="height:50px;margin-bottom:8px">`:''}<div class="row"><input type="text" id="bName" placeholder="Site name" value="${h(b.name||'Hackathon Rivals')}"><input type="file" id="bLogo" accept="image/*"></div><div class="row"><button class="btn btn-primary" id="bSave">Save</button>${b.logo?'<button class="btn btn-ghost" id="bRm">Remove logo</button>':''}</div></div>
+  <div class="pt-card"><h4>🖼️ Logo &amp; site name</h4>${b.logo?`<img src="${b.logo}" alt="" loading="lazy" decoding="async" style="height:50px;margin-bottom:8px">`:''}<div class="row"><input type="text" id="bName" placeholder="Site name" value="${h(b.name||'Hackathon Rivals')}"><input type="file" id="bLogo" accept="image/*"></div><div class="row"><button class="btn btn-primary" id="bSave">Save</button>${b.logo?'<button class="btn btn-ghost" id="bRm">Remove logo</button>':''}</div></div>
   <div class="pt-card"><h4>👤 Founders &amp; Organisers</h4><div class="row"><select id="pType"><option value="founder">Founder</option><option value="organiser">Organiser</option></select><input type="text" id="pName" placeholder="Name"><input type="text" id="pRole" placeholder="Title / role"></div><div class="row"><input type="text" id="pBio" placeholder="Short bio"><input type="text" id="pLink" placeholder="LinkedIn / website (optional)"><input type="file" id="pPhoto" accept="image/*"></div><div class="row"><button class="btn btn-primary" id="pAdd">+ Add</button></div>${ppl.map(p=>row(p.k,p.name,p.type+' · '+(p.role||''),p.photo)).join('')}</div>
   <div class="pt-card"><h4>📄 Question papers</h4><div class="row"><input type="text" id="qpTitle" placeholder="Title"><input type="text" id="qpSub" placeholder="Subject"><input type="text" id="qpYear" placeholder="Year"></div><div class="row"><input type="file" id="qpFile" accept=".pdf,image/*,.doc,.docx"><button class="btn btn-primary" id="qpAdd">Upload</button></div>${pp.map(p=>row(p.k,p.title,(p.subject||'')+' '+(p.year||''))).join('')}</div>`;
   const re=()=>{content(el);applyBrand()},on=(id,fn)=>{const n=$('#'+id,el);if(n)n.onclick=async()=>{try{await fn()}catch(e){toast(String(e.message||e),'warn','⚠️')}}};
