@@ -9903,6 +9903,7 @@ feat('Confetti on successful registration', () => {});
 feat('Konami-code easter egg 🎮', () => {
   const seq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']; let i = 0;
   document.addEventListener('keydown', e => {
+    if (!e.key) return;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     i = (k === seq[i]) ? i + 1 : (k === seq[0] ? 1 : 0);
     if (i === seq.length) { i = 0; confetti(120); toast('Cheat code activated: +100 XP', 'success', '🎮'); addXP(100); award('konami'); }
@@ -12048,11 +12049,22 @@ function openQuizReg(q){
 }
 async function fetchQuizzes(){
   await fetchQuizzesBase(); HQ.papers = {};
-  if (HB.remote && HQ.list.length) { try { const rows = await pgrest('hr_quiz_files?kind=eq.paper&select=quiz_id,file_path,file_name,file_size'); (rows || []).forEach(r => { HQ.papers[r.quiz_id] = r; }); } catch(e){} }
+  if (HB.remote && HQ.list.length) { try { const rows = await pgrest('rpc/hr_papers_present', { method: 'POST', body: {} }); (rows || []).forEach(r => { HQ.papers[r.quiz_id] = { present: true }; }); } catch(e){} }
 }
 const paperUrl = p => HK_URL + '/storage/v1/object/public/' + HK_BUCKET + '/' + String(p).split('/').map(encodeURIComponent).join('/');
 const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
-function paperLine(q){ const p = (HQ.papers || {})[q.id]; if (!p) return ''; return `<p class="hrp-muted">📄 <a href="${esc(paperUrl(p.file_path))}" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:underline">Question paper — ${esc(p.file_name || 'PDF')}${p.file_size ? ' (' + fmtSize(p.file_size) + ')' : ''}</a></p>`; }
+function paperLine(q){ if (!(HQ.papers || {})[q.id]) return ''; return '<p class="hrp-muted">📄 The question paper opens inside the exam, after you register, verify your email and the quiz starts.</p>'; }
+/* the real link is fetched from the server only inside the running exam */
+async function loadPaper(q, email){
+  const el = document.getElementById('hqPaper'); if (!el || !(HQ.papers || {})[q.id]) return;
+  const retry = txt => { el.innerHTML = txt + ' <button class="hrp-mini" id="hqPR" type="button">Retry</button>'; const b = el.querySelector('#hqPR'); if (b) b.onclick = () => { el.textContent = '📄 Loading question paper…'; loadPaper(q, email); }; };
+  try {
+    const rows = await pgrest('rpc/hr_quiz_paper', { method: 'POST', headers: vtHdr(email), body: { p_quiz: q.id, p_email: email } });
+    const f = rows && rows[0];
+    if (!f) return retry('📄 The question paper is not available yet.');
+    el.innerHTML = '📄 <a href="' + esc(paperUrl(f.file_path)) + '" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:underline">Question paper — ' + esc(f.file_name || 'PDF') + (f.file_size ? ' (' + fmtSize(f.file_size) + ')' : '') + '</a>';
+  } catch(e){ retry('📄 Could not load the question paper.'); }
+}
 function quizSig(){ const done = store.get('hk:done', {}); return (HQ.list || []).map(q => [q.id, quizState(q), needReg(q) ? regState(q) : '-', isReg(q) ? 1 : 0, done[q.id] ? 1 : 0, (HQ.papers || {})[q.id] ? 1 : 0].join(':')).join('|'); }
 async function renderQuizList(){
   const box = hkEl('hkQuizBox'); if (!box) return; await fetchQuizzes(); paintQuizList();
@@ -12086,8 +12098,9 @@ async function quizQuestions(q){
 function runQuiz(q, qs, name, email){
   const m = qzModal(), B = $('#hkQB', m); const ans = {}, typed = {}; let file = null; const t0 = Date.now(), end = t0 + q.duration_min * 60000; HQ.cur = { q, ans };
   const paperMode = !qs.length;
+  setTimeout(() => loadPaper(q, email), 60);
   const fileBlock = `<div class="hrp-card hq-file" style="margin:10px 0"><b>📎 Upload answer sheet (PDF, max 5 MB)</b> <span class="hrp-muted">— optional</span>${HB.remote ? `<input type="file" id="hqF" accept="application/pdf,.pdf"><div class="hk-msg" id="hqFi"></div>` : '<p class="hrp-muted">PDF upload becomes available once the organiser finishes the database setup.</p>'}</div>`;
-  B.innerHTML = `<div class="hrp-row" style="justify-content:space-between"><b>${paperMode ? 'Paper-based exam' : qs.length + ' questions'}</b><span class="hrp-kbd" id="hqT">--:--</span></div>${paperLine(q)}
+  B.innerHTML = `<div class="hrp-row" style="justify-content:space-between"><b>${paperMode ? 'Paper-based exam' : qs.length + ' questions'}</b><span class="hrp-kbd" id="hqT">--:--</span></div><div id="hqPaper" class="hrp-muted" style="margin:6px 0">${HQ.papers[q.id] ? '📄 Loading question paper…' : ''}</div>
   ${paperMode ? `<div class="hrp-card" style="margin:10px 0"><b>✍️ Type your answers</b><textarea class="hrp-ta hq-type" data-t="_paper" maxlength="20000" style="min-height:180px" placeholder="Write your answers here…"></textarea></div>` : qs.map((x, i) => `<div class="hrp-card" style="margin:10px 0"><b>${i + 1}. ${esc(x.text)}</b> <span class="hrp-muted">(${x.points || 1} pt)</span>${x.options.map((o, k) => `<label class="hrp-check"><input type="radio" name="hq${i}" data-q="${esc(x.id)}" value="${k}"><span>${esc(o)}</span></label>`).join('')}<div class="hq-or">…or type your answer (A / B / C / D, or in your own words):</div><textarea class="hrp-ta hq-type" data-t="${esc(x.id)}" maxlength="2000" rows="2" placeholder="✍️ Type your answer here"></textarea></div>`).join('')}
   ${fileBlock}<div class="hk-msg" id="hqM"></div><div class="hrp-row"><button class="hrp-btn pri" data-a="sub">Submit answers</button></div>`;
   const setMsg = (t, c) => { const msg = $('#hqM', m); if (msg) { msg.textContent = t; msg.className = 'hk-msg' + (c ? ' ' + c : ''); } };
@@ -12330,8 +12343,7 @@ create unique index if not exists hr_quiz_files_answer_uq on public.hr_quiz_file
 alter table public.hr_quiz_files enable row level security;
 drop policy if exists hr_qf_read_paper on public.hr_quiz_files;
 drop policy if exists hr_qf_admin on public.hr_quiz_files;
-create policy hr_qf_read_paper on public.hr_quiz_files for select
-  using (public.hr_is_admin() or (kind = 'paper' and exists (select 1 from public.hr_quizzes z where z.id = quiz_id and z.published)));
+-- (paper rows are admin-only; students get the link through hr_quiz_paper(), see Part 6)
 create policy hr_qf_admin on public.hr_quiz_files for all using (public.hr_is_admin()) with check (public.hr_is_admin());
 
 -- Participants save typed answers / PDF only AFTER a real quiz attempt exists for their email
@@ -12507,6 +12519,9 @@ alter table public.hr_email_codes enable row level security;
 alter table public.hr_verified enable row level security;
 revoke all on public.hr_email_codes from anon, authenticated;
 revoke all on public.hr_verified from anon, authenticated;
+grant all on public.hr_email_codes to service_role;
+grant all on public.hr_verified to service_role;
+grant usage, select on sequence public.hr_email_codes_id_seq to service_role;
 
 create or replace function public.hr_token_ok(p_email text, p_token text)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -12567,7 +12582,57 @@ drop trigger if exists hr_quiz_time_changed on public.hr_quizzes;
 create trigger hr_quiz_time_changed before update on public.hr_quizzes
   for each row execute function public.hr_quiz_time_changed();
 `;
-const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS + '\n' + HK_SQL_VERIFY + '\n' + HK_SQL_REMIND;
+const HK_SQL_LOCK = `-- ============================================================
+-- PART 6 — question-paper link is hidden until the student is registered,
+-- email-verified (OTP) and the quiz has started. Safe to run again.
+-- Needs Part 2 (quiz-files.sql) and Part 4 step A (verify tables + hr_token_ok).
+-- ============================================================
+create or replace function public.hr_req_token() returns text language plpgsql stable as $$
+declare tok text;
+begin
+  begin
+    tok := (nullif(current_setting('request.headers', true), '')::json) ->> 'x-quiz-token';
+  exception when others then tok := null;
+  end;
+  if tok is null then tok := current_setting('request.header.x-quiz-token', true); end if;
+  return tok;
+end $$;
+
+-- nobody but the admin can read paper rows (and so the file path) directly any more
+drop policy if exists hr_qf_read_paper on public.hr_quiz_files;
+
+-- tells the quiz list only WHETHER a paper exists (no link)
+create or replace function public.hr_papers_present()
+returns table (quiz_id uuid) language sql stable security definer set search_path = public as $$
+  select f.quiz_id from public.hr_quiz_files f join public.hr_quizzes z on z.id = f.quiz_id
+  where f.kind = 'paper' and z.published;
+$$;
+grant execute on function public.hr_papers_present() to anon, authenticated;
+
+-- the link itself: only for a registered, verified student after the quiz start time
+create or replace function public.hr_quiz_paper(p_quiz uuid, p_email text)
+returns table (file_path text, file_name text, file_size int)
+language plpgsql stable security definer set search_path = public as $$
+declare q record;
+begin
+  if not public.hr_is_admin() then
+    select * into q from public.hr_quizzes z where z.id = p_quiz and z.published;
+    if not found then return; end if;
+    if q.opens_at is not null and now() < q.opens_at then return; end if;
+    if q.closes_at is not null and now() > q.closes_at + make_interval(mins => coalesce(q.duration_min, 0)) then return; end if;
+    if to_jsonb(q) ->> 'reg_closes_at' is not null and not exists (
+         select 1 from public.hr_quiz_regs r
+         where r.quiz_id = p_quiz and lower(r.email) = lower(trim(coalesce(p_email, '')))) then
+      return;
+    end if;
+    if not public.hr_token_ok(p_email, public.hr_req_token()) then return; end if;
+  end if;
+  return query select f.file_path, f.file_name, f.file_size from public.hr_quiz_files f
+    where f.quiz_id = p_quiz and f.kind = 'paper' limit 1;
+end $$;
+grant execute on function public.hr_quiz_paper(uuid, text) to anon, authenticated;
+`;
+const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS + '\n' + HK_SQL_VERIFY + '\n' + HK_SQL_REMIND + '\n' + HK_SQL_LOCK;
 
 const AD = { sub: store.get('adminSub', 'hack'), c: null, qz: null, bank: { subj: 'all', sem: '-1', lvl: '0', q: '', lim: 25, edit: null, imp: null } };
 const ADV = {};
@@ -12651,7 +12716,7 @@ ADV.quiz = async box => {
   box.innerHTML = '<p class="hrp-muted">Loading…</p>';
   try { const list = await QZ.list(); AD.qzList = list; AD.papers = {}; if (HB.remote) { try { (await pgrest('hr_quiz_files?kind=eq.paper&select=quiz_id,file_name')).forEach(r => { AD.papers[r.quiz_id] = r; }); } catch(e){} }
     box.innerHTML = `<div class="hrp-row"><button class="hrp-btn pri" data-ad="qnew">➕ New quiz</button></div>${list.map(q => `<div class="hrp-card" style="margin:8px 0"><b>${esc(q.title)}</b> ${q.published ? '<span class="hk-pill ok">published</span>' : '<span class="hk-pill">draft</span>'}<div class="hrp-muted">${q.duration_min} min${AD.papers[q.id] ? ' · 📄 paper attached' : ''}${q.opens_at ? ' · opens ' + new Date(q.opens_at).toLocaleString() : ''}${q.closes_at ? ' · closes ' + new Date(q.closes_at).toLocaleString() : ''}${q.reg_closes_at ? ' · registration ' + (q.reg_opens_at ? new Date(q.reg_opens_at).toLocaleString() + ' → ' : 'until ') + new Date(q.reg_closes_at).toLocaleString() : ''}</div>
-    <div class="hrp-row" style="margin:8px 0 0"><button class="hrp-mini" data-ad="qopen" data-id="${esc(q.id)}">✏️ Edit & questions</button><button class="hrp-mini" data-ad="qpub" data-id="${esc(q.id)}">${q.published ? 'Unpublish' : 'Publish'}</button><button class="hrp-mini" data-ad="qres" data-id="${esc(q.id)}">📊 Results</button><button class="hrp-mini" data-ad="qregs" data-id="${esc(q.id)}">📋 Registrations CSV</button><button class="hrp-mini" data-ad="qdel" data-id="${esc(q.id)}">🗑 Delete</button></div></div>`).join('') || '<p class="hrp-muted">No quizzes yet. Click “New quiz” to create one for your hackathon.</p>'}`; }
+    <div class="hrp-row" style="margin:8px 0 0"><button class="hrp-mini" data-ad="qopen" data-id="${esc(q.id)}">✏️ Edit & questions</button><button class="hrp-mini" data-ad="qpub" data-id="${esc(q.id)}">${q.published ? 'Unpublish' : 'Publish'}</button><button class="hrp-mini" data-ad="qres" data-id="${esc(q.id)}">📊 Results</button><button class="hrp-mini" data-ad="qregs" data-id="${esc(q.id)}">📋 Registrations CSV</button><button class="hrp-mini" data-ad="qmailnow" data-id="${esc(q.id)}">📧 Send start email</button><button class="hrp-mini" data-ad="qdel" data-id="${esc(q.id)}">🗑 Delete</button></div></div>`).join('') || '<p class="hrp-muted">No quizzes yet. Click “New quiz” to create one for your hackathon.</p>'}`; }
   catch(e){ box.innerHTML = `<p class="hrp-muted">❌ ${esc(admErr(e))}</p>`; }
 };
 adAct.qnew = () => { AD.qz = { mode: 'edit', quiz: { id: uid(), title: '', description: '', duration_min: 30, opens_at: null, closes_at: null, published: false, isNew: true }, qs: [], editQ: null }; adRender(); };
@@ -12659,6 +12724,18 @@ adAct.qopen = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id);
 adAct.qpub = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { await QZ.save({ ...q, published: !q.published }); renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 adAct.qdel = async b => { if (!confirm('Delete this quiz and all its questions and results?')) return; try { await QZ.del(b.dataset.id); renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 adAct.qres = async b => { const q = AD.qzList.find(x => x.id === b.dataset.id); try { AD.qz = { mode: 'results', quiz: q, rows: await QZ.attempts(q.id), files: await FILES.answers(q.id), qs: await QZ.qs(q.id).catch(() => []) }; adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
+adAct.qmailnow = async b => {
+  const q = AD.qzList.find(x => x.id === b.dataset.id); if (!q) return;
+  if (!confirm('Email the start notice for "' + q.title + '" to every registered student who has not attempted it yet?')) return;
+  const tok = sbToken();
+  try {
+    const r = await fetch('/api/quiz-reminders', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify({ quiz_id: q.id, kind: 'start' }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 404) throw new Error('api/quiz-reminders.js is not deployed');
+    if (!r.ok || !j.ok) throw new Error(j.error || 'HTTP ' + r.status);
+    toast(j.sent + ' email(s) sent · ' + j.registered + ' registered' + (j.failed ? ' · ' + j.failed + ' failed' : ''), j.sent ? 'success' : 'warn', '📧');
+  } catch(e){ toast(e.message || String(e), 'warn', '⚠️'); }
+};
 adAct.qback = () => { AD.qz = null; adRender(); };
 function adQuizEditor(box){
   const { quiz, qs, editQ } = AD.qz;
