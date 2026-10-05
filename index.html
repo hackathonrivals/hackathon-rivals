@@ -3138,12 +3138,13 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
               <input type="url" id="asWebhook"
                 placeholder="https://hooks.slack.com/services/... or https://discord.com/api/webhooks/..." />
               <button class="btn btn-ghost" id="asSave" type="button">Save</button>
-              <button class="btn btn-ghost" id="asTest" type="button">Test</button>
+              <button class="btn btn-ghost" id="asTest" type="button">Test alert</button>
             </div>
             <div class="as-hint">
-              Slack (<code>hooks.slack.com</code>) aur Discord
-              (<code>discord.com/api/webhooks</code>) dono support hain.
-              URL server-side stored hai (app_settings) — client me kabhi expose nahi hoti.
+              Ye URL sirf daily/weekly <b>digest</b> ke liye hai (Supabase function <code>digest</code> ise <code>app_settings</code> se padhta hai).
+              Naye submission ke alert alag se Vercel ke <code>DISCORD_WEBHOOK_URL</code> se jaate hain —
+              dono jagah ek hi (naya) URL rakho. <b>Test alert</b> sirf Vercel wale alert ko test karta hai;
+              digest test karne ke liye neeche <b>Send now</b> dabao.
             </div>
             <div class="as-row">
               <label>Digest schedule</label>
@@ -8433,16 +8434,12 @@ async function loadAdminData(){
     }
   });
   if (asTest) asTest.addEventListener('click', async () => {
-    const u = asWebhook.value.trim();
-    if (!u){ showToast('Save a webhook URL first', 'warn', '⚠️'); return; }
-    await saveWebhookToCloud(u);
-    refreshAsState();
     asTest.disabled = true; asTest.textContent = 'Sending…';
     const ok = await fireWebhookViaEdge({
       email:'test@arena.dev', role:'Admin', score: 92, lang:'python',
       topic:'Strings', title:'Webhook test ping'
     }, true);
-    asTest.disabled = false; asTest.textContent = 'Test';
+    asTest.disabled = false; asTest.textContent = 'Test alert';
     showToast(ok ? 'Test ping sent ✓' : 'Ping failed — ' + (window.__webhookErr || 'check URL & function deploy'),
               ok ? 'success' : 'warn', ok ? '📡' : '⚠️');
   });
