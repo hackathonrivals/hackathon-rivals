@@ -3444,6 +3444,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
     <div class="foot-bottom">
       <span>© <span id="year"></span> Hackathon Rivals.</span>
       <span>Built for builders 🚀</span>
+      <a href="#" id="hrCertLink" style="color:inherit">🎓 Certificates</a>
     </div>
   </div>
 </footer>
@@ -12629,7 +12630,81 @@ begin
 end $$;
 grant execute on function public.hr_quiz_paper(uuid, text) to anon, authenticated;
 `;
-const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS + '\n' + HK_SQL_VERIFY + '\n' + HK_SQL_REMIND + '\n' + HK_SQL_LOCK;
+const HK_SQL_CERT = `-- ============================================================
+-- PART 7 — certificates (issue, view, verify). Safe to run again.
+-- Needs: Part 4 step A (hr_token_ok) and Part 6 (hr_req_token).
+-- ============================================================
+create table if not exists public.hr_certificates (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  quiz_id uuid not null references public.hr_quizzes(id) on delete cascade,
+  email text not null,
+  name text not null,
+  kind text not null default 'participation' check (kind in ('participation', 'winner')),
+  pos int,
+  score int,
+  max_score int,
+  issued_at timestamptz not null default now(),
+  emailed_at timestamptz,
+  revoked boolean not null default false,
+  unique (quiz_id, email)
+);
+alter table public.hr_certificates enable row level security;
+drop policy if exists hr_cert_admin on public.hr_certificates;
+create policy hr_cert_admin on public.hr_certificates for all using (public.hr_is_admin()) with check (public.hr_is_admin());
+grant all on public.hr_certificates to service_role;
+
+-- admin: create a certificate for every attempt of a quiz whose results are published.
+-- the top p_top ranks get a "winner" certificate, everyone else "participation".
+create or replace function public.hr_issue_certificates(p_quiz uuid, p_top int default 3)
+returns int language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if not public.hr_is_admin() then raise exception 'ADMIN_ONLY'; end if;
+  if not exists (select 1 from public.hr_quizzes z where z.id = p_quiz and z.results_published) then
+    raise exception 'PUBLISH_RESULTS_FIRST';
+  end if;
+  with r as (
+    select a.name, lower(trim(a.email)) as em, (a.score + coalesce(a.bonus, 0)) as sc, a.max_score,
+           rank() over (order by (a.score + coalesce(a.bonus, 0)) desc, a.secs asc) as rk
+    from public.hr_attempts a where a.quiz_id = p_quiz
+  )
+  insert into public.hr_certificates (code, quiz_id, email, name, kind, pos, score, max_score)
+  select 'HR-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 12)), p_quiz, r.em, r.name,
+         case when r.rk <= greatest(coalesce(p_top, 0), 0) then 'winner' else 'participation' end,
+         r.rk, r.sc, r.max_score
+  from r
+  on conflict (quiz_id, email) do nothing;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+grant execute on function public.hr_issue_certificates(uuid, int) to authenticated;
+
+-- public: look up ONE certificate by its code (used for the e-mail link and for verification)
+create or replace function public.hr_get_certificate(p_code text)
+returns table (code text, name text, kind text, pos int, score int, max_score int, issued_at timestamptz, revoked boolean, quiz_title text)
+language sql stable security definer set search_path = public as $$
+  select c.code, c.name, c.kind, c.pos, c.score, c.max_score, c.issued_at, c.revoked, z.title
+  from public.hr_certificates c join public.hr_quizzes z on z.id = c.quiz_id
+  where c.code = upper(trim(p_code)) limit 1;
+$$;
+grant execute on function public.hr_get_certificate(text) to anon, authenticated;
+
+-- public, but only for an OTP-verified email: list that person's certificates
+create or replace function public.hr_my_certificates(p_email text)
+returns table (code text, quiz_title text, kind text, issued_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.hr_token_ok(p_email, public.hr_req_token()) then raise exception 'EMAIL_NOT_VERIFIED'; end if;
+  return query
+    select c.code, z.title, c.kind, c.issued_at
+    from public.hr_certificates c join public.hr_quizzes z on z.id = c.quiz_id
+    where c.email = lower(trim(p_email)) and not c.revoked
+    order by c.issued_at desc;
+end $$;
+grant execute on function public.hr_my_certificates(text) to anon, authenticated;
+`;
+const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS + '\n' + HK_SQL_VERIFY + '\n' + HK_SQL_REMIND + '\n' + HK_SQL_LOCK + '\n' + HK_SQL_CERT;
 
 const AD = { sub: store.get('adminSub', 'hack'), c: null, qz: null, bank: { subj: 'all', sem: '-1', lvl: '0', q: '', lim: 25, edit: null, imp: null } };
 const ADV = {};
@@ -12841,7 +12916,7 @@ const mkSorted = () => AD.qz.rows.slice().sort((a, b) => mkTotal(b) - mkTotal(a)
 function adQuizResults(box){
   const { quiz } = AD.qz, rows = mkSorted(), pend = rows.reduce((s, r) => s + mkPending(r), 0), who = rows.filter(r => mkPending(r)).length, pub = !!quiz.results_published;
   const status = pub ? '✅ <b>Results uploaded</b> — rankings are final.' : pend ? '✍️ <b>' + pend + ' typed answer(s)</b> from ' + who + ' participant(s) still need marks. Add them below; the live rankings update on every save.' : '✅ All typed answers are marked — you can upload the results now.';
-  const btns = pub ? '<button class="hrp-btn pri" data-ad="mkmail">📧 Email remaining</button><button class="hrp-btn" data-ad="mkmail" data-force="1">📧 Email everyone again</button><button class="hrp-mini" data-ad="mkunpub">↩ Mark as not final</button>' : '<button class="hrp-btn pri" data-ad="mkpublish"' + (pend ? ' disabled' : '') + '>⬆ Upload results &amp; email everyone</button>';
+  const btns = pub ? '<button class="hrp-btn pri" data-ad="mkmail">📧 Email remaining</button><button class="hrp-btn" data-ad="mkmail" data-force="1">📧 Email everyone again</button><button class="hrp-mini" data-ad="mkunpub">↩ Mark as not final</button><button class="hrp-btn" data-ad="certissue">🎓 Issue certificates</button><button class="hrp-btn" data-ad="certmail">📧 Email certificates</button><button class="hrp-mini" data-ad="certreset">🗑 Reset certificates</button><span id="certInfo" class="hrp-muted"></span>' : '<button class="hrp-btn pri" data-ad="mkpublish"' + (pend ? ' disabled' : '') + '>⬆ Upload results &amp; email everyone</button>';
   const marking = rows.filter(r => mkNeed(r).length).map(r => { const need = mkNeed(r), mk = r.marks || {}, p = mkPending(r);
     return '<details class="hrp-card" style="margin:6px 0" data-mkc="' + esc(r.id) + '"' + (AD.qz.open === r.id ? ' open' : '') + '><summary><b>' + esc(r.name) + '</b> <span class="hrp-muted">' + esc(r.email) + ' · ' + (p ? '⏳ ' + p + ' pending' : '✅ marked') + '</span></summary>'
       + need.map(n => '<div style="margin:10px 0"><div><b>' + esc(n.label) + '</b></div>' + (n.text ? '<div class="hrp-muted" style="white-space:pre-wrap">' + esc(n.text) + '</div>' : '') + (n.pdf ? '<a href="' + esc(paperUrl(n.pdf.file_path)) + '" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:underline">📎 Open PDF</a>' : '') + '<div><label class="hrp-muted">Marks (0–' + n.max + ') <input class="hrp-in mk-in" data-k="' + esc(n.k) + '" data-max="' + n.max + '" type="number" min="0" max="' + n.max + '" step="1" value="' + (mk[n.k] ?? '') + '" style="width:90px;display:inline-block"></label></div></div>').join('')
@@ -12850,6 +12925,7 @@ function adQuizResults(box){
     + '<div class="hrp-card" style="margin:8px 0">' + (HB.remote ? status : '⚠️ Marks, upload and email need the database (Setup tab).') + '<div class="hrp-row" style="margin-top:8px">' + (HB.remote ? btns : '') + '<button class="hrp-mini" data-ad="mkcopy">📋 Copy emails</button></div><div class="hk-msg" id="mkMsg"></div></div>'
     + (rows.length ? table(rows.map((r, i) => [String(i + 1), r.name, r.email, String(r.score), String(r.bonus || 0), mkTotal(r) + (r.max_score ? '/' + r.max_score : ''), fmtClock(r.secs || 0), mkNeed(r).length ? (mkPending(r) ? '⏳ ' + mkPending(r) + ' pending' : '✅ marked') : '—']), ['#', 'Name', 'Email', 'Auto', 'Typed marks', 'Total', 'Time', 'Marking']) : '<p class="hrp-muted">No submissions yet.</p>')
     + (HB.remote && marking ? '<div class="hrp-h">✍️ Add marks for typed answers</div>' + marking : '') + filesResultsHtml();
+  setTimeout(loadCertInfo, 60);
 }
 adAct.qcsv = () => { download('quiz-results.csv', toCSV([['Rank', 'Name', 'Email', 'Auto score', 'Typed-answer marks', 'Total', 'Max', 'Seconds', 'Submitted']].concat(mkSorted().map((r, i) => [i + 1, r.name, r.email, r.score, r.bonus || 0, mkTotal(r), r.max_score, r.secs, r.created_at]))), 'text/csv'); };
 adAct.mkcopy = () => copy(AD.qz.rows.map(r => r.email).join(', '));
@@ -12882,6 +12958,126 @@ adAct.mkpublish = async () => {
 adAct.mkmail = async b => { mkSay('Sending…'); const r = await mkSendMails(AD.qz.quiz.id, b.dataset.force === '1'); mkSay(r.msg, r.ok); };
 adAct.mkunpub = async () => { if (!confirm('Mark these results as not final? Rankings will show as live again.')) return; try { const o = { ...AD.qz.quiz, results_published: false, results_published_at: null }; await QZ.save(o); AD.qz.quiz = o; renderQuizList(); adRender(); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
 feat('Admin: add marks to typed / PDF answers, upload final results, email every participant', () => {});
+/* ---- certificates: admin issues them, anyone can open by link or verify by code ---- */
+const certDate = d => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
+const verifyUrl = code => location.origin + '/?verify=' + encodeURIComponent(code);
+function certSvg(c){
+  const e = s => esc(String(s == null ? '' : s)), win = c.kind === 'winner';
+  const name = String(c.name || '').slice(0, 60), fs = name.length > 34 ? 38 : name.length > 24 ? 50 : 64;
+  const qt0 = String(c.quiz_title || ''), qt = qt0.length > 56 ? qt0.slice(0, 55) + '…' : qt0;
+  const sc = c.max_score ? 'Score: ' + c.score + ' / ' + c.max_score : (c.score ? 'Score: ' + c.score : '');
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850" width="1200" height="850" style="width:100%;height:auto;display:block" font-family="Georgia, \'Times New Roman\', serif">'
+    + '<rect width="1200" height="850" fill="#fffdf7"/>'
+    + '<rect x="30" y="30" width="1140" height="790" fill="none" stroke="#7c5cff" stroke-width="8"/>'
+    + '<rect x="52" y="52" width="1096" height="746" fill="none" stroke="#22d3ee" stroke-width="2"/>'
+    + '<text x="600" y="150" text-anchor="middle" font-size="30" letter-spacing="8" fill="#7c5cff" font-weight="700">HACKATHON RIVALS</text>'
+    + '<text x="600" y="245" text-anchor="middle" font-size="58" fill="#1a1a2e" font-weight="700">' + (win ? 'Certificate of Achievement' : 'Certificate of Participation') + '</text>'
+    + '<text x="600" y="320" text-anchor="middle" font-size="26" fill="#555" font-style="italic">This is to certify that</text>'
+    + '<text x="600" y="425" text-anchor="middle" font-size="' + fs + '" fill="#1a1a2e" font-weight="700">' + e(name) + '</text>'
+    + '<line x1="260" y1="448" x2="940" y2="448" stroke="#7c5cff" stroke-width="2"/>'
+    + '<text x="600" y="510" text-anchor="middle" font-size="28" fill="#333">' + (win ? 'secured <tspan font-weight="700" fill="#7c5cff">Rank #' + e(c.pos) + '</tspan> in' : 'successfully participated in') + '</text>'
+    + '<text x="600" y="578" text-anchor="middle" font-size="38" fill="#1a1a2e" font-weight="700">' + e(qt) + '</text>'
+    + (sc ? '<text x="600" y="635" text-anchor="middle" font-size="26" fill="#555">' + e(sc) + '</text>' : '')
+    + '<text x="110" y="740" font-size="22" fill="#333">Date: ' + e(certDate(c.issued_at)) + '</text>'
+    + '<line x1="480" y1="722" x2="720" y2="722" stroke="#333" stroke-width="1.5"/>'
+    + '<text x="600" y="750" text-anchor="middle" font-size="20" fill="#333">Team Hackathon Rivals</text>'
+    + '<text x="1090" y="740" text-anchor="end" font-size="22" fill="#333">ID: ' + e(c.code) + '</text>'
+    + '<text x="600" y="782" text-anchor="middle" font-size="17" fill="#777">Verify at ' + e(verifyUrl(c.code).replace('https://', '').replace('http://', '')) + '</text>'
+    + '</svg>';
+}
+function certPng(svg, name){
+  const img = new Image();
+  img.onload = () => {
+    const cv = document.createElement('canvas'); cv.width = 2400; cv.height = 1700;
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fffdf7'; cx.fillRect(0, 0, 2400, 1700); cx.drawImage(img, 0, 0, 2400, 1700);
+    cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }, 'image/png');
+  };
+  img.onerror = () => toast('Could not create the image. Use Print / Save PDF.', 'warn', '⚠️');
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+function certPrint(svg){
+  const w = window.open('', '_blank');
+  if (!w) { toast('Allow pop-ups to print the certificate', 'warn', '⚠️'); return; }
+  w.document.write('<!doctype html><title>Certificate</title><style>@page{size:A4 landscape;margin:0}html,body{margin:0;background:#fff}svg{width:100vw;height:auto;display:block}</style>' + svg + '<scr' + 'ipt>setTimeout(function(){window.print()},400)</scr' + 'ipt>');
+  w.document.close();
+}
+function certModal(title){
+  const m = qzModal(); $('#hkQT', m).textContent = title; m.classList.add('open');
+  m.onclick = e => { if (e.target.closest('[data-a=close]')) m.classList.remove('open'); };
+  return $('#hkQB', m);
+}
+async function waitRemote(){ for (let i = 0; i < 10 && !HB.remote; i++) await new Promise(r => setTimeout(r, 400)); }
+async function showCert(code){
+  const B = certModal('🎓 Certificate'); B.innerHTML = '<p class="hrp-muted">Checking…</p>';
+  await waitRemote();
+  if (!HB.remote) { B.innerHTML = '<div class="hk-msg err">Certificates need the online database.</div>'; return; }
+  let c;
+  try { const rows = await pgrest('rpc/hr_get_certificate', { method: 'POST', body: { p_code: String(code || '').trim() } }); c = rows && rows[0]; }
+  catch(e){ B.innerHTML = '<div class="hk-msg err">Could not check the certificate right now. Try again in a moment.</div>'; return; }
+  if (!c) { B.innerHTML = '<div class="hk-msg err">❌ No certificate found for the code <b>' + esc(code) + '</b>.</div>'; return; }
+  if (c.revoked) { B.innerHTML = '<div class="hk-msg err">⚠️ Certificate <b>' + esc(c.code) + '</b> has been revoked.</div>'; return; }
+  const svg = certSvg(c);
+  B.innerHTML = '<div class="hk-msg ok">✅ <b>Valid certificate</b> — issued to <b>' + esc(c.name) + '</b> for <b>' + esc(c.quiz_title) + '</b> on ' + esc(certDate(c.issued_at)) + (c.kind === 'winner' ? ' · Rank #' + esc(c.pos) : ' · Participation') + '.</div>'
+    + '<div style="margin:10px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden">' + svg + '</div>'
+    + '<div class="hrp-row"><button class="hrp-btn pri" id="hcPng" type="button">⬇ Download image</button><button class="hrp-btn" id="hcPr" type="button">🖨 Print / Save PDF</button></div>'
+    + '<p class="hrp-muted" style="word-break:break-all">Verify link: ' + esc(verifyUrl(c.code)) + '</p>';
+  $('#hcPng', B).onclick = () => certPng(svg, 'certificate-' + c.code + '.png');
+  $('#hcPr', B).onclick = () => certPrint(svg);
+}
+function openCertHub(){
+  const B = certModal('🎓 Certificates'), me = store.get('hk:me', { email: '' }) || {};
+  B.innerHTML = '<div class="hrp-h">Verify a certificate</div><div class="hrp-row"><input class="hrp-in" id="chC" placeholder="Certificate ID, e.g. HR-1A2B3C4D5E6F" style="flex:1"><button class="hrp-btn pri" id="chV" type="button">Verify</button></div>'
+    + '<div class="hrp-h" style="margin-top:18px">Get my certificate</div><input class="hrp-in" id="chE" type="email" placeholder="Email you used for the quiz" value="' + esc(me.email || '') + '">'
+    + '<div class="hrp-row" style="margin-top:8px"><button class="hrp-btn" id="chG" type="button">Send me a code</button></div><div id="chM" class="hk-msg"></div><div id="chL"></div>';
+  $('#chV', B).onclick = () => { const v = $('#chC', B).value.trim(); if (v) showCert(v); };
+  $('#chG', B).onclick = async () => {
+    const email = $('#chE', B).value.trim().toLowerCase(), box = $('#chM', B);
+    if (email.indexOf('@') < 1) { box.className = 'hk-msg err'; box.textContent = 'Enter a valid email.'; return; }
+    if (!(await ensureVerified(box, email))) return;
+    try {
+      const rows = await pgrest('rpc/hr_my_certificates', { method: 'POST', headers: vtHdr(email), body: { p_email: email } });
+      box.className = 'hk-msg ok'; box.textContent = rows.length ? 'Your certificates (tap to open):' : 'No certificate found for this email yet.';
+      $('#chL', B).innerHTML = rows.map(r => '<button class="hrp-btn" type="button" style="display:block;margin:6px 0;width:100%;text-align:left" data-code="' + esc(r.code) + '">🎓 ' + esc(r.quiz_title) + ' — ' + (r.kind === 'winner' ? 'Winner' : 'Participation') + '</button>').join('');
+      $$('#chL [data-code]', B).forEach(b => { b.onclick = () => showCert(b.dataset.code); });
+    } catch(e){ box.className = 'hk-msg err'; box.textContent = /EMAIL_NOT_VERIFIED/.test(e.message || '') ? 'Please verify your email again.' : 'Could not load certificates. The organiser may need to run certificates.sql.'; }
+  };
+}
+(function(){
+  const link = document.getElementById('hrCertLink');
+  if (link) link.addEventListener('click', e => { e.preventDefault(); openCertHub(); });
+  const q = new URLSearchParams(location.search), c = q.get('cert') || q.get('verify');
+  if (c) setTimeout(() => showCert(c), 700);
+})();
+
+/* admin side */
+async function loadCertInfo(){
+  const el = $('#certInfo', AD.c); if (!el || !AD.qz) return;
+  try { const rows = await pgrest('hr_certificates?quiz_id=eq.' + AD.qz.quiz.id + '&select=id,emailed_at'); el.textContent = '🎓 ' + rows.length + ' issued · ' + rows.filter(r => r.emailed_at).length + ' emailed'; }
+  catch(e){ el.textContent = ''; }
+}
+adAct.certissue = async () => {
+  const q = AD.qz.quiz;
+  const top = prompt('How many top ranks get a "Winner" certificate? (0 = everyone gets a participation certificate)', '3'); if (top === null) return;
+  try { const n = await pgrest('rpc/hr_issue_certificates', { method: 'POST', body: { p_quiz: q.id, p_top: Math.max(0, parseInt(top, 10) || 0) } }); mkSay('🎓 ' + n + ' new certificate(s) issued. Use "Email certificates" to send them.', true); loadCertInfo(); }
+  catch(e){ const m = e.message || ''; mkSay(/PUBLISH_RESULTS_FIRST/.test(m) ? 'Upload (publish) the results first.' : /ADMIN_ONLY/.test(m) ? 'Only an admin can issue certificates.' : e.status === 404 || /hr_issue_certificates|does not exist/.test(m) ? 'Run certificates.sql first (Supabase SQL Editor).' : admErr(e), false); }
+};
+adAct.certmail = async () => {
+  const q = AD.qz.quiz, tok = sbToken(); mkSay('Sending…');
+  try {
+    const r = await fetch('/api/send-certificates', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify({ quiz_id: q.id }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 404) throw new Error('api/send-certificates.js is not deployed yet.');
+    if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+    mkSay('📧 Certificate emails sent: ' + j.sent + ' of ' + j.total + (j.failed ? ' · failed: ' + j.failed + ' (' + (j.errors || []).join('; ') + ')' : ''), !j.failed); loadCertInfo();
+  } catch(e){ mkSay(e.message || String(e), false); }
+};
+adAct.certreset = async () => {
+  const q = AD.qz.quiz;
+  if (!confirm('Delete ALL certificates of this quiz? Old certificate links and IDs will stop working. You can issue new ones afterwards.')) return;
+  try { await pgrest('hr_certificates?quiz_id=eq.' + encodeURIComponent(q.id), { method: 'DELETE', headers: { Prefer: 'return=minimal' } }); mkSay('Certificates deleted. You can issue them again.', true); loadCertInfo(); }
+  catch(e){ mkSay(admErr(e), false); }
+};
+feat('Certificates: issue, e-mail, open by link, download and verify by code', () => {});
 
 /* ---------- Question bank manager ---------- */
 const lvlNum = v => { v = String(v ?? '').trim().toLowerCase(); return ({ easy: 1, medium: 2, moderate: 2, hard: 3, difficult: 3, '1': 1, '2': 2, '3': 3 })[v] || 0; };
@@ -12978,6 +13174,7 @@ ADV.setup = async box => {
   { let mk = '✅ ready'; try { await pgrest('hr_attempts?select=marks,bonus,emailed_at&limit=1'); await pgrest('hr_quizzes?select=results_published&limit=1'); } catch(e){ mk = '❌ run the updated SQL (Part 3)'; } res.push(['Marks & results upload (Part 3)', mk]); }
   { let vf = '✅ ready'; try { await pgrest('hr_verified?select=token_hash&limit=1'); } catch(e){ vf = '❌ run Part 4 SQL (email verification)'; } res.push(['Email verification (Part 4)', vf]); }
   { let rm = '✅ ready'; try { await pgrest('hr_quizzes?select=remind_sent_for,start_sent_for,time_changed_at,change_notified_at&limit=1'); } catch(e){ rm = '❌ run Part 5 SQL (quiz reminders)'; } res.push(['Quiz reminder emails (Part 5)', rm]); }
+  { let ce = '✅ ready'; try { await pgrest('hr_certificates?select=id&limit=1'); } catch(e){ ce = '❌ run certificates.sql (Part 7)'; } res.push(['Certificates (Part 7)', ce]); }
   { let st = '✅ ready'; try { const r = await fetch(HK_URL + '/storage/v1/object/public/' + HK_BUCKET + '/_probe', { headers: { apikey: HK_KEY } }); const j = await r.json().catch(() => ({})); if (/bucket not found/i.test(j.message || j.error || '')) st = '❌ not created'; } catch(e){ st = '❌ ' + (e.message || 'unreachable'); } res.push(['PDF storage bucket (hr-quiz-files)', st]); }
   box.innerHTML = `${table(res, ['Item', 'Status'])}<div class="hrp-h">How to set up (2 minutes)</div><ol class="hrp-muted" style="padding-left:18px;line-height:1.7"><li>Open your Supabase project → <b>SQL Editor</b> → New query.</li><li>Tap <b>Copy SQL</b> below, paste it and press <b>Run</b>.</li><li>Come back here and reopen this tab — every row should show ✅.</li></ol>
   <div class="hrp-row"><button class="hrp-btn pri" data-ad="sqlcopy">📋 Copy SQL</button><button class="hrp-btn" data-ad="sqldl">⬇ Download .sql</button><button class="hrp-btn" data-ad="setupre">↻ Re-check</button><button class="hrp-btn" data-ad="edgecopy">✉️ Copy email function</button></div>
