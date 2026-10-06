@@ -12654,9 +12654,13 @@ drop policy if exists hr_cert_admin on public.hr_certificates;
 create policy hr_cert_admin on public.hr_certificates for all using (public.hr_is_admin()) with check (public.hr_is_admin());
 grant all on public.hr_certificates to service_role;
 
--- admin: create a certificate for every attempt of a quiz whose results are published.
--- the top p_top ranks get a "winner" certificate, everyone else "participation".
-create or replace function public.hr_issue_certificates(p_quiz uuid, p_top int default 3)
+-- admin: issue (or update) certificates for a quiz whose results are published.
+-- p_top  = how many top ranks are "winner" certificates
+-- p_only_top = true  -> ONLY the top p_top students (ties included) get a certificate
+--              false -> everyone gets one (top p_top = winner, the rest = participation)
+-- Running it again keeps every certificate ID and link, and refreshes name / rank / score.
+drop function if exists public.hr_issue_certificates(uuid, int);
+create or replace function public.hr_issue_certificates(p_quiz uuid, p_top int default 3, p_only_top boolean default false)
 returns int language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
@@ -12674,11 +12678,31 @@ begin
          case when r.rk <= greatest(coalesce(p_top, 0), 0) then 'winner' else 'participation' end,
          r.rk, r.sc, r.max_score
   from r
-  on conflict (quiz_id, email) do nothing;
+  where (not coalesce(p_only_top, false)) or r.rk <= greatest(coalesce(p_top, 0), 0)
+  on conflict (quiz_id, email) do update
+    set name = excluded.name, kind = excluded.kind, pos = excluded.pos, score = excluded.score, max_score = excluded.max_score;
   get diagnostics n = row_count;
   return n;
 end $$;
-grant execute on function public.hr_issue_certificates(uuid, int) to authenticated;
+grant execute on function public.hr_issue_certificates(uuid, int, boolean) to authenticated;
+
+-- admin: delete the certificates of every student who is NOT in the current top p_top
+create or replace function public.hr_prune_certificates(p_quiz uuid, p_top int)
+returns int language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if not public.hr_is_admin() then raise exception 'ADMIN_ONLY'; end if;
+  with r as (
+    select lower(trim(a.email)) as em,
+           rank() over (order by (a.score + coalesce(a.bonus, 0)) desc, a.secs asc) as rk
+    from public.hr_attempts a where a.quiz_id = p_quiz
+  )
+  delete from public.hr_certificates c using r
+  where c.quiz_id = p_quiz and c.email = r.em and r.rk > greatest(coalesce(p_top, 0), 0);
+  get diagnostics n = row_count;
+  return n;
+end $$;
+grant execute on function public.hr_prune_certificates(uuid, int) to authenticated;
 
 -- signer name / title / logo / signature used on every certificate (set from Admin -> Results -> Design)
 create table if not exists public.hr_cert_settings (
@@ -13167,11 +13191,32 @@ async function loadCertInfo(){
   try { const rows = await pgrest('hr_certificates?quiz_id=eq.' + AD.qz.quiz.id + '&select=id,emailed_at'); el.textContent = '🎓 ' + rows.length + ' issued · ' + rows.filter(r => r.emailed_at).length + ' emailed'; }
   catch(e){ el.textContent = ''; }
 }
-adAct.certissue = async () => {
-  const q = AD.qz.quiz;
-  const top = prompt('How many top ranks get a "Winner" certificate? (0 = everyone gets a participation certificate)', '3'); if (top === null) return;
-  try { const n = await pgrest('rpc/hr_issue_certificates', { method: 'POST', body: { p_quiz: q.id, p_top: Math.max(0, parseInt(top, 10) || 0) } }); mkSay('🎓 ' + n + ' new certificate(s) issued. Use "Email certificates" to send them.', true); loadCertInfo(); }
-  catch(e){ const m = e.message || ''; mkSay(/PUBLISH_RESULTS_FIRST/.test(m) ? 'Upload (publish) the results first.' : /ADMIN_ONLY/.test(m) ? 'Only an admin can issue certificates.' : e.status === 404 || /hr_issue_certificates|does not exist/.test(m) ? 'Run certificates.sql first (Supabase SQL Editor).' : admErr(e), false); }
+adAct.certissue = () => {
+  const q = AD.qz.quiz, B = certModal('🎓 Issue certificates');
+  B.innerHTML = '<p class="hrp-muted">Who should get a certificate?</p>'
+    + '<label style="display:block;margin:10px 0"><input type="radio" name="ciW" value="top" checked> Only the <b>top</b> <input type="number" id="ciN" class="hrp-in" min="1" max="500" value="3" style="width:80px;display:inline-block"> students</label>'
+    + '<label style="display:block;margin:10px 0"><input type="radio" name="ciW" value="all"> <b>Everyone</b> — the top <input type="number" id="ciA" class="hrp-in" min="0" max="500" value="3" style="width:80px;display:inline-block"> get a Winner certificate, the rest get Participation</label>'
+    + '<p class="hrp-muted">Students with the same score and time share a rank, so a few more than N can qualify. Running this again never changes existing certificate IDs or links; it only refreshes name, rank and score.</p>'
+    + '<div class="hrp-row"><button class="hrp-btn pri" id="ciGo" type="button">🎓 Issue</button></div><div id="ciM" class="hk-msg"></div>';
+  $('#ciGo', B).onclick = async () => {
+    const onlyTop = B.querySelector('input[name=ciW]:checked').value === 'top', m = $('#ciM', B);
+    const n = Math.max(onlyTop ? 1 : 0, parseInt($(onlyTop ? '#ciN' : '#ciA', B).value, 10) || 0);
+    m.className = 'hk-msg'; m.textContent = 'Working…';
+    try {
+      let removed = 0;
+      if (onlyTop) {
+        const have = await pgrest('hr_certificates?quiz_id=eq.' + encodeURIComponent(q.id) + '&select=id,emailed_at');
+        if (have.length && !confirm('Certificates of students outside the top ' + n + ' will be DELETED' + (have.some(r => r.emailed_at) ? ' (some were already emailed, their links will stop working)' : '') + '. Continue?')) { m.textContent = 'Cancelled.'; return; }
+        if (have.length) removed = await pgrest('rpc/hr_prune_certificates', { method: 'POST', body: { p_quiz: q.id, p_top: n } });
+      }
+      const done = await pgrest('rpc/hr_issue_certificates', { method: 'POST', body: { p_quiz: q.id, p_top: n, p_only_top: onlyTop } });
+      m.className = 'hk-msg ok'; m.textContent = '🎓 ' + done + ' certificate(s) issued or refreshed' + (removed ? ' · ' + removed + ' removed' : '') + '. Now close this and use "Email certificates" (only students not emailed yet get a mail).';
+      mkSay('🎓 Certificates updated: ' + done + ' issued or refreshed' + (removed ? ', ' + removed + ' removed' : '') + '.', true); loadCertInfo();
+    } catch(e){
+      const x = e.message || ''; m.className = 'hk-msg err';
+      m.textContent = /PUBLISH_RESULTS_FIRST/.test(x) ? 'Upload (publish) the results first.' : /ADMIN_ONLY/.test(x) ? 'Only an admin can issue certificates.' : e.status === 404 || /hr_issue_certificates|hr_prune_certificates|does not exist/.test(x) ? 'Run certificates-top.sql first (Supabase SQL Editor).' : admErr(e);
+    }
+  };
 };
 adAct.certmail = async () => {
   const q = AD.qz.quiz, tok = sbToken(); mkSay('Sending…');
