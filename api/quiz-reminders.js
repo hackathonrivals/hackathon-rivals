@@ -69,7 +69,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, kind, registered: r.total, recipients: r.rows.length, sent, failed });
     }
 
-    const quizzes = await (await sb('hr_quizzes?published=eq.true&select=id,title,opens_at,closes_at,duration_min,remind_sent_for,start_sent_for,time_changed_at,change_notified_at')).json();
+    const quizzes = await (await sb('hr_quizzes?published=eq.true&select=*')).json();
     if (!Array.isArray(quizzes)) return res.status(500).json({ error: 'Run the PART 5 SQL first (' + (quizzes && quizzes.message || 'unknown') + ')' });
 
     const now = Date.now(), report = [], status = [];
@@ -99,6 +99,9 @@ export default async function handler(req, res) {
         const got = claim.ok ? await claim.json() : [];
         if (!Array.isArray(got) || got.length !== 1) { report.push({ quiz: q.title, kind, skipped: 'already handled' }); continue; }
 
+        if (kind === 'start' && q.announce_all) {   // also tell every signed-up user (the e-mail itself is sent by /api/broadcast)
+          try { await sb('hr_broadcasts?on_conflict=kind,ref', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify({ kind: 'quiz_start', ref: String(q.id), send_after: new Date().toISOString() }) }); } catch (e) {}
+        }
         let to;
         try { to = (await recipients(sb, q, kind, false)).rows; }
         catch (e) { await sb('hr_quizzes?id=eq.' + q.id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ [col]: q[col] || null }) }); report.push({ quiz: q.title, kind, error: String(e.message || e) }); continue; }

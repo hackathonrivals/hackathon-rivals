@@ -80,10 +80,17 @@ export default async function handler(req, res) {
 
     // ---------- what the e-mail says (read live, so it is always current) ----------
     const content = async b => {
-      if (b.kind === 'quiz') {
+      if (b.kind === 'quiz' || b.kind === 'quiz_start') {
         const id = String(b.ref).split('#')[0];
         const q = (await (await sb('hr_quizzes?id=eq.' + enc(id) + '&select=*')).json())[0];
         if (!q || !q.published) return null;
+        if (b.kind === 'quiz_start') {          // "it has started" mail: pointless once the window is over
+          if (q.closes_at && Date.now() > Date.parse(q.closes_at)) return null;
+          const l2 = [];
+          if (q.closes_at) l2.push('<b>Window closes:</b> ' + esc(fmt(Date.parse(q.closes_at))));
+          l2.push('<b>Duration:</b> ' + esc(q.duration_min) + ' minutes');
+          return { subject: '🚀 Live now: ' + clean(q.title), head: 'The quiz is live now 🚀', intro: '<b style="color:#22d3ee">' + esc(clean(q.title)) + '</b> has started. Log in and start your attempt before the window closes.', lines: l2, cta: 'Start the quiz' };
+        }
         const lines = [];
         if (q.opens_at) lines.push('<b>Starts:</b> ' + esc(fmt(Date.parse(q.opens_at))));
         if (q.closes_at) lines.push('<b>Window closes:</b> ' + esc(fmt(Date.parse(q.closes_at))));
@@ -115,10 +122,10 @@ export default async function handler(req, res) {
       if (body.action === 'status') {
         const rows = await (await sb('hr_broadcasts?select=id,kind,ref,status,total,sent,last_error,created_at&order=created_at.desc&limit=8')).json();
         if (!Array.isArray(rows)) return res.status(500).json({ ok: false, error: 'Run announcements.sql first' });
-        const ids = [...new Set(rows.filter(r => r.kind === 'quiz').map(r => String(r.ref).split('#')[0]))];
+        const ids = [...new Set(rows.filter(r => r.kind !== 'hackathon').map(r => String(r.ref).split('#')[0]))];
         const qs = ids.length ? await (await sb('hr_quizzes?id=in.(' + ids.map(enc).join(',') + ')&select=id,title')).json().catch(() => []) : [];
         const tt = {}; (Array.isArray(qs) ? qs : []).forEach(q => { tt[q.id] = q.title; });
-        return res.status(200).json({ ok: true, rows: rows.map(r => ({ label: r.kind === 'quiz' ? 'Quiz: ' + (tt[String(r.ref).split('#')[0]] || '?') : 'Hackathon', status: r.status, sent: r.sent, total: r.total, last_error: r.last_error })) });
+        return res.status(200).json({ ok: true, rows: rows.map(r => ({ id: r.id, label: r.kind === 'quiz' ? 'Quiz announced: ' + (tt[String(r.ref).split('#')[0]] || '?') : r.kind === 'quiz_start' ? 'Quiz started: ' + (tt[String(r.ref).split('#')[0]] || '?') : 'Hackathon', status: r.status, sent: r.sent, total: r.total, last_error: r.last_error })) });
       }
       return res.status(400).json({ ok: false, error: 'Unknown action' });
     }
@@ -135,6 +142,14 @@ export default async function handler(req, res) {
 
     if (b.status === 'queued') {                       // first run: take the list of recipients
       const r = await recipients();
+      if (b.kind === 'quiz_start') {            // registered students already got their own start e-mail
+        const have = new Set(), id = String(b.ref).split('#')[0];
+        for (let i = 0; i < 30; i++) {
+          const g = await (await sb('hr_quiz_regs?quiz_id=eq.' + enc(id) + '&select=email&order=email&limit=1000&offset=' + i * 1000)).json().catch(() => null);
+          if (!Array.isArray(g)) break; g.forEach(x => have.add(String(x.email || '').trim().toLowerCase())); if (g.length < 1000) break;
+        }
+        r.list = r.list.filter(e => !have.has(e));
+      }
       for (let i = 0; i < r.list.length; i += 500) {
         const rr = await sb('hr_broadcast_rcpt?on_conflict=broadcast_id,email', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
           body: JSON.stringify(r.list.slice(i, i + 500).map(e => ({ broadcast_id: b.id, email: e }))) });
