@@ -2234,7 +2234,17 @@ body{overflow-x:clip}
   .nav-links a.active::after{display:none}
   .burger{display:block}
 }
-@media (max-width:420px){.logo{font-size:15px;gap:8px}.nav-cta .btn-ghost{display:none}}
+@media (max-width:480px){
+  .nav{gap:6px}
+  .logo{font-size:15px;gap:8px}
+  .nav-cta{gap:6px}
+  .nav-cta .btn-ghost{padding:7px 12px;font-size:13px}
+  .nav-cta .theme-toggle{width:38px;height:38px;font-size:16px}
+}
+@media (max-width:340px){.nav-cta .theme-toggle{display:none}}
+/* a second way in: "Log in / Sign up" inside the phone menu */
+.nav-links .nav-m-only{display:none}
+@media (max-width:1000px){.nav-links .nav-m-only{display:block;font-weight:700;color:var(--primary,#7c5cff)}}
 
 /* focus mode */
 html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp-focus #hrpTopBtn,html.hrp-focus #hrpShareBtn,html.hrp-focus #hrpStick{display:none!important}
@@ -2371,6 +2381,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
       <a href="#arena">Code Arena</a>
       <a href="#register">Register</a>
       <a href="#contact">Contact</a>
+      <a href="#" id="navLoginM" class="nav-m-only">👤 Log in / Sign up</a>
     </nav>
     <div class="nav-cta">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
@@ -12227,6 +12238,14 @@ window.__hkQuizBoard = async function(host){
   } catch(e){ note('Could not load quiz rankings.'); }
 };
 setInterval(() => { const a = document.querySelector('[data-board].active'); if (a && a.dataset.board === 'quiz' && !document.hidden) window.__hkQuizBoard(); }, 20000);
+(function(){
+  const m = document.getElementById('navLoginM'), b = document.getElementById('loginBtn');
+  if (!m || !b) return;
+  const sync = () => { const x = (b.textContent || '').trim(); m.textContent = '👤 ' + (x && !/^log ?in$/i.test(x) ? x : 'Log in / Sign up'); };
+  const bg = document.getElementById('burger'); if (bg) bg.addEventListener('click', sync);
+  m.addEventListener('click', e => { e.preventDefault(); const nl = document.getElementById('navLinks'); if (nl) nl.classList.remove('open'); b.click(); });
+  sync();
+})();
 feat('Quiz ranks: students see their own rank, a "Quizzes" tab in Live Rankings, auto-refreshing', () => {});
 feat('Hackathon quizzes: participants can take timed quizzes and see a leaderboard', () => {});
 /* ---- combined registration hub: Team + Quiz in one place ---- */
