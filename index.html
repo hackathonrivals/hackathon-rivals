@@ -12836,7 +12836,7 @@ alter table public.hr_quizzes add column if not exists announce_all boolean not 
 
 create table if not exists public.hr_broadcasts (
   id uuid primary key default gen_random_uuid(),
-  kind text not null check (kind in ('quiz', 'hackathon')),
+  kind text not null check (kind in ('quiz', 'quiz_start', 'hackathon')),
   ref text not null,
   status text not null default 'queued' check (status in ('queued', 'sending', 'done', 'cancelled')),
   send_after timestamptz not null default now(),
@@ -12868,6 +12868,10 @@ create policy hr_bc_admin on public.hr_broadcasts for all using (public.hr_is_ad
 grant all on public.hr_broadcasts to service_role;
 grant all on public.hr_broadcast_rcpt to service_role;
 grant all on public.hr_mail_optout to service_role;
+
+-- allow the "quiz has started" announcement kind (older installs had only quiz / hackathon)
+alter table public.hr_broadcasts drop constraint if exists hr_broadcasts_kind_check;
+alter table public.hr_broadcasts add constraint hr_broadcasts_kind_check check (kind in ('quiz', 'quiz_start', 'hackathon'));
 
 -- when a quiz with "e-mail all users" ticked becomes published, queue ONE announcement (sent ~10 min later,
 -- cancelled automatically if the quiz is unpublished before that)
@@ -13044,7 +13048,7 @@ function adQuizEditor(box){
   <div class="hrp-row"><label>Duration (min) <input class="hrp-in" id="aqDur" type="number" min="1" max="600" value="${quiz.duration_min}" style="width:90px"></label><label>Opens <input class="hrp-in" id="aqOp" type="datetime-local" value="${quiz.opens_at ? localInput(new Date(quiz.opens_at)) : ''}" style="width:auto"></label><label>Closes <input class="hrp-in" id="aqCl" type="datetime-local" value="${quiz.closes_at ? localInput(new Date(quiz.closes_at)) : ''}" style="width:auto"></label></div>
   <div class="hrp-row"><label>Registration opens <input class="hrp-in" id="aqRo" type="datetime-local" value="${quiz.reg_opens_at ? localInput(new Date(quiz.reg_opens_at)) : ''}" style="width:auto"></label><label>Registration closes <input class="hrp-in" id="aqRc" type="datetime-local" value="${quiz.reg_closes_at ? localInput(new Date(quiz.reg_closes_at)) : ''}" style="width:auto"></label></div><p class="hrp-muted">Leave both empty if no registration is needed. Exam can only be taken by registered emails when a registration deadline is set.</p>
   <label class="hrp-check"><input type="checkbox" id="aqPub" ${quiz.published ? 'checked' : ''}><span>Published (visible to participants inside its open window)</span></label>
-  <label class="hrp-check"><input type="checkbox" id="aqAnn" ${quiz.isNew || quiz.announce_all ? 'checked' : ''}><span>📣 Email ALL signed-up users when this quiz is published (about 10 minutes after publishing, once only. Untick for test quizzes.)</span></label><div class="hk-msg" id="aqMsg"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="qsave">Save quiz</button></div>
+  <label class="hrp-check"><input type="checkbox" id="aqAnn" ${quiz.isNew || quiz.announce_all ? 'checked' : ''}><span>📣 Email ALL signed-up users when this quiz is published (about 10 minutes later) and again when it starts. Each only once. Untick for test quizzes.</span></label><div class="hk-msg" id="aqMsg"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="qsave">Save quiz</button></div>
   <div class="hrp-h">Question paper / file upload</div>${paperCardHtml()}
   <div class="hrp-h">Questions (${qs.length})</div><div class="hrp-row"><button class="hrp-btn" data-ad="qqnew">➕ Add question</button><button class="hrp-btn" data-ad="qqimp">⬆ Bulk import</button></div>${form}
   ${qs.map((x, i) => `<div class="hrp-card" style="margin:8px 0"><b>${i + 1}. ${esc(x.text)}</b><div class="hrp-muted">${(x.options || []).map((o, k) => (k === x.answer ? '✅ ' : '') + 'ABCD'[k] + ') ' + esc(o)).join('  ·  ')} · ${x.points} pt</div><div class="hrp-row" style="margin:6px 0 0"><button class="hrp-mini" data-ad="qqedit" data-id="${esc(x.id)}">Edit</button><button class="hrp-mini" data-ad="qqdel" data-id="${esc(x.id)}">Delete</button></div></div>`).join('')}
@@ -13474,10 +13478,13 @@ async function bcStatusLoad(){
   const el = $('#bcStatus', AD.c); if (!el) return;
   try {
     const j = await bcApi('status');
-    el.innerHTML = j.rows.length ? j.rows.map(r => '• ' + esc(r.label) + ' — <b>' + esc(r.status) + '</b> (' + r.sent + '/' + r.total + ' sent)' + (r.last_error ? ' <span style="color:var(--pink)">⚠️ ' + esc(r.last_error) + '</span>' : '')).join('<br>') : 'Nothing announced yet.';
+    el.innerHTML = j.rows.length ? j.rows.map(r => '<div style="margin:4px 0">• ' + esc(r.label) + ' — <b>' + esc(r.status) + '</b> (' + r.sent + '/' + r.total + ' sent)' + (r.last_error ? ' <span style="color:var(--pink)">⚠️ ' + esc(r.last_error) + '</span>' : '')
+      + (r.status === 'queued' || r.status === 'sending' ? ' <button class="hrp-mini" type="button" data-ad="bccancel" data-id="' + esc(r.id) + '">✖ Cancel</button>' : '') + '</div>').join('') : 'Nothing announced yet.';
   } catch(e){ el.textContent = e.message; }
 }
 async function bcAnnounce(kind, ref, name){
+  const label = kind === 'quiz' ? 'Quiz announced: ' + name : 'Hackathon';
+  try { const st = await bcApi('status'); if (st.rows.some(r => r.label === label && (r.status === 'queued' || r.status === 'sending'))) { toast('An announcement for this is already in progress. Cancel it first if you want to start over.', 'warn', '⚠️'); bcStatusLoad(); return; } } catch(e){}
   let n;
   try { n = (await bcApi('count')).users; } catch(e){ toast(e.message, 'warn', '⚠️'); return; }
   if (!confirm('Email "' + name + '" to ' + n + ' signed-up users? Emails go out about 100 per minute. People who unsubscribed are skipped.')) return;
@@ -13493,6 +13500,11 @@ async function bcAnnounce(kind, ref, name){
     toast(/QUIZ_NOT_PUBLISHED/.test(m) ? 'Publish the quiz first.' : e.status === 404 || /hr_queue_broadcast|does not exist/.test(m) ? 'Run announcements.sql first (Supabase SQL Editor).' : admErr(e), 'warn', '⚠️');
   }
 }
+adAct.bccancel = async b => {
+  if (!confirm('Cancel this announcement? Emails already sent cannot be taken back, but no more will go out.')) return;
+  try { await pgrest('hr_broadcasts?id=eq.' + encodeURIComponent(b.dataset.id) + '&status=in.(queued,sending)', { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { status: 'cancelled', finished_at: new Date().toISOString(), last_error: 'cancelled by admin' } }); toast('Announcement cancelled', 'success', '✖'); bcStatusLoad(); }
+  catch(e){ toast(admErr(e), 'warn', '⚠️'); }
+};
 adAct.qannounce = b => { const q = AD.qzList.find(x => x.id === b.dataset.id); if (q) bcAnnounce('quiz', q.id, q.title); };
 adAct.hannounce = () => bcAnnounce('hackathon', null, (HB.ev && HB.ev.name) || 'the hackathon');
 feat('Announcements: e-mail all signed-up users about a new quiz or the hackathon (queued, 100 per minute, unsubscribe link)', () => {});
