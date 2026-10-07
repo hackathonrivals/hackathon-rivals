@@ -12828,7 +12828,106 @@ begin
 end $$;
 grant execute on function public.hr_my_certificates(text) to anon, authenticated;
 `;
-const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS + '\n' + HK_SQL_VERIFY + '\n' + HK_SQL_REMIND + '\n' + HK_SQL_LOCK + '\n' + HK_SQL_CERT;
+const HK_SQL_ANN = `-- ============================================================
+-- PART 11 — announcement e-mails to ALL signed-up users (new quiz published / hackathon). Safe to run again.
+-- Needs the scheduler secret table from quiz-reminders-scheduler.sql (hr_cron_secret).
+-- ============================================================
+alter table public.hr_quizzes add column if not exists announce_all boolean not null default false;
+
+create table if not exists public.hr_broadcasts (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('quiz', 'hackathon')),
+  ref text not null,
+  status text not null default 'queued' check (status in ('queued', 'sending', 'done', 'cancelled')),
+  send_after timestamptz not null default now(),
+  next_try_at timestamptz,
+  total int not null default 0,
+  sent int not null default 0,
+  last_error text,
+  created_at timestamptz not null default now(),
+  started_at timestamptz,
+  finished_at timestamptz,
+  unique (kind, ref)
+);
+create table if not exists public.hr_broadcast_rcpt (
+  broadcast_id uuid not null references public.hr_broadcasts(id) on delete cascade,
+  email text not null,
+  sent_at timestamptz,
+  primary key (broadcast_id, email)
+);
+create index if not exists hr_broadcast_rcpt_pending on public.hr_broadcast_rcpt (broadcast_id) where sent_at is null;
+create table if not exists public.hr_mail_optout (
+  email text primary key,
+  created_at timestamptz not null default now()
+);
+alter table public.hr_broadcasts enable row level security;
+alter table public.hr_broadcast_rcpt enable row level security;
+alter table public.hr_mail_optout enable row level security;
+drop policy if exists hr_bc_admin on public.hr_broadcasts;
+create policy hr_bc_admin on public.hr_broadcasts for all using (public.hr_is_admin()) with check (public.hr_is_admin());
+grant all on public.hr_broadcasts to service_role;
+grant all on public.hr_broadcast_rcpt to service_role;
+grant all on public.hr_mail_optout to service_role;
+
+-- when a quiz with "e-mail all users" ticked becomes published, queue ONE announcement (sent ~10 min later,
+-- cancelled automatically if the quiz is unpublished before that)
+create or replace function public.hr_quiz_announce()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare ok boolean;
+begin
+  if tg_op = 'INSERT' then
+    ok := new.published and new.announce_all;
+  else
+    ok := new.published and new.announce_all and (not coalesce(old.published, false) or not coalesce(old.announce_all, false));
+  end if;
+  if ok then
+    insert into public.hr_broadcasts (kind, ref, send_after) values ('quiz', new.id::text, now() + interval '10 minutes')
+    on conflict (kind, ref) do nothing;
+  end if;
+  return new;
+end $$;
+drop trigger if exists hr_quiz_announce_trg on public.hr_quizzes;
+create trigger hr_quiz_announce_trg after insert or update on public.hr_quizzes
+  for each row execute function public.hr_quiz_announce();
+
+-- admin button: queue an announcement now. 'already_sent' = it was announced before (p_force = send again)
+create or replace function public.hr_queue_broadcast(p_kind text, p_ref text default null, p_force boolean default false)
+returns text language plpgsql security definer set search_path = public as $$
+declare r text; n int;
+begin
+  if not public.hr_is_admin() then raise exception 'ADMIN_ONLY'; end if;
+  if p_kind = 'quiz' then
+    if not exists (select 1 from public.hr_quizzes z where z.id::text = p_ref and z.published) then
+      raise exception 'QUIZ_NOT_PUBLISHED';
+    end if;
+    r := p_ref;
+  elsif p_kind = 'hackathon' then
+    select 'main:' || extract(epoch from e.starts_at)::bigint::text into r from public.hr_events e where e.id = 'main';
+    if r is null then raise exception 'NO_EVENT'; end if;
+  else
+    raise exception 'BAD_KIND';
+  end if;
+  if p_force then r := r || '#' || extract(epoch from now())::bigint::text; end if;
+  insert into public.hr_broadcasts (kind, ref, send_after) values (p_kind, r, now()) on conflict (kind, ref) do nothing;
+  get diagnostics n = row_count;
+  return case when n = 1 then 'queued' else 'already_sent' end;
+end $$;
+grant execute on function public.hr_queue_broadcast(text, text, boolean) to authenticated;
+
+-- every minute Supabase calls /api/broadcast, which sends the next 100 e-mails of any queued announcement
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+select cron.unschedule(jobid) from cron.job where jobname = 'hr-broadcast';
+select cron.schedule(
+  'hr-broadcast', '* * * * *',
+  $job$
+  select net.http_get(
+    url := 'https://hackathonrivals.in/api/broadcast?key=' || (select secret from public.hr_cron_secret where id = 1)
+  );
+  $job$
+);
+`;
+const HK_SQL_ALL = HK_SQL + '\n' + HK_SQL_FILES + '\n' + HK_SQL_MARKS + '\n' + HK_SQL_VERIFY + '\n' + HK_SQL_REMIND + '\n' + HK_SQL_LOCK + '\n' + HK_SQL_CERT + '\n' + HK_SQL_ANN;
 
 const AD = { sub: store.get('adminSub', 'hack'), c: null, qz: null, bank: { subj: 'all', sem: '-1', lvl: '0', q: '', lim: 25, edit: null, imp: null } };
 const ADV = {};
@@ -12860,7 +12959,9 @@ ADV.hack = box => {
   <label class="hrp-muted">Message shown on the page</label><textarea class="hrp-ta" id="adMsg" style="min-height:70px;font-family:inherit">${esc(e.message || '')}</textarea>
   <label class="hrp-check"><input type="checkbox" id="adOpen" ${e.reg_open !== false ? 'checked' : ''}><span>Registration switch is ON (untick to close registration immediately)</span></label>
   <label class="hrp-check"><input type="checkbox" id="adLock" ${e.lock_main !== false ? 'checked' : ''}><span>Also lock the site’s main team-registration form when time is up</span></label>
-  <div class="hrp-row"><button class="hrp-btn pri" data-ad="hsave">Save changes</button><button class="hrp-btn" data-ad="hclose">Close registration now</button><button class="hrp-btn" data-ad="hopen">Reopen (switch ON)</button></div><div class="hk-msg" id="adMsgOut"></div>`;
+  <div class="hrp-row"><button class="hrp-btn pri" data-ad="hsave">Save changes</button><button class="hrp-btn" data-ad="hclose">Close registration now</button><button class="hrp-btn" data-ad="hopen">Reopen (switch ON)</button><button class="hrp-btn" data-ad="hannounce">📣 Announce to all users</button></div><div class="hk-msg" id="adMsgOut"></div>
+  <div class="hrp-h">📣 Announcements to all signed-up users</div><div id="bcStatus" class="hrp-muted">Loading…</div>`;
+  setTimeout(bcStatusLoad, 80);
 };
 async function adSaveEvent(patch, okMsg){
   const out = $('#adMsgOut', AD.c);
@@ -12912,7 +13013,7 @@ ADV.quiz = async box => {
   box.innerHTML = '<p class="hrp-muted">Loading…</p>';
   try { const list = await QZ.list(); AD.qzList = list; AD.papers = {}; if (HB.remote) { try { (await pgrest('hr_quiz_files?kind=eq.paper&select=quiz_id,file_name')).forEach(r => { AD.papers[r.quiz_id] = r; }); } catch(e){} }
     box.innerHTML = `<div class="hrp-row"><button class="hrp-btn pri" data-ad="qnew">➕ New quiz</button></div>${list.map(q => `<div class="hrp-card" style="margin:8px 0"><b>${esc(q.title)}</b> ${q.published ? '<span class="hk-pill ok">published</span>' : '<span class="hk-pill">draft</span>'}<div class="hrp-muted">${q.duration_min} min${AD.papers[q.id] ? ' · 📄 paper attached' : ''}${q.opens_at ? ' · opens ' + new Date(q.opens_at).toLocaleString() : ''}${q.closes_at ? ' · closes ' + new Date(q.closes_at).toLocaleString() : ''}${q.reg_closes_at ? ' · registration ' + (q.reg_opens_at ? new Date(q.reg_opens_at).toLocaleString() + ' → ' : 'until ') + new Date(q.reg_closes_at).toLocaleString() : ''}</div>
-    <div class="hrp-row" style="margin:8px 0 0"><button class="hrp-mini" data-ad="qopen" data-id="${esc(q.id)}">✏️ Edit & questions</button><button class="hrp-mini" data-ad="qpub" data-id="${esc(q.id)}">${q.published ? 'Unpublish' : 'Publish'}</button><button class="hrp-mini" data-ad="qres" data-id="${esc(q.id)}">📊 Results</button><button class="hrp-mini" data-ad="qregs" data-id="${esc(q.id)}">📋 Registrations CSV</button><button class="hrp-mini" data-ad="qmailnow" data-id="${esc(q.id)}">📧 Send start email</button><button class="hrp-mini" data-ad="qdel" data-id="${esc(q.id)}">🗑 Delete</button></div></div>`).join('') || '<p class="hrp-muted">No quizzes yet. Click “New quiz” to create one for your hackathon.</p>'}`; }
+    <div class="hrp-row" style="margin:8px 0 0"><button class="hrp-mini" data-ad="qopen" data-id="${esc(q.id)}">✏️ Edit & questions</button><button class="hrp-mini" data-ad="qpub" data-id="${esc(q.id)}">${q.published ? 'Unpublish' : 'Publish'}</button><button class="hrp-mini" data-ad="qres" data-id="${esc(q.id)}">📊 Results</button><button class="hrp-mini" data-ad="qregs" data-id="${esc(q.id)}">📋 Registrations CSV</button><button class="hrp-mini" data-ad="qmailnow" data-id="${esc(q.id)}">📧 Send start email</button><button class="hrp-mini" data-ad="qannounce" data-id="${esc(q.id)}">📣 Announce to all users</button><button class="hrp-mini" data-ad="qdel" data-id="${esc(q.id)}">🗑 Delete</button></div></div>`).join('') || '<p class="hrp-muted">No quizzes yet. Click “New quiz” to create one for your hackathon.</p>'}`; }
   catch(e){ box.innerHTML = `<p class="hrp-muted">❌ ${esc(admErr(e))}</p>`; }
 };
 adAct.qnew = () => { AD.qz = { mode: 'edit', quiz: { id: uid(), title: '', description: '', duration_min: 30, opens_at: null, closes_at: null, published: false, isNew: true }, qs: [], editQ: null }; adRender(); };
@@ -12942,7 +13043,8 @@ function adQuizEditor(box){
   <input class="hrp-in" id="aqTitle" placeholder="Quiz title" value="${esc(quiz.title)}" maxlength="120" style="margin-bottom:8px"><textarea class="hrp-ta" id="aqDesc" style="min-height:60px;font-family:inherit" placeholder="Short description / instructions">${esc(quiz.description || '')}</textarea>
   <div class="hrp-row"><label>Duration (min) <input class="hrp-in" id="aqDur" type="number" min="1" max="600" value="${quiz.duration_min}" style="width:90px"></label><label>Opens <input class="hrp-in" id="aqOp" type="datetime-local" value="${quiz.opens_at ? localInput(new Date(quiz.opens_at)) : ''}" style="width:auto"></label><label>Closes <input class="hrp-in" id="aqCl" type="datetime-local" value="${quiz.closes_at ? localInput(new Date(quiz.closes_at)) : ''}" style="width:auto"></label></div>
   <div class="hrp-row"><label>Registration opens <input class="hrp-in" id="aqRo" type="datetime-local" value="${quiz.reg_opens_at ? localInput(new Date(quiz.reg_opens_at)) : ''}" style="width:auto"></label><label>Registration closes <input class="hrp-in" id="aqRc" type="datetime-local" value="${quiz.reg_closes_at ? localInput(new Date(quiz.reg_closes_at)) : ''}" style="width:auto"></label></div><p class="hrp-muted">Leave both empty if no registration is needed. Exam can only be taken by registered emails when a registration deadline is set.</p>
-  <label class="hrp-check"><input type="checkbox" id="aqPub" ${quiz.published ? 'checked' : ''}><span>Published (visible to participants inside its open window)</span></label><div class="hk-msg" id="aqMsg"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="qsave">Save quiz</button></div>
+  <label class="hrp-check"><input type="checkbox" id="aqPub" ${quiz.published ? 'checked' : ''}><span>Published (visible to participants inside its open window)</span></label>
+  <label class="hrp-check"><input type="checkbox" id="aqAnn" ${quiz.isNew || quiz.announce_all ? 'checked' : ''}><span>📣 Email ALL signed-up users when this quiz is published (about 10 minutes after publishing, once only. Untick for test quizzes.)</span></label><div class="hk-msg" id="aqMsg"></div><div class="hrp-row"><button class="hrp-btn pri" data-ad="qsave">Save quiz</button></div>
   <div class="hrp-h">Question paper / file upload</div>${paperCardHtml()}
   <div class="hrp-h">Questions (${qs.length})</div><div class="hrp-row"><button class="hrp-btn" data-ad="qqnew">➕ Add question</button><button class="hrp-btn" data-ad="qqimp">⬆ Bulk import</button></div>${form}
   ${qs.map((x, i) => `<div class="hrp-card" style="margin:8px 0"><b>${i + 1}. ${esc(x.text)}</b><div class="hrp-muted">${(x.options || []).map((o, k) => (k === x.answer ? '✅ ' : '') + 'ABCD'[k] + ') ' + esc(o)).join('  ·  ')} · ${x.points} pt</div><div class="hrp-row" style="margin:6px 0 0"><button class="hrp-mini" data-ad="qqedit" data-id="${esc(x.id)}">Edit</button><button class="hrp-mini" data-ad="qqdel" data-id="${esc(x.id)}">Delete</button></div></div>`).join('')}
@@ -12951,6 +13053,7 @@ function adQuizEditor(box){
 }
 adAct.qsave = async () => { const c = AD.c, m = $('#aqMsg', c), q = AD.qz.quiz; const t = $('#aqTitle', c).value.trim(); if (!t) { m.textContent = 'Give the quiz a title.'; m.className = 'hk-msg err'; return; }
   const op = $('#aqOp', c).value, cl = $('#aqCl', c).value; const o = { id: q.id, title: t, description: $('#aqDesc', c).value.trim(), duration_min: Math.min(600, Math.max(1, +$('#aqDur', c).value || 30)), opens_at: op ? new Date(op).toISOString() : null, closes_at: cl ? new Date(cl).toISOString() : null, published: $('#aqPub', c).checked };
+  if (await annSupported()) o.announce_all = $('#aqAnn', c).checked;
   { const ro = $('#aqRo', c).value, rc = $('#aqRc', c).value; if (ro || rc || q.reg_opens_at || q.reg_closes_at) { o.reg_opens_at = ro ? new Date(ro).toISOString() : null; o.reg_closes_at = rc ? new Date(rc).toISOString() : null; } }
   try { await QZ.save(o); AD.qz.quiz = { ...o }; renderQuizList(); m.textContent = 'Quiz saved ✔ — now add questions below.'; m.className = 'hk-msg ok'; } catch(e){ m.textContent = admErr(e); m.className = 'hk-msg err'; } };
 adAct.qregs = async b => { try { const rows = await pgrest('hr_quiz_regs?quiz_id=eq.' + encodeURIComponent(b.dataset.id) + '&select=name,email,phone,college,created_at&order=created_at'); download('exam-registrations.csv', toCSV([['name', 'email', 'phone', 'college', 'registered_at'], ...rows.map(r => [r.name, r.email, r.phone, r.college, r.created_at])]), 'text/csv'); toast(rows.length + ' registration(s) exported', 'success', '⬇'); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } };
@@ -13354,6 +13457,45 @@ adAct.tcreset = async () => {
   catch(e){ tcSay(admErr(e), false); }
 };
 feat('Team certificates: the admin picks teams and awards, e-mails them, anyone can verify', () => {});
+/* ---- announcements: e-mail every signed-up user about a new quiz / the hackathon ---- */
+async function annSupported(){
+  if (AD.annOk === undefined) { try { await pgrest('hr_quizzes?select=announce_all&limit=1'); AD.annOk = true; } catch(e){ AD.annOk = false; } }
+  return AD.annOk;
+}
+async function bcApi(action){
+  const tok = sbToken();
+  const r = await fetch('/api/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify({ action }) });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 404) throw new Error('api/broadcast.js is not deployed yet.');
+  if (!r.ok || j.ok === false) throw new Error(j.error || 'HTTP ' + r.status);
+  return j;
+}
+async function bcStatusLoad(){
+  const el = $('#bcStatus', AD.c); if (!el) return;
+  try {
+    const j = await bcApi('status');
+    el.innerHTML = j.rows.length ? j.rows.map(r => '• ' + esc(r.label) + ' — <b>' + esc(r.status) + '</b> (' + r.sent + '/' + r.total + ' sent)' + (r.last_error ? ' <span style="color:var(--pink)">⚠️ ' + esc(r.last_error) + '</span>' : '')).join('<br>') : 'Nothing announced yet.';
+  } catch(e){ el.textContent = e.message; }
+}
+async function bcAnnounce(kind, ref, name){
+  let n;
+  try { n = (await bcApi('count')).users; } catch(e){ toast(e.message, 'warn', '⚠️'); return; }
+  if (!confirm('Email "' + name + '" to ' + n + ' signed-up users? Emails go out about 100 per minute. People who unsubscribed are skipped.')) return;
+  try {
+    let r = await pgrest('rpc/hr_queue_broadcast', { method: 'POST', body: { p_kind: kind, p_ref: ref || null, p_force: false } });
+    if (r === 'already_sent') {
+      if (!confirm('This was already announced. Send it to everyone again?')) return;
+      r = await pgrest('rpc/hr_queue_broadcast', { method: 'POST', body: { p_kind: kind, p_ref: ref || null, p_force: true } });
+    }
+    toast('📣 Queued for ' + n + ' users. Progress: Hackathon tab → Announcements.', 'success', '📣'); bcStatusLoad();
+  } catch(e){
+    const m = e.message || '';
+    toast(/QUIZ_NOT_PUBLISHED/.test(m) ? 'Publish the quiz first.' : e.status === 404 || /hr_queue_broadcast|does not exist/.test(m) ? 'Run announcements.sql first (Supabase SQL Editor).' : admErr(e), 'warn', '⚠️');
+  }
+}
+adAct.qannounce = b => { const q = AD.qzList.find(x => x.id === b.dataset.id); if (q) bcAnnounce('quiz', q.id, q.title); };
+adAct.hannounce = () => bcAnnounce('hackathon', null, (HB.ev && HB.ev.name) || 'the hackathon');
+feat('Announcements: e-mail all signed-up users about a new quiz or the hackathon (queued, 100 per minute, unsubscribe link)', () => {});
 
 /* ---------- Question bank manager ---------- */
 const lvlNum = v => { v = String(v ?? '').trim().toLowerCase(); return ({ easy: 1, medium: 2, moderate: 2, hard: 3, difficult: 3, '1': 1, '2': 2, '3': 3 })[v] || 0; };
@@ -13452,6 +13594,7 @@ ADV.setup = async box => {
   { let rm = '✅ ready'; try { await pgrest('hr_quizzes?select=remind_sent_for,start_sent_for,time_changed_at,change_notified_at&limit=1'); } catch(e){ rm = '❌ run Part 5 SQL (quiz reminders)'; } res.push(['Quiz reminder emails (Part 5)', rm]); }
   { let ce = '✅ ready'; try { await pgrest('hr_certificates?select=id&limit=1'); } catch(e){ ce = '❌ run certificates.sql (Part 7)'; } res.push(['Certificates (Part 7)', ce]); }
   { let tc = '✅ ready'; try { await pgrest('hr_team_certs?select=id&limit=1'); } catch(e){ tc = '❌ run team-certificates.sql (Part 9)'; } res.push(['Team certificates (Part 9)', tc]); }
+  { let an = '✅ ready'; try { await pgrest('hr_broadcasts?select=id&limit=1'); await pgrest('hr_quizzes?select=announce_all&limit=1'); } catch(e){ an = '❌ run announcements.sql (Part 11)'; } res.push(['Announcements to all users (Part 11)', an]); }
   { let st = '✅ ready'; try { const r = await fetch(HK_URL + '/storage/v1/object/public/' + HK_BUCKET + '/_probe', { headers: { apikey: HK_KEY } }); const j = await r.json().catch(() => ({})); if (/bucket not found/i.test(j.message || j.error || '')) st = '❌ not created'; } catch(e){ st = '❌ ' + (e.message || 'unreachable'); } res.push(['PDF storage bucket (hr-quiz-files)', st]); }
   box.innerHTML = `${table(res, ['Item', 'Status'])}<div class="hrp-h">How to set up (2 minutes)</div><ol class="hrp-muted" style="padding-left:18px;line-height:1.7"><li>Open your Supabase project → <b>SQL Editor</b> → New query.</li><li>Tap <b>Copy SQL</b> below, paste it and press <b>Run</b>.</li><li>Come back here and reopen this tab — every row should show ✅.</li></ol>
   <div class="hrp-row"><button class="hrp-btn pri" data-ad="sqlcopy">📋 Copy SQL</button><button class="hrp-btn" data-ad="sqldl">⬇ Download .sql</button><button class="hrp-btn" data-ad="setupre">↻ Re-check</button><button class="hrp-btn" data-ad="edgecopy">✉️ Copy email function</button></div>
