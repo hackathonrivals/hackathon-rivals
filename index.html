@@ -13429,7 +13429,7 @@ ADV.setup = async box => {
   let fn = '✅ ready'; try { await pgrest('rpc/hr_now', { method: 'POST', body: {} }); } catch(e){ fn = '❌ not created'; }
   res.push(['Server clock (hr_now)', fn]);
   { let mk = '✅ ready'; try { await pgrest('hr_attempts?select=marks,bonus,emailed_at&limit=1'); await pgrest('hr_quizzes?select=results_published&limit=1'); } catch(e){ mk = '❌ run the updated SQL (Part 3)'; } res.push(['Marks & results upload (Part 3)', mk]); }
-  { let vf = '✅ ready'; try { await pgrest('hr_verified?select=token_hash&limit=1'); } catch(e){ vf = '❌ run Part 4 SQL (email verification)'; } res.push(['Email verification (Part 4)', vf]); }
+  { let vf = '✅ ready'; try { await pgrest('hr_verified?select=token_hash&limit=1'); } catch(e){ if (e.status !== 401 && e.status !== 403) vf = '❌ run Part 4 SQL (email verification)'; } res.push(['Email verification (Part 4)', vf]); }
   { let rm = '✅ ready'; try { await pgrest('hr_quizzes?select=remind_sent_for,start_sent_for,time_changed_at,change_notified_at&limit=1'); } catch(e){ rm = '❌ run Part 5 SQL (quiz reminders)'; } res.push(['Quiz reminder emails (Part 5)', rm]); }
   { let ce = '✅ ready'; try { await pgrest('hr_certificates?select=id&limit=1'); } catch(e){ ce = '❌ run certificates.sql (Part 7)'; } res.push(['Certificates (Part 7)', ce]); }
   { let tc = '✅ ready'; try { await pgrest('hr_team_certs?select=id&limit=1'); } catch(e){ tc = '❌ run team-certificates.sql (Part 9)'; } res.push(['Team certificates (Part 9)', tc]); }
