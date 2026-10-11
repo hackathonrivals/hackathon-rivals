@@ -3032,7 +3032,9 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
           <div class="support-hours">
             <h4>🕒 Support Hours</h4>
             <div class="hours-row"><span class="day">Monday – Friday</span><span class="time green">10:00 AM – 6:00 PM</span></div>
-            <div class="hours-row"><span class="day">Saturday &amp; Sunday</span><span class="time">Email only</span></div>
+          </div>
+          <div class="social-row">
+            <a href="https://wa.me/919889168518?text=Hi%20Hackathon%20Rivals" target="_blank" rel="noopener" class="social-btn" aria-label="Chat on WhatsApp" style="width:auto;padding:0 16px;gap:8px;display:inline-flex;align-items:center">💬 Chat on WhatsApp</a>
           </div>
         </div>
       </div>
@@ -11871,7 +11873,7 @@ const FREE = /@(gmail|yahoo|outlook|hotmail|rediffmail|live|icloud|proton)\./i;
 const v = (c, id) => ((c.querySelector('#' + id) || {}).value || '').trim();
 const X = { miss: false };
 const rem = () => HB.remote && !X.miss;
-const ER = { HOUSEFULL: 'Housefull — registration is full.', ALREADY_REGISTERED: 'Already registered for this session.', EMAIL_NOT_VERIFIED: 'Verify your email first.', EVENT_ENDED: 'This event has ended.', INVALID_CODE: 'Invalid team code.', REG_CLOSED: 'Registration is closed — joining is locked.', ALREADY_IN_TEAM: 'You are already in a team.', INVALID_TOKEN: 'Invalid or already-used token.', LEADER_ONLY: 'Only the team leader can do that.', FREE_EMAIL: 'Please use an official college email domain.', ADMIN_ONLY: 'Admin only.', JUDGE_ONLY: 'Judge or Admin login required.', SCORE_RANGE: 'Each score must be 1 to 10.' };
+const ER = { HOUSEFULL: 'Housefull — registration is full.', ALREADY_REGISTERED: 'Already registered for this session.', EMAIL_NOT_VERIFIED: 'Verify your email first.', EVENT_ENDED: 'This event has ended.', INVALID_CODE: 'Invalid team code.', REG_CLOSED: 'Registration is closed — joining is locked.', ALREADY_IN_TEAM: 'You are already in a team.', INVALID_TOKEN: 'Invalid or already-used token.', LEADER_ONLY: 'Only the team leader can do that.', FREE_EMAIL: 'Please use an official college email domain.', ADMIN_ONLY: 'Admin only.', JUDGE_ONLY: 'Judge or Admin login required.', RETRY_OFF: 'Re-attempt is not enabled.', RETRY_USED: 'Your re-attempt has already been used.', NO_RETRY: 'No re-attempt is available for this quiz.', NO_TIME_LEFT: 'No time was left, so there is no re-attempt.', SCORE_RANGE: 'Each score must be 1 to 10.' };
 const errTxt = e => { const m = Object.keys(ER).find(k => String(e && e.message).includes(k)); return m ? ER[m] : ((e && e.message) || 'Something went wrong'); };
 const call = async (fn, body, email) => { try { return await pgrest('rpc/' + fn, { method: 'POST', body, headers: email ? vtHdr(email) : {} }); } catch(e){ if (e.status === 404 || /PGRST20|42883|42P01|schema cache|does not exist/i.test((e.code || '') + (e.message || ''))) X.miss = true; throw e; } };
 const MISS = /PGRST20|42883|42P01|schema cache|does not exist|Could not find/i;
@@ -11984,13 +11986,17 @@ tab('judge', '⚖️ Judge', drawJ, {
 /* ---- Module 4: violation log, optional score-0, DevTools detection ---- */
 const zeroOn = () => !!(HB.ev && HB.ev.proctor_zero === true);
 const tryDq = async (ref, email, k = 0) => { let n = 0; try { n = await call('hr_x_apply_dq', { p_ref: ref, p_email: email }, email); } catch(_){} if (!(n > 0) && k < 8) setTimeout(() => tryDq(ref, email, k + 1), 4000); };
+const retryOn = () => !!(HB.ev && HB.ev.proctor_retry === true);
+window.__hrRetry = async (q, email) => { if (!rem()) throw new Error('Re-attempt needs the database.'); try { HQ.retrySecs = await call('hr_x_retry_start', { p_ref: String(q.id), p_email: email }, email); store.set('x:rtUsed:' + q.id, 1); } catch(e){ throw new Error(errTxt(e)); } };
 window.__hrViol = (S, why) => {
+  const Q = S.kind === 'quiz' && HQ.cur ? HQ.cur.q : null, left = HQ.cur && HQ.cur.left ? HQ.cur.left() : 0;
   const email = (me().email || '').toLowerCase(), ref = S.kind === 'quiz' && HQ.cur && HQ.cur.q ? String(HQ.cur.q.id) : 'exam-centre', zero = zeroOn() && S.kind === 'quiz';
   const L = g('x:viol', []); L.unshift({ at: Date.now(), email, kind: S.kind, ref, reason: why, zero }); sv('x:viol', L.slice(0, 100));
-  const V = email && rem() ? call('hr_x_violation', { p_email: email, p_kind: S.kind, p_ref: ref, p_reason: why, p_zero: zero }, email).catch(() => {}) : Promise.resolve();
+  const V = email && rem() ? call('hr_x_violation', { p_email: email, p_kind: S.kind, p_ref: ref, p_reason: why, p_zero: zero, ...(retryOn() ? { p_left: left } : {}) }, email).catch(() => {}) : Promise.resolve();
   if (zero && HQ.cur && HQ.cur.ans) Object.keys(HQ.cur.ans).forEach(k => delete HQ.cur.ans[k]);
   const P = S.stop();
   if (zero && email && rem()) Promise.all([V, P]).then(() => tryDq(ref, email));
+  if (zero && Q && retryOn() && left >= 10 && !store.get('x:rtUsed:' + Q.id, 0)) { const setRt = (k = 0) => { const d = store.get('hk:done', {}); if (d[Q.id]) { d[Q.id].rt = left; store.set('hk:done', d); try { renderQuizList(); } catch(_){} const B = document.getElementById('hkQB'); if (B && !B.querySelector('#hrRt')) { const c = document.createElement('div'); c.className = 'hrp-card'; c.id = 'hrRt'; c.innerHTML = '<b>🔁 You can re-attempt once</b><div class="hrp-muted">You will get the same time that was left: ' + fmtClock(left) + '. Your score stays 0 until you submit it.</div><div class="hrp-row"><button class="hrp-btn pri" type="button">Re-attempt now</button></div>'; c.querySelector('button').onclick = () => { HQ.rtMode = true; openQuiz(Q); }; B.appendChild(c); } } else if (k < 20) setTimeout(() => setRt(k + 1), 1500); }; setRt(); }
   return P;
 };
 let dtN = 0;
@@ -12156,8 +12162,8 @@ async function loadEvent(){
 }
 async function saveEvent(ev){
   const row = { id: 'main', name: ev.name, starts_at: ev.starts_at, reg_closes_at: ev.reg_closes_at, ends_at: ev.ends_at || null, reg_open: !!ev.reg_open, lock_main: !!ev.lock_main, message: ev.message || '', updated_at: new Date().toISOString() };
-  row.proctor = ev.proctor !== false; row.proctor_zero = ev.proctor_zero === true;
-  if (HB.remote) { try { await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [row] }); } catch(e){ if (/proctor/i.test(e.message || '')) { const r2 = { ...row }; delete r2.proctor; delete r2.proctor_zero; await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [r2] }); throw new Error('Saved, but the exam-guard switch needs the updated SQL: run Admin → Setup SQL once (adds the "proctor" column).'); } throw e; } } else store.set('hk:ev', row);
+  row.proctor = ev.proctor !== false; row.proctor_zero = ev.proctor_zero === true; row.proctor_retry = ev.proctor_retry === true;
+  if (HB.remote) { try { await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [row] }); } catch(e){ if (/proctor/i.test(e.message || '')) { const r2 = { ...row }; delete r2.proctor; delete r2.proctor_zero; delete r2.proctor_retry; await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [r2] }); throw new Error('Saved, but the exam-guard switch needs the updated SQL: run Admin → Setup SQL once (adds the "proctor" column).'); } throw e; } } else store.set('hk:ev', row);
   HB.ev = { ...HB.ev, ...row };
 }
 /* hooks so the Site Content "Event dates" card drives this live countdown too */
@@ -12350,8 +12356,8 @@ function paintQuizList(){
   const done = store.get('hk:done', {});
   b2.innerHTML = `<div class="hk-quizzes">${HQ.list.map(q => { const s = quizState(q), d = done[q.id];
     return `<div class="hk-card"><b>${esc(q.title)}</b><p class="hk-sub">${esc(q.description || '')}</p><p class="hrp-muted">${q.duration_min} min · ${s === 'open' ? '🟢 Open' : s === 'upcoming' ? '⏳ Opens ' + fmtIST(Date.parse(q.opens_at)) : '🔒 Closed'}${d ? ` · Your score ${d.score}/${d.max}` : ''}</p>
-    ${regLine(q)}${paperLine(q)}<div class="hrp-row">${regBtn(q)}<button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button></div></div>`; }).join('')}</div>`;
-  b2.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const q = HQ.list.find(x => x.id === b.dataset.q); if (q) (b.dataset.a === 'start' ? openQuiz(q) : b.dataset.a === 'reg' ? openQuizReg(q) : openBoard(q)); };
+    ${regLine(q)}${paperLine(q)}<div class="hrp-row">${regBtn(q)}<button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button>${d && d.rt > 0 ? `<button class="hrp-btn" data-q="${esc(q.id)}" data-a="retry">🔁 Re-attempt (${fmtClock(d.rt)} left)</button>` : ''}</div></div>`; }).join('')}</div>`;
+  b2.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const q = HQ.list.find(x => x.id === b.dataset.q); if (q) (b.dataset.a === 'start' ? (HQ.rtMode = false, openQuiz(q)) : b.dataset.a === 'retry' ? (HQ.rtMode = true, openQuiz(q)) : b.dataset.a === 'reg' ? openQuizReg(q) : openBoard(q)); };
   updateRegHub();
 }
 let qzEl = null;
@@ -12364,7 +12370,7 @@ async function openQuiz(q){
     if (a.dataset.a === 'go') { const name = $('#hqN', m).value.trim(), email = $('#hqE', m).value.trim().toLowerCase(), msg = $('#hqM', m); if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) { msg.textContent = 'Enter your name and a valid email.'; msg.className = 'hk-msg err'; return; }
       store.set('hk:me', { name, email }); if (!(await ensureVerified(msg, email))) return; await syncTime(); if (quizState(q) !== 'open') { msg.textContent = 'This quiz is not open right now.'; msg.className = 'hk-msg err'; return; }
       if (needReg(q) && HB.remote) { let ok = true; try { ok = await pgrest('rpc/hr_quiz_registered', { method: 'POST', body: { p_quiz: q.id, p_email: email } }); } catch(_){} if (ok === false) { msg.textContent = 'This email is not registered for this exam.'; msg.className = 'hk-msg err'; return; } }
-      try { const qs = await quizQuestions(q); if (!qs.length && !HQ.papers[q.id]) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
+      try { if (HQ.rtMode) { HQ.rtMode = false; await window.__hrRetry(q, email); } const qs = await quizQuestions(q); if (!qs.length && !HQ.papers[q.id]) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
 }
 async function quizQuestions(q){
   if (HB.remote) return await pgrest(`hr_quiz_questions?quiz_id=eq.${encodeURIComponent(q.id)}&select=id,pos,text,options,points&order=pos`);
@@ -12373,7 +12379,7 @@ async function quizQuestions(q){
 function qOrder(qs, key){ if (!qs || qs.length < 2) return qs; let h = 2166136261; for (const ch of key) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } const r = seeded(h), a = qs.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function runQuiz(q, qs, name, email){
   if (guardOn()) qs = qOrder(qs, 'uphr_rnd_' + email + '_' + q.id);
-  const m = qzModal(), B = $('#hkQB', m); const ans = {}, typed = {}; let file = null; const t0 = Date.now(), end = t0 + q.duration_min * 60000; HQ.cur = { q, ans }; HQ.retry = 0;
+  const m = qzModal(), B = $('#hkQB', m); const ans = {}, typed = {}; let file = null; const t0 = Date.now(), end = t0 + (HQ.retrySecs > 0 ? HQ.retrySecs * 1000 : q.duration_min * 60000); HQ.cur = { q, ans }; HQ.retry = 0; HQ.retrySecs = 0;
   const paperMode = !qs.length;
   setTimeout(() => loadPaper(q, email), 60);
   const fileBlock = `<div class="hrp-card hq-file" style="margin:10px 0"><b>📎 Upload answer sheet (PDF, max 5 MB)</b> <span class="hrp-muted">— optional</span>${HB.remote ? `<input type="file" id="hqF" accept="application/pdf,.pdf"><div class="hk-msg" id="hqFi"></div>` : '<p class="hrp-muted">PDF upload becomes available once the organiser finishes the database setup.</p>'}</div>`;
@@ -12398,7 +12404,7 @@ function runQuiz(q, qs, name, email){
   m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'sub') { const answered = new Set([...Object.keys(ans), ...Object.keys(typed).filter(k => (typed[k] || '').trim())]); const un = paperMode ? 0 : qs.filter(x => !answered.has(x.id)).length; if (!un || confirm(un + ' question(s) unanswered. Submit anyway?')) submit(false); } else if (a.dataset.a === 'close') { if (confirm('Leave the quiz? Your answers will be lost.')) { clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); } } };
   m.oninput = e => { const t = e.target; if (t && t.dataset && t.dataset.t) typed[t.dataset.t] = t.value; };
   m.onchange = async e => { const t = e.target; if (t.type === 'radio') ans[t.dataset.q] = +t.value; else if (t.id === 'hqF') { const f = t.files && t.files[0]; if (!f) { file = null; const i0 = $('#hqFi', m); if (i0) { i0.textContent = ''; } return; } const err = await pdfCheck(f); const info = $('#hqFi', m); if (err) { file = null; t.value = ''; if (info) { info.textContent = '❌ ' + err; info.className = 'hk-msg err'; } return; } file = f; if (info) { info.textContent = '✅ ' + f.name + ' (' + fmtSize(f.size) + ') — will be uploaded when you submit'; info.className = 'hk-msg ok'; } } };
-  if (HQ.cur) { HQ.cur.submit = submit; HQ.cur.t0 = Date.now(); }
+  if (HQ.cur) { HQ.cur.submit = submit; HQ.cur.t0 = Date.now(); HQ.cur.left = () => Math.max(0, Math.round((end - Date.now()) / 1000)); }
   startTimer();
 }
 async function saveExtras(q, name, email, typed, up){
@@ -13250,6 +13256,7 @@ ADV.hack = box => {
   <label class="hrp-check"><input type="checkbox" id="adLock" ${e.lock_main !== false ? 'checked' : ''}><span>Also lock the site’s main team-registration form when time is up</span></label>
   <label class="hrp-check"><input type="checkbox" id="adProctor" ${e.proctor !== false ? 'checked' : ''}><span>🛡️ Exam guard ON — during a test/quiz, switching tab/app or a screenshot/print attempt auto-submits it</span></label>
   <label class="hrp-check"><input type="checkbox" id="adProctorZero" ${e.proctor_zero === true ? 'checked' : ''}><span>🚫 Also score a hackathon quiz 0 (disqualify) when a violation happens — run hr-x-setup.sql once</span></label>
+  <label class="hrp-check"><input type="checkbox" id="adProctorRetry" ${e.proctor_retry === true ? 'checked' : ''}><span>🔁 After a rule-break (score 0) let the student re-attempt ONCE, with the same time that was left — run hr-x-fix-2.sql once</span></label>
   <div class="hrp-row"><button class="hrp-btn pri" data-ad="hsave">Save changes</button><button class="hrp-btn" data-ad="hclose">Close registration now</button><button class="hrp-btn" data-ad="hopen">Reopen (switch ON)</button><button class="hrp-btn" data-ad="hannounce">📣 Announce to all users</button></div><div class="hk-msg" id="adMsgOut"></div>
   <div class="hrp-h">📣 Announcements to all signed-up users</div><div id="bcStatus" class="hrp-muted">Loading…</div>`;
   setTimeout(bcStatusLoad, 80);
@@ -13261,7 +13268,7 @@ async function adSaveEvent(patch, okMsg){
 }
 adAct.hsave = () => { const c = AD.c, out = $('#adMsgOut', c); const s = new Date($('#adStart', c).value).getTime(); let cl = new Date($('#adClose', c).value).getTime(); const en = $('#adEnd', c).value ? new Date($('#adEnd', c).value).getTime() : null;
   if (!isFinite(s)) { out.textContent = 'Pick a valid start time.'; out.className = 'hk-msg err'; return; } if (!isFinite(cl)) cl = s;
-  adSaveEvent({ name: $('#adName', c).value.trim() || HK_DEFAULT.name, starts_at: new Date(s).toISOString(), reg_closes_at: new Date(cl).toISOString(), ends_at: en ? new Date(en).toISOString() : null, message: $('#adMsg', c).value.trim(), reg_open: $('#adOpen', c).checked, proctor: $('#adProctor', c).checked, proctor_zero: $('#adProctorZero', c).checked, lock_main: $('#adLock', c).checked }, 'Hackathon settings saved'); };
+  adSaveEvent({ name: $('#adName', c).value.trim() || HK_DEFAULT.name, starts_at: new Date(s).toISOString(), reg_closes_at: new Date(cl).toISOString(), ends_at: en ? new Date(en).toISOString() : null, message: $('#adMsg', c).value.trim(), reg_open: $('#adOpen', c).checked, proctor: $('#adProctor', c).checked, proctor_zero: $('#adProctorZero', c).checked, proctor_retry: $('#adProctorRetry', c).checked, lock_main: $('#adLock', c).checked }, 'Hackathon settings saved'); };
 adAct.hclose = () => adSaveEvent({ reg_open: false }, 'Registration closed');
 adAct.hopen = () => { const st = evState(); adSaveEvent({ reg_open: true }, st.n >= st.c ? 'Switch is ON, but the closing time has already passed — move “Registration closes” to a later time' : 'Registration reopened'); };
 
@@ -13434,7 +13441,7 @@ const mkSorted = () => AD.qz.rows.slice().sort((a, b) => mkTotal(b) - mkTotal(a)
 function adQuizResults(box){
   const { quiz } = AD.qz, rows = mkSorted(), pend = rows.reduce((s, r) => s + mkPending(r), 0), who = rows.filter(r => mkPending(r)).length, pub = !!quiz.results_published;
   const status = pub ? '✅ <b>Results uploaded</b> — rankings are final.' : pend ? '✍️ <b>' + pend + ' typed answer(s)</b> from ' + who + ' participant(s) still need marks. Add them below; the live rankings update on every save.' : '✅ All typed answers are marked — you can upload the results now.';
-  const btns = pub ? '<button class="hrp-btn pri" data-ad="mkmail">📧 Email remaining</button><button class="hrp-btn" data-ad="mkmail" data-force="1">📧 Email everyone again</button><button class="hrp-mini" data-ad="mkunpub">↩ Mark as not final</button><button class="hrp-btn" data-ad="certissue">🎓 Issue certificates</button><button class="hrp-btn" data-ad="certmail">📧 Email certificates</button><button class="hrp-mini" data-ad="certreset">🗑 Reset certificates</button><button class="hrp-mini" data-ad="certdesign">🎨 Design</button><span id="certInfo" class="hrp-muted"></span>' : '<button class="hrp-btn pri" data-ad="mkpublish"' + (pend ? ' disabled' : '') + '>⬆ Upload results &amp; email everyone</button>';
+  const btns = pub ? '<button class="hrp-btn pri" data-ad="mkmail">📧 Email remaining</button><button class="hrp-btn" data-ad="mkmail" data-force="1">📧 Email everyone again</button><button class="hrp-mini" data-ad="mkunpub">↩ Mark as not final</button><button class="hrp-btn" data-ad="certissue">🎓 Issue certificates</button><button class="hrp-btn" data-ad="certmail">📧 Email certificates</button><button class="hrp-mini" data-ad="certreset">🗑 Reset certificates</button><button class="hrp-mini" data-ad="certdesign">🎨 Design</button><span id="certInfo" class="hrp-muted"></span>' : '<button class="hrp-btn pri" data-ad="mkpublish"' + (pend ? ' disabled' : '') + '>⬆ Upload results &amp; email everyone</button><button class="hrp-mini" data-ad="certdesign">🎨 Certificate design</button>';
   const marking = rows.filter(r => mkNeed(r).length).map(r => { const need = mkNeed(r), mk = r.marks || {}, p = mkPending(r);
     return '<details class="hrp-card" style="margin:6px 0" data-mkc="' + esc(r.id) + '"' + (AD.qz.open === r.id ? ' open' : '') + '><summary><b>' + esc(r.name) + '</b> <span class="hrp-muted">' + esc(r.email) + ' · ' + (p ? '⏳ ' + p + ' pending' : '✅ marked') + '</span></summary>'
       + need.map(n => '<div style="margin:10px 0"><div><b>' + esc(n.label) + '</b></div>' + (n.text ? '<div class="hrp-muted" style="white-space:pre-wrap">' + esc(n.text) + '</div>' : '') + (n.pdf ? '<a href="' + esc(paperUrl(n.pdf.file_path)) + '" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:underline">📎 Open PDF</a>' : '') + '<div><label class="hrp-muted">Marks (0–' + n.max + ') <input class="hrp-in mk-in" data-k="' + esc(n.k) + '" data-max="' + n.max + '" type="number" min="0" max="' + n.max + '" step="1" value="' + (mk[n.k] ?? '') + '" style="width:90px;display:inline-block"></label></div></div>').join('')
@@ -13718,7 +13725,7 @@ ADV.tcert = async box => {
   box.innerHTML = '<div class="hrp-card"><label class="hrp-muted">Event name shown on the certificates</label>'
     + '<input class="hrp-in" id="tcEv" data-ch="tcev" maxlength="100" value="' + esc(ev) + '" style="margin-bottom:8px">'
     + '<div class="hrp-row"><button class="hrp-mini" data-ad="tcall" type="button">☑ Select all</button><button class="hrp-mini" data-ad="tcnone" type="button">☐ Clear</button>'
-    + '<button class="hrp-btn pri" data-ad="tcissue" type="button">🎓 Issue / update for selected</button><button class="hrp-btn" data-ad="tcmail" type="button">📧 Email certificates</button>'
+    + '<button class="hrp-btn pri" data-ad="tcissue" type="button">🎓 Issue / update for selected</button><button class="hrp-btn" data-ad="tcmail" type="button">📧 Email certificates</button><button class="hrp-btn" data-ad="certdesign" type="button">🎨 Certificate design (signature, logo)</button>'
     + '<button class="hrp-mini" data-ad="tcreset" type="button">🗑 Reset all</button></div>'
     + '<div class="hrp-muted" style="margin-top:6px">' + (teams || []).length + ' teams · ' + issued + ' certificates issued · ' + mailed + ' emailed. Tick teams, choose each award, then Issue.</div><div id="tcMsg" class="hk-msg"></div></div>'
     + ((teams || []).length ? '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th></th><th align="left">Team</th><th align="left">SPOC</th><th align="left">Award</th><th align="left">Certificate</th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="hrp-muted">No team registrations yet.</p>');
