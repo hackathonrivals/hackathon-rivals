@@ -6468,628 +6468,7 @@ function populateReviewSection(){
     }
   <\/script>
 
-<!-- ===== HR+ EXTRA TOOLKIT (added without replacing existing features) ===== -->
-<style id="hr-extra-toolkit-css">
-#hrExtraFab{position:fixed;right:18px;bottom:88px;z-index:9998;border:0;border-radius:999px;padding:13px 17px;background:linear-gradient(135deg,#7c5cff,#22d3ee);color:#08090d;font:700 13px Inter,system-ui,sans-serif;box-shadow:0 10px 30px #0006;cursor:pointer}
-#hrExtraPanel{position:fixed;right:16px;bottom:142px;z-index:9999;width:min(440px,calc(100vw - 24px));max-height:min(76vh,720px);overflow:auto;background:var(--surface,#111522);color:var(--text,#eee);border:1px solid var(--border-strong, #444);border-radius:18px;box-shadow:0 24px 70px #0009;padding:16px;display:none;font:14px/1.45 Inter,system-ui,sans-serif}
-#hrExtraPanel.open{display:block}
-#hrExtraPanel *{box-sizing:border-box}
-#hrExtraPanel .hrx-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
-#hrExtraPanel .hrx-head h3{margin:0;font-size:18px}
-#hrExtraPanel .hrx-close,#hrExtraPanel .hrx-btn{border:1px solid var(--border-strong,#444);background:var(--surface-2,#1b2030);color:inherit;border-radius:9px;padding:8px 11px;cursor:pointer;font:inherit}
-#hrExtraPanel .hrx-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-#hrExtraPanel .hrx-tab{border:1px solid var(--border,#444);background:transparent;color:inherit;border-radius:8px;padding:7px 9px;cursor:pointer;font:inherit;font-size:12px}
-#hrExtraPanel .hrx-tab.active{background:#7c5cff2b;border-color:#7c5cff}
-#hrExtraPanel .hrx-page{display:none}
-#hrExtraPanel .hrx-page.active{display:block}
-#hrExtraPanel input,#hrExtraPanel textarea,#hrExtraPanel select{width:100%;margin:5px 0 10px;padding:10px;border:1px solid var(--border-strong,#444);border-radius:9px;background:var(--bg,#08090d);color:inherit;font:inherit}
-#hrExtraPanel textarea{min-height:100px;resize:vertical}
-#hrExtraPanel .hrx-row{display:flex;gap:8px;flex-wrap:wrap}
-#hrExtraPanel .hrx-row>*{flex:1}
-#hrExtraPanel .hrx-muted{color:var(--muted,#999);font-size:12px}
-#hrExtraPanel .hrx-list{display:grid;gap:7px;margin:8px 0}
-#hrExtraPanel .hrx-item{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--border,#444);border-radius:9px}
-#hrExtraPanel .hrx-item span{flex:1;overflow-wrap:anywhere}
-#hrExtraPanel .hrx-item input{width:auto;margin:0}
-#hrExtraPanel .hrx-item button{background:transparent;color:inherit;border:0;cursor:pointer}
-#hrExtraPanel .hrx-result{padding:10px;border:1px solid var(--border,#444);border-radius:9px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px}
-@media(max-width:520px){#hrExtraFab{right:12px;bottom:76px;padding:11px 13px}#hrExtraPanel{right:8px;bottom:128px;width:calc(100vw - 16px);padding:12px}}
-</style>
-<button id="hrExtraFab" type="button" aria-controls="hrExtraPanel" aria-expanded="false">✦ Extra Toolkit</button>
-<section id="hrExtraPanel" aria-label="Extra Hackathon Rivals tools" aria-hidden="true">
-  <div class="hrx-head"><h3>✦ Rivals Extra Toolkit</h3><button class="hrx-close" type="button" id="hrxClose" aria-label="Close toolkit">✕</button></div>
-  <div class="hrx-muted" style="margin-bottom:12px">Extra browser-based utilities. Saved items remain on this device.</div>
-  <div class="hrx-tabs" role="tablist">
-    <button class="hrx-tab active" data-hrx-tab="tasks" role="tab">Team tasks</button>
-    <button class="hrx-tab" data-hrx-tab="ideas" role="tab">Idea board</button>
-    <button class="hrx-tab" data-hrx-tab="pitch" role="tab">Pitch timer</button>
-    <button class="hrx-tab" data-hrx-tab="text" role="tab">Text tools</button>
-    <button class="hrx-tab" data-hrx-tab="json" role="tab">JSON checker</button>
-    <button class="hrx-tab" data-hrx-tab="check" role="tab">Launch checklist</button>
-  </div>
-  <div class="hrx-page active" data-hrx-page="tasks" role="tabpanel">
-    <label for="hrxTask">New task</label><input id="hrxTask" maxlength="180" placeholder="e.g. Test login on mobile">
-    <div class="hrx-row"><select id="hrxPriority" aria-label="Task priority"><option>Normal</option><option>High</option><option>Low</option></select><button class="hrx-btn" id="hrxAddTask" type="button">Add task</button></div>
-    <div id="hrxTasks" class="hrx-list"></div>
-  </div>
-  <div class="hrx-page" data-hrx-page="ideas" role="tabpanel">
-    <label for="hrxIdea">Capture a project idea or decision</label><textarea id="hrxIdea" maxlength="4000" placeholder="Problem → proposed solution → who benefits"></textarea>
-    <div class="hrx-row"><button class="hrx-btn" id="hrxSaveIdea" type="button">Save idea</button><button class="hrx-btn" id="hrxExportIdeas" type="button">Export notes</button></div>
-    <div id="hrxIdeas" class="hrx-list"></div>
-  </div>
-  <div class="hrx-page" data-hrx-page="pitch" role="tabpanel">
-    <p class="hrx-muted">Use a rehearsal timer for your demo or pitch. Keep the page open while it runs.</p>
-    <label for="hrxPitchSeconds">Duration (seconds)</label><input id="hrxPitchSeconds" type="number" min="15" max="3600" value="180">
-    <div class="hrx-result" id="hrxPitchDisplay" aria-live="polite" style="font-size:26px;text-align:center;font-weight:700">03:00</div>
-    <div class="hrx-row" style="margin-top:8px"><button class="hrx-btn" id="hrxPitchStart" type="button">Start</button><button class="hrx-btn" id="hrxPitchPause" type="button">Pause</button><button class="hrx-btn" id="hrxPitchReset" type="button">Reset</button></div>
-  </div>
-  <div class="hrx-page" data-hrx-page="text" role="tabpanel">
-    <label for="hrxText">Paste your abstract, README, or pitch</label><textarea id="hrxText" maxlength="50000" placeholder="Paste text here…"></textarea>
-    <div class="hrx-result" id="hrxTextStats" aria-live="polite">0 words · 0 characters · 0 sentences · ~0 min read</div>
-    <div class="hrx-row" style="margin-top:8px"><button class="hrx-btn" id="hrxCopyText" type="button">Copy text</button><button class="hrx-btn" id="hrxDownloadText" type="button">Download .txt</button></div>
-  </div>
-  <div class="hrx-page" data-hrx-page="json" role="tabpanel">
-    <label for="hrxJSON">Paste JSON to validate and format</label><textarea id="hrxJSON" spellcheck="false" placeholder='{"project":"My Hackathon Project"}'></textarea>
-    <div class="hrx-row"><button class="hrx-btn" id="hrxFormatJSON" type="button">Validate & format</button><button class="hrx-btn" id="hrxMinifyJSON" type="button">Minify</button></div>
-    <div id="hrxJSONStatus" class="hrx-result" role="status">JSON has not been checked yet.</div>
-  </div>
-  <div class="hrx-page" data-hrx-page="check" role="tabpanel">
-    <p class="hrx-muted">A practical pre-submission checklist. Tick items as your team completes them.</p>
-    <div id="hrxLaunchList" class="hrx-list"></div>
-    <div class="hrx-row"><button class="hrx-btn" id="hrxExportChecklist" type="button">Export checklist</button><button class="hrx-btn" id="hrxResetChecklist" type="button">Reset ticks</button></div>
-  </div>
-  <p class="hrx-muted" id="hrxStatus" aria-live="polite" style="margin-top:12px"></p>
-</section>
-<script id="hr-extra-toolkit-js">
-(function(){
-  'use strict';
-  const $ = (s, r=document) => r.querySelector(s);
-  const panel = $('#hrExtraPanel'), fab = $('#hrExtraFab');
-  if (!panel || !fab || panel.dataset.ready) return;
-  panel.dataset.ready = '1';
-  const KEY = 'hr-extra-toolkit-v1';
-  const defaults = {tasks:[], ideas:[], checklist:{}};
-  let state = defaults, pitchRemaining = 180, pitchEnd = 0, pitchInterval = null;
-  try { state = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) {}
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); status('Saved on this device.'); } catch(e) { status('Browser storage is unavailable; export your work to keep it.'); } };
-  const status = m => { const el = $('#hrxStatus'); if (el) el.textContent = m; };
-  const safe = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const download = (name, text, type='text/plain;charset=utf-8') => { const a=document.createElement('a'); const u=URL.createObjectURL(new Blob([text],{type})); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); };
-  const fmt = n => { n=Math.max(0,Math.floor(n)); return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0'); };
-  fab.addEventListener('click', () => { const open=!panel.classList.contains('open'); panel.classList.toggle('open',open); panel.setAttribute('aria-hidden',String(!open)); fab.setAttribute('aria-expanded',String(open)); if(open) $('#hrxTask').focus(); });
-  $('#hrxClose').addEventListener('click', () => { panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); fab.setAttribute('aria-expanded','false'); fab.focus(); });
-  document.addEventListener('keydown', e => { if(e.key==='Escape' && panel.classList.contains('open')) $('#hrxClose').click(); });
-  panel.addEventListener('click', e => {
-    const tab=e.target.closest('[data-hrx-tab]');
-    if(tab){ panel.querySelectorAll('[data-hrx-tab]').forEach(b=>b.classList.toggle('active',b===tab)); panel.querySelectorAll('[data-hrx-page]').forEach(p=>p.classList.toggle('active',p.dataset.hrxPage===tab.dataset.hrxTab)); }
-    const done=e.target.closest('[data-hrx-done]'); if(done){const t=state.tasks[Number(done.dataset.hrxDone)]; if(t){t.done=!t.done;save();renderTasks();}}
-    const del=e.target.closest('[data-hrx-del]'); if(del){const i=Number(del.dataset.hrxDel); if(Number.isInteger(i)){state.tasks.splice(i,1);save();renderTasks();}}
-    const ideadel=e.target.closest('[data-hrx-ideadel]'); if(ideadel){state.ideas.splice(Number(ideadel.dataset.hrxIdeadel),1);save();renderIdeas();}
-    const check=e.target.closest('[data-hrx-check]'); if(check){state.checklist[check.dataset.hrxCheck]=check.checked;save();renderChecklist();}
-  });
-  function renderTasks(){
-    const box=$('#hrxTasks'); if(!box)return;
-    box.innerHTML=state.tasks.map((t,i)=>`<div class="hrx-item"><input type="checkbox" data-hrx-done="${i}" ${t.done?'checked':''} aria-label="Mark ${safe(t.text)} complete"><span style="${t.done?'text-decoration:line-through;opacity:.65':''}"><b>${safe(t.text)}</b><small style="display:block" class="hrx-muted">${safe(t.priority)} priority</small></span><button type="button" data-hrx-del="${i}" aria-label="Delete task">✕</button></div>`).join('')||'<p class="hrx-muted">No team tasks yet.</p>';
-  }
-  function renderIdeas(){const box=$('#hrxIdeas');if(!box)return;box.innerHTML=state.ideas.map((x,i)=>`<div class="hrx-item"><span>${safe(x.text)}<small style="display:block" class="hrx-muted">${new Date(x.at).toLocaleString()}</small></span><button type="button" data-hrx-ideadel="${i}" aria-label="Delete idea">✕</button></div>`).join('')||'<p class="hrx-muted">No saved ideas yet.</p>';}
-  const launchItems=['Problem statement and judging criteria reviewed','Prototype tested on a clean browser/device','Repository and README are up to date','No API keys or passwords committed to source control','Demo link tested on mobile and desktop','Pitch and demo video rehearsed','Team roles and contact details confirmed','Submission deadline and timezone verified','Fallback demo/screenshots prepared','Final submission confirmation saved'];
-  function renderChecklist(){const box=$('#hrxLaunchList');if(!box)return;box.innerHTML=launchItems.map((x,i)=>`<label class="hrx-item"><input type="checkbox" data-hrx-check="${i}" ${state.checklist[i]?'checked':''}><span>${safe(x)}</span></label>`).join('');}
-  $('#hrxAddTask').addEventListener('click',()=>{const input=$('#hrxTask'),text=input.value.trim();if(!text)return status('Enter a task first.');if(state.tasks.length>=100)return status('Maximum 100 tasks reached.');state.tasks.unshift({text:text.slice(0,180),priority:$('#hrxPriority').value,done:false,at:Date.now()});input.value='';save();renderTasks();});
-  $('#hrxTask').addEventListener('keydown',e=>{if(e.key==='Enter')$('#hrxAddTask').click();});
-  $('#hrxSaveIdea').addEventListener('click',()=>{const input=$('#hrxIdea'),text=input.value.trim();if(!text)return status('Write an idea first.');if(state.ideas.length>=100)return status('Maximum 100 notes reached.');state.ideas.unshift({text:text.slice(0,4000),at:Date.now()});input.value='';save();renderIdeas();});
-  $('#hrxExportIdeas').addEventListener('click',()=>download('hackathon-rivals-ideas.json',JSON.stringify(state.ideas,null,2),'application/json'));
-  function updateTextStats(){const t=$('#hrxText').value;const words=(t.trim().match(/\S+/g)||[]).length;const sentences=(t.match(/[.!?]+(?=\s|$)/g)||[]).length;$('#hrxTextStats').textContent=`${words} words · ${t.length} characters · ${sentences} sentences · ~${Math.ceil(words/200)} min read`;}
-  $('#hrxText').addEventListener('input',updateTextStats);
-  $('#hrxCopyText').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#hrxText').value);status('Text copied.');}catch(e){$('#hrxText').select();status('Text selected; use Copy from your device/browser.');}});
-  $('#hrxDownloadText').addEventListener('click',()=>download('hackathon-rivals-draft.txt',$('#hrxText').value));
-  function checkJSON(minify){const out=$('#hrxJSONStatus');try{const obj=JSON.parse($('#hrxJSON').value);$('#hrxJSON').value=minify?JSON.stringify(obj):JSON.stringify(obj,null,2);out.textContent='Valid JSON ✓';out.style.borderColor='#3ddc84';status('JSON validated successfully.');}catch(e){out.textContent='Invalid JSON: '+e.message;out.style.borderColor='#ff6b6b';status('Please fix the JSON error shown above.');}}
-  $('#hrxFormatJSON').addEventListener('click',()=>checkJSON(false));$('#hrxMinifyJSON').addEventListener('click',()=>checkJSON(true));
-  function pitchDisplay(){$('#hrxPitchDisplay').textContent=fmt(pitchRemaining);}
-  function stopPitch(){if(pitchInterval){clearInterval(pitchInterval);pitchInterval=null;}}
-  $('#hrxPitchSeconds').addEventListener('change',()=>{stopPitch();pitchRemaining=Math.min(3600,Math.max(15,Number($('#hrxPitchSeconds').value)||180));$('#hrxPitchSeconds').value=pitchRemaining;pitchDisplay();});
-  $('#hrxPitchStart').addEventListener('click',()=>{if(pitchInterval)return;pitchEnd=Date.now()+pitchRemaining*1000;pitchInterval=setInterval(()=>{pitchRemaining=Math.max(0,Math.ceil((pitchEnd-Date.now())/1000));pitchDisplay();if(!pitchRemaining){stopPitch();status('Pitch time is up!');try{if('vibrate'in navigator)navigator.vibrate([150,80,150]);}catch(e){}}},250);status('Pitch timer running.');});
-  $('#hrxPitchPause').addEventListener('click',()=>{if(pitchInterval){pitchRemaining=Math.max(0,Math.ceil((pitchEnd-Date.now())/1000));stopPitch();pitchDisplay();status('Pitch timer paused.');}});
-  $('#hrxPitchReset').addEventListener('click',()=>{stopPitch();pitchRemaining=Math.min(3600,Math.max(15,Number($('#hrxPitchSeconds').value)||180));pitchDisplay();status('Pitch timer reset.');});
-  $('#hrxExportChecklist').addEventListener('click',()=>download('hackathon-rivals-launch-checklist.txt',launchItems.map((x,i)=>(state.checklist[i]?'[x] ':'[ ] ')+x).join('\n')));
-  $('#hrxResetChecklist').addEventListener('click',()=>{if(confirm('Reset all launch checklist ticks?')){state.checklist={};save();renderChecklist();}});
-  renderTasks();renderIdeas();renderChecklist();updateTextStats();pitchDisplay();
-})();
-</script>
-<!-- ===== END HR+ EXTRA TOOLKIT ===== -->
 
-
-<!-- ===== HR+ PROJECT WORKSPACE (batch 2; additive only) ===== -->
-<style id="hr-project-workspace-css">
-#hrWorkspaceFab{position:fixed;right:18px;bottom:24px;z-index:9997;border:1px solid #22d3ee66;border-radius:999px;padding:12px 15px;background:var(--surface-2,#151824);color:var(--text,#e9ebf2);font:700 12px Inter,system-ui,sans-serif;box-shadow:0 8px 26px #0007;cursor:pointer}
-#hrWorkspace{position:fixed;right:16px;bottom:76px;z-index:9996;width:min(500px,calc(100vw - 24px));max-height:min(78vh,760px);overflow:auto;display:none;background:var(--surface,#0f1119);color:var(--text,#e9ebf2);border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:18px;padding:15px;box-shadow:0 24px 70px #000a;font:14px/1.45 Inter,system-ui,sans-serif}
-#hrWorkspace.open{display:block}#hrWorkspace *{box-sizing:border-box}
-#hrWorkspace .hw-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-#hrWorkspace .hw-head h3{font-size:17px;margin:0}#hrWorkspace button{cursor:pointer;font:inherit}
-#hrWorkspace .hw-close,#hrWorkspace .hw-btn{border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:9px;padding:8px 10px;background:var(--surface-2,#151824);color:inherit}
-#hrWorkspace .hw-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
-#hrWorkspace .hw-tab{border:1px solid var(--border,rgba(255,255,255,.08));border-radius:8px;padding:7px 9px;background:transparent;color:inherit;font-size:12px}
-#hrWorkspace .hw-tab.active{border-color:#22d3ee;background:#22d3ee18}
-#hrWorkspace .hw-page{display:none}#hrWorkspace .hw-page.active{display:block}
-#hrWorkspace input,#hrWorkspace textarea,#hrWorkspace select{width:100%;margin:5px 0 9px;padding:9px 10px;border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:9px;background:var(--bg,#08090d);color:inherit;font:inherit}
-#hrWorkspace textarea{min-height:72px;resize:vertical}
-#hrWorkspace .hw-row{display:flex;gap:7px;flex-wrap:wrap}#hrWorkspace .hw-row>*{flex:1}
-#hrWorkspace .hw-muted{font-size:12px;color:var(--muted,#8b90a4)}
-#hrWorkspace .hw-list{display:grid;gap:7px;margin:9px 0}
-#hrWorkspace .hw-item{border:1px solid var(--border,rgba(255,255,255,.08));border-radius:10px;padding:9px;display:flex;gap:8px;align-items:flex-start}
-#hrWorkspace .hw-item>span{flex:1;min-width:0;overflow-wrap:anywhere}
-#hrWorkspace .hw-item button{border:0;background:transparent;color:inherit;padding:2px 4px}
-#hrWorkspace .hw-item small{display:block;color:var(--muted,#8b90a4);margin-top:3px}
-@media(max-width:520px){#hrWorkspaceFab{right:10px;bottom:16px;padding:10px 12px}#hrWorkspace{right:8px;bottom:66px;width:calc(100vw - 16px);padding:11px}}
-</style>
-<button id="hrWorkspaceFab" type="button" aria-controls="hrWorkspace" aria-expanded="false">▦ Project Workspace</button>
-<section id="hrWorkspace" aria-label="Project workspace" aria-hidden="true">
- <div class="hw-head"><h3>▦ Project Workspace</h3><button class="hw-close" id="hwClose" type="button" aria-label="Close workspace">✕</button></div>
- <p class="hw-muted">Sprint board, bug log, meeting notes and risk register. Data stays in this browser; export it for sharing.</p>
- <div class="hw-tabs" role="tablist">
-  <button class="hw-tab active" data-hw-tab="sprint" role="tab">Sprint board</button>
-  <button class="hw-tab" data-hw-tab="bugs" role="tab">Bug tracker</button>
-  <button class="hw-tab" data-hw-tab="meet" role="tab">Meeting notes</button>
-  <button class="hw-tab" data-hw-tab="risk" role="tab">Risk register</button>
-  <button class="hw-tab" data-hw-tab="export" role="tab">Export data</button>
- </div>
- <div class="hw-page active" data-hw-page="sprint" role="tabpanel">
-  <label for="hwSprintTask">Sprint task</label><input id="hwSprintTask" maxlength="180" placeholder="Task / deliverable">
-  <div class="hw-row"><input id="hwSprintOwner" maxlength="80" placeholder="Owner (optional)"><select id="hwSprintState" aria-label="Task status"><option>To do</option><option>In progress</option><option>Blocked</option><option>Done</option></select></div>
-  <button class="hw-btn" id="hwAddSprint" type="button">Add sprint task</button><div id="hwSprintList" class="hw-list"></div>
- </div>
- <div class="hw-page" data-hw-page="bugs" role="tabpanel">
-  <label for="hwBugTitle">Bug / issue</label><input id="hwBugTitle" maxlength="180" placeholder="Short issue title">
-  <label for="hwBugDetails">Steps or expected behaviour</label><textarea id="hwBugDetails" maxlength="2000" placeholder="Steps to reproduce, expected vs actual result"></textarea>
-  <div class="hw-row"><select id="hwBugSeverity" aria-label="Bug severity"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select><select id="hwBugStatus" aria-label="Bug status"><option>Open</option><option>Investigating</option><option>Fixed</option><option>Won't fix</option></select></div>
-  <button class="hw-btn" id="hwAddBug" type="button">Log issue</button><div id="hwBugList" class="hw-list"></div>
- </div>
- <div class="hw-page" data-hw-page="meet" role="tabpanel">
-  <label for="hwMeetTitle">Meeting title</label><input id="hwMeetTitle" maxlength="160" placeholder="e.g. Demo rehearsal">
-  <label for="hwMeetNotes">Notes / decisions / action items</label><textarea id="hwMeetNotes" maxlength="6000" placeholder="Decisions made, action owner, deadline…"></textarea>
-  <button class="hw-btn" id="hwSaveMeet" type="button">Save meeting note</button><div id="hwMeetList" class="hw-list"></div>
- </div>
- <div class="hw-page" data-hw-page="risk" role="tabpanel">
-  <label for="hwRisk">Risk or blocker</label><input id="hwRisk" maxlength="180" placeholder="e.g. API provider unavailable">
-  <div class="hw-row"><select id="hwRiskLevel" aria-label="Risk level"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select><input id="hwRiskOwner" maxlength="80" placeholder="Owner (optional)"></div>
-  <label for="hwMitigation">Mitigation plan</label><textarea id="hwMitigation" maxlength="2000" placeholder="Fallback, prevention or next action"></textarea>
-  <button class="hw-btn" id="hwAddRisk" type="button">Add risk</button><div id="hwRiskList" class="hw-list"></div>
- </div>
- <div class="hw-page" data-hw-page="export" role="tabpanel">
-  <p class="hw-muted">Export a JSON backup of this workspace, or import a previous workspace backup. Import replaces this workspace's local data after confirmation.</p>
-  <div class="hw-row"><button class="hw-btn" id="hwExport" type="button">Download JSON</button><button class="hw-btn" id="hwCopy" type="button">Copy JSON</button></div>
-  <label for="hwImportFile">Import workspace JSON</label><input id="hwImportFile" type="file" accept=".json,application/json">
-  <button class="hw-btn" id="hwImport" type="button">Import backup</button>
-  <p id="hwStatus" class="hw-muted" role="status" aria-live="polite"></p>
- </div>
-</section>
-<script id="hr-project-workspace-js">
-(function(){
- 'use strict';
- const $=(s,r=document)=>r.querySelector(s),panel=$('#hrWorkspace'),fab=$('#hrWorkspaceFab');
- if(!panel||!fab||panel.dataset.ready)return;panel.dataset.ready='1';
- const KEY='hr-project-workspace-v1',blank={sprint:[],bugs:[],meetings:[],risks:[]};
- let data=blank;
- try{data=Object.assign({},blank,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){}
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const say=m=>{const e=$('#hwStatus');if(e)e.textContent=m;};
- const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));say('Saved locally.');}catch(e){say('Storage unavailable; export your workspace to keep changes.');}};
- const download=(name,text)=>{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([text],{type:'application/json'}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
- const stamp=t=>new Date(t).toLocaleString();
- fab.addEventListener('click',()=>{const open=!panel.classList.contains('open');panel.classList.toggle('open',open);panel.setAttribute('aria-hidden',String(!open));fab.setAttribute('aria-expanded',String(open));});
- $('#hwClose').addEventListener('click',()=>{panel.classList.remove('open');panel.setAttribute('aria-hidden','true');fab.setAttribute('aria-expanded','false');fab.focus();});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panel.classList.contains('open'))$('#hwClose').click();});
- panel.addEventListener('click',e=>{
-  const tab=e.target.closest('[data-hw-tab]');if(tab){panel.querySelectorAll('[data-hw-tab]').forEach(b=>b.classList.toggle('active',b===tab));panel.querySelectorAll('[data-hw-page]').forEach(p=>p.classList.toggle('active',p.dataset.hwPage===tab.dataset.hwTab));}
-  const del=e.target.closest('[data-hw-del]');if(del){const [kind,idx]=del.dataset.hwDel.split(':');if(data[kind]&&Number.isInteger(+idx)){data[kind].splice(+idx,1);save();renderAll();}}
-  const state=e.target.closest('[data-hw-state]');if(state){const [idx]=state.dataset.hwState.split(':');const item=data.sprint[+idx];if(item){item.status=state.value;save();renderSprint();}}
-  const bugstate=e.target.closest('[data-hw-bugstate]');if(bugstate){const item=data.bugs[+bugstate.dataset.hwBugstate];if(item){item.status=bugstate.value;save();renderBugs();}}
- });
- function renderSprint(){const box=$('#hwSprintList');box.innerHTML=data.sprint.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>Owner: ${esc(x.owner||'Unassigned')} · Added ${stamp(x.at)}</small><select data-hw-state="${i}" aria-label="Status for ${esc(x.title)}">${['To do','In progress','Blocked','Done'].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></span><button type="button" data-hw-del="sprint:${i}" aria-label="Delete task">✕</button></div>`).join('')||'<p class="hw-muted">No sprint tasks yet.</p>';}
- function renderBugs(){const box=$('#hwBugList');box.innerHTML=data.bugs.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${esc(x.severity)} · ${stamp(x.at)}<br>${esc(x.details||'No reproduction notes')}</small><select data-hw-bugstate="${i}" aria-label="Status for ${esc(x.title)}">${['Open','Investigating','Fixed',"Won't fix"].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></span><button type="button" data-hw-del="bugs:${i}" aria-label="Delete issue">✕</button></div>`).join('')||'<p class="hw-muted">No issues logged.</p>';}
- function renderMeetings(){const box=$('#hwMeetList');box.innerHTML=data.meetings.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${stamp(x.at)}</small><div style="white-space:pre-wrap;margin-top:5px">${esc(x.notes)}</div></span><button type="button" data-hw-del="meetings:${i}" aria-label="Delete meeting note">✕</button></div>`).join('')||'<p class="hw-muted">No meeting notes yet.</p>';}
- function renderRisks(){const box=$('#hwRiskList');box.innerHTML=data.risks.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${esc(x.level)} · Owner: ${esc(x.owner||'Unassigned')}</small><div style="white-space:pre-wrap;margin-top:5px">${esc(x.mitigation||'No mitigation plan yet')}</div></span><button type="button" data-hw-del="risks:${i}" aria-label="Delete risk">✕</button></div>`).join('')||'<p class="hw-muted">No risks recorded.</p>';}
- function renderAll(){renderSprint();renderBugs();renderMeetings();renderRisks();}
- $('#hwAddSprint').addEventListener('click',()=>{const title=$('#hwSprintTask').value.trim();if(!title)return say('Enter a task title first.');if(data.sprint.length>=150)return say('Sprint task limit reached.');data.sprint.unshift({title:title.slice(0,180),owner:$('#hwSprintOwner').value.trim().slice(0,80),status:$('#hwSprintState').value,at:Date.now()});$('#hwSprintTask').value='';$('#hwSprintOwner').value='';save();renderSprint();});
- $('#hwAddBug').addEventListener('click',()=>{const title=$('#hwBugTitle').value.trim();if(!title)return say('Enter a bug title first.');if(data.bugs.length>=150)return say('Issue limit reached.');data.bugs.unshift({title:title.slice(0,180),details:$('#hwBugDetails').value.trim().slice(0,2000),severity:$('#hwBugSeverity').value,status:$('#hwBugStatus').value,at:Date.now()});$('#hwBugTitle').value='';$('#hwBugDetails').value='';save();renderBugs();});
- $('#hwSaveMeet').addEventListener('click',()=>{const title=$('#hwMeetTitle').value.trim(),notes=$('#hwMeetNotes').value.trim();if(!title||!notes)return say('Enter a meeting title and notes.');if(data.meetings.length>=100)return say('Meeting note limit reached.');data.meetings.unshift({title:title.slice(0,160),notes:notes.slice(0,6000),at:Date.now()});$('#hwMeetTitle').value='';$('#hwMeetNotes').value='';save();renderMeetings();});
- $('#hwAddRisk').addEventListener('click',()=>{const title=$('#hwRisk').value.trim();if(!title)return say('Enter a risk or blocker first.');if(data.risks.length>=100)return say('Risk limit reached.');data.risks.unshift({title:title.slice(0,180),level:$('#hwRiskLevel').value,owner:$('#hwRiskOwner').value.trim().slice(0,80),mitigation:$('#hwMitigation').value.trim().slice(0,2000),at:Date.now()});$('#hwRisk').value='';$('#hwRiskOwner').value='';$('#hwMitigation').value='';save();renderRisks();});
- $('#hwExport').addEventListener('click',()=>download('hackathon-rivals-workspace.json',JSON.stringify(data,null,2)));
- $('#hwCopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(JSON.stringify(data,null,2));say('Workspace JSON copied.');}catch(e){say('Clipboard permission unavailable; use Download JSON.');}});
- $('#hwImport').addEventListener('click',async()=>{const f=$('#hwImportFile').files[0];if(!f)return say('Choose a JSON backup file first.');try{const parsed=JSON.parse(await f.text());if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.sprint)||!Array.isArray(parsed.bugs)||!Array.isArray(parsed.meetings)||!Array.isArray(parsed.risks))throw new Error('This file is not a compatible workspace backup.');if(!confirm('Replace the current local workspace with this backup?'))return;data={sprint:parsed.sprint.slice(0,150),bugs:parsed.bugs.slice(0,150),meetings:parsed.meetings.slice(0,100),risks:parsed.risks.slice(0,100)};save();renderAll();say('Workspace imported.');}catch(e){say('Import failed: '+e.message);}});
- renderAll();
-})();
-</script>
-<!-- ===== END HR+ PROJECT WORKSPACE ===== -->
-
-
-<!-- HACKATHON_RIVALS_V5_TOOLKIT: additive, browser-local utilities -->
-<style>
-#hrv5-launcher{position:fixed;right:18px;bottom:158px;z-index:2147483000;background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
-#hrv5-panel{position:fixed;inset:0;z-index:2147483001;background:#080b16ee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#eef2ff}
-#hrv5-panel *{box-sizing:border-box}#hrv5-panel .wrap{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#111827;border:1px solid #374151;border-radius:18px;padding:18px}
-#hrv5-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#hrv5-panel h2{margin:0;font-size:22px}#hrv5-panel h3{font-size:16px;margin:0 0 10px}
-#hrv5-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
-#hrv5-panel button,#hrv5-panel select{cursor:pointer}
-#hrv5-panel button{border:1px solid #4b5563;background:#253047;color:#f9fafb;border-radius:9px;padding:8px 11px}
-#hrv5-panel button.primary{background:#6d28d9;border-color:#7c3aed}
-#hrv5-panel .tab.active{background:#6d28d9}
-#hrv5-panel input,#hrv5-panel textarea,#hrv5-panel select{width:100%;background:#0b1220;color:#f9fafb;border:1px solid #4b5563;border-radius:8px;padding:9px;margin:4px 0 9px}
-#hrv5-panel textarea{min-height:76px;resize:vertical}#hrv5-panel label{display:block;color:#cbd5e1;font-size:12px}
-#hrv5-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#hrv5-panel .card{border:1px solid #374151;border-radius:12px;padding:13px;margin:8px 0;background:#151f31}
-#hrv5-panel .muted{color:#9ca3af;font-size:12px}#hrv5-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #374151;padding:10px 0}
-#hrv5-panel .item:last-child{border-bottom:0}#hrv5-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-#hrv5-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#312e81;font-size:11px}
-@media(max-width:650px){#hrv5-panel .grid{grid-template-columns:1fr}#hrv5-panel .wrap{padding:12px}}
-</style>
-<button id="hrv5-launcher" type="button">Extra Tools 5</button>
-<div id="hrv5-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Extra Tools 5">
- <div class="wrap">
-  <div class="top"><div><h2>Hackathon Rivals · Extra Tools 5</h2><div class="muted">New productivity utilities · data stays in this browser</div></div><button id="hrv5-close" type="button">Close ✕</button></div>
-  <div class="tabs">
-   <button class="tab active" data-tab="checkin">Check-in</button>
-   <button class="tab" data-tab="assets">Asset Inventory</button>
-   <button class="tab" data-tab="feedback">Feedback</button>
-   <button class="tab" data-tab="timeline">Milestones</button>
-  </div>
-  <section data-page="checkin">
-   <div class="grid"><div class="card"><h3>Participant check-in</h3>
-    <label>Participant name<input id="hrv5-cname" placeholder="Name"></label>
-    <label>Team / college<input id="hrv5-cteam" placeholder="Team or college"></label>
-    <label>Ticket / registration ID<input id="hrv5-cid" placeholder="Optional ID"></label>
-    <label>Check-in status<select id="hrv5-cstatus"><option>Checked in</option><option>Pending</option><option>Needs help</option></select></label>
-    <button class="primary" id="hrv5-cadd">Add participant</button>
-    <button id="hrv5-cexport">Export CSV</button><div class="muted" id="hrv5-cmsg" aria-live="polite"></div>
-   </div><div class="card"><h3>Attendance summary</h3><div id="hrv5-csummary"></div><p class="muted">This is a local organizer log, not a verified registration-system check.</p></div></div>
-   <div class="card"><h3>Check-in records</h3><div id="hrv5-clist"></div></div>
-  </section>
-  <section data-page="assets" hidden>
-   <div class="grid"><div class="card"><h3>Asset inventory</h3>
-    <label>Asset / equipment<input id="hrv5-aname" placeholder="Projector, laptop, badge..."></label>
-    <label>Quantity<input id="hrv5-aqty" type="number" min="1" step="1" value="1"></label>
-    <label>Assigned to / location<input id="hrv5-aowner" placeholder="Person, room, team"></label>
-    <label>Status<select id="hrv5-astatus"><option>Available</option><option>Assigned</option><option>Needs repair</option><option>Returned</option></select></label>
-    <button class="primary" id="hrv5-aadd">Add asset</button><button id="hrv5-aexport">Export CSV</button>
-   </div><div class="card"><h3>Inventory summary</h3><div id="hrv5-asummary"></div></div></div>
-   <div class="card"><h3>Assets</h3><div id="hrv5-alist"></div></div>
-  </section>
-  <section data-page="feedback" hidden>
-   <div class="grid"><div class="card"><h3>Feedback collector</h3>
-    <label>Session / project<input id="hrv5-fsession" placeholder="Workshop or project name"></label>
-    <label>Rating (1–5)<select id="hrv5-frating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></label>
-    <label>Feedback<textarea id="hrv5-ftext" placeholder="What worked? What can improve?"></textarea></label>
-    <label>Follow-up needed<select id="hrv5-ffollow"><option>No</option><option>Yes</option></select></label>
-    <button class="primary" id="hrv5-fadd">Save feedback</button><button id="hrv5-fexport">Export CSV</button>
-   </div><div class="card"><h3>Feedback summary</h3><div id="hrv5-fsummary"></div></div></div>
-   <div class="card"><h3>Feedback records</h3><div id="hrv5-flist"></div></div>
-  </section>
-  <section data-page="timeline" hidden>
-   <div class="grid"><div class="card"><h3>Milestone planner</h3>
-    <label>Milestone<input id="hrv5-mname" placeholder="Prototype freeze"></label>
-    <label>Due date<input id="hrv5-mdate" type="date"></label>
-    <label>Owner<input id="hrv5-mowner" placeholder="Responsible person"></label>
-    <label>Status<select id="hrv5-mstatus"><option>Planned</option><option>In progress</option><option>Blocked</option><option>Done</option></select></label>
-    <label>Notes<textarea id="hrv5-mnotes" placeholder="Dependencies / details"></textarea></label>
-    <button class="primary" id="hrv5-madd">Add milestone</button><button id="hrv5-mexport">Export CSV</button>
-   </div><div class="card"><h3>Milestone summary</h3><div id="hrv5-msummary"></div></div></div>
-   <div class="card"><h3>Milestones</h3><div id="hrv5-mlist"></div></div>
-  </section>
-  <div class="top"><span class="muted" id="hrv5-status" aria-live="polite"></span><button id="hrv5-backup">Export all V5 data (JSON)</button></div>
- </div>
-</div>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const keys={check:'hrv5_checkin_v1',assets:'hrv5_assets_v1',feedback:'hrv5_feedback_v1',milestones:'hrv5_milestones_v1'};
-const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
-const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv5-status').textContent='Saved locally in this browser.'}catch(_){$('hrv5-status').textContent='Could not save: browser storage may be full or disabled.'}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-let checkins=load(keys.check),assets=load(keys.assets),feedback=load(keys.feedback),milestones=load(keys.milestones);
-const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
-function renderCheck(){ $('hrv5-csummary').textContent=`Total: ${checkins.length} · Checked in: ${checkins.filter(x=>x.status==='Checked in').length} · Pending: ${checkins.filter(x=>x.status==='Pending').length} · Needs help: ${checkins.filter(x=>x.status==='Needs help').length}`;list('hrv5-clist',checkins,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.team||'No team')} · ID: ${esc(x.reg||'—')}</p><span class="muted">${esc(x.created)}</span>`,i=>{checkins.splice(i,1);save(keys.check,checkins);renderCheck()})}
-function renderAssets(){ $('hrv5-asummary').textContent=`Entries: ${assets.length} · Units: ${assets.reduce((a,x)=>a+x.qty,0)} · Needs repair: ${assets.filter(x=>x.status==='Needs repair').length}`;list('hrv5-alist',assets,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>Qty: ${x.qty} · Assigned/location: ${esc(x.owner||'—')}</p>`,i=>{assets.splice(i,1);save(keys.assets,assets);renderAssets()})}
-function renderFeedback(){const avg=feedback.length?(feedback.reduce((a,x)=>a+x.rating,0)/feedback.length).toFixed(1):'—';$('hrv5-fsummary').textContent=`Responses: ${feedback.length} · Average rating: ${avg}/5 · Follow-up: ${feedback.filter(x=>x.follow==='Yes').length}`;list('hrv5-flist',feedback,x=>`<strong>${esc(x.session||'General')} · ${x.rating}/5</strong> <span class="pill">${x.follow==='Yes'?'Follow-up':'No follow-up'}</span><p>${esc(x.text||'(No written comment)')}</p><span class="muted">${esc(x.created)}</span>`,i=>{feedback.splice(i,1);save(keys.feedback,feedback);renderFeedback()})}
-function renderMilestones(){const done=milestones.filter(x=>x.status==='Done').length;$('hrv5-msummary').textContent=`Total: ${milestones.length} · Done: ${done} · Blocked: ${milestones.filter(x=>x.status==='Blocked').length}`;list('hrv5-mlist',milestones,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>Due: ${esc(x.date||'Unscheduled')} · Owner: ${esc(x.owner||'—')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{milestones.splice(i,1);save(keys.milestones,milestones);renderMilestones()})}
-$('hrv5-launcher').addEventListener('click',()=>{$('hrv5-panel').style.display='flex'});
-$('hrv5-close').addEventListener('click',()=>{$('hrv5-panel').style.display='none'});
-$('hrv5-panel').addEventListener('click',e=>{if(e.target===$('hrv5-panel'))$('hrv5-panel').style.display='none'});
-$('hrv5-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv5-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv5-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
-$('hrv5-cadd').addEventListener('click',()=>{const name=$('hrv5-cname').value.trim();if(!name){$('hrv5-cmsg').textContent='Participant name is required.';return}checkins.unshift({id:id(),name,team:$('hrv5-cteam').value.trim(),reg:$('hrv5-cid').value.trim(),status:$('hrv5-cstatus').value,created:new Date().toLocaleString()});save(keys.check,checkins);$('hrv5-cname').value='';$('hrv5-cteam').value='';$('hrv5-cid').value='';$('hrv5-cmsg').textContent='Participant added.';renderCheck()});
-$('hrv5-cexport').addEventListener('click',()=>csv([['Name','Team/College','Registration ID','Status','Created'],...checkins.map(x=>[x.name,x.team,x.reg,x.status,x.created])],'participant-checkin.csv'));
-$('hrv5-aadd').addEventListener('click',()=>{const name=$('hrv5-aname').value.trim(),qty=Number($('hrv5-aqty').value);if(!name||!Number.isInteger(qty)||qty<1){alert('Enter an asset name and a whole quantity of at least 1.');return}assets.unshift({id:id(),name,qty,owner:$('hrv5-aowner').value.trim(),status:$('hrv5-astatus').value});save(keys.assets,assets);$('hrv5-aname').value='';$('hrv5-aowner').value='';renderAssets()});
-$('hrv5-aexport').addEventListener('click',()=>csv([['Asset','Quantity','Assigned/Location','Status'],...assets.map(x=>[x.name,x.qty,x.owner,x.status])],'asset-inventory.csv'));
-$('hrv5-fadd').addEventListener('click',()=>{const text=$('hrv5-ftext').value.trim();if(!text){alert('Please enter feedback first.');return}feedback.unshift({id:id(),session:$('hrv5-fsession').value.trim(),rating:Number($('hrv5-frating').value),text,follow:$('hrv5-ffollow').value,created:new Date().toLocaleString()});save(keys.feedback,feedback);$('hrv5-ftext').value='';renderFeedback()});
-$('hrv5-fexport').addEventListener('click',()=>csv([['Session','Rating','Feedback','Follow-up','Created'],...feedback.map(x=>[x.session,x.rating,x.text,x.follow,x.created])],'event-feedback.csv'));
-$('hrv5-madd').addEventListener('click',()=>{const name=$('hrv5-mname').value.trim();if(!name){alert('Milestone name is required.');return}milestones.unshift({id:id(),name,date:$('hrv5-mdate').value,owner:$('hrv5-mowner').value.trim(),status:$('hrv5-mstatus').value,notes:$('hrv5-mnotes').value.trim()});save(keys.milestones,milestones);$('hrv5-mname').value='';$('hrv5-mnotes').value='';renderMilestones()});
-$('hrv5-mexport').addEventListener('click',()=>csv([['Milestone','Due date','Owner','Status','Notes'],...milestones.map(x=>[x.name,x.date,x.owner,x.status,x.notes])],'project-milestones.csv'));
-$('hrv5-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v5-data.json',{exportedAt:new Date().toISOString(),checkins,assets,feedback,milestones}));
-renderCheck();renderAssets();renderFeedback();renderMilestones();
-})();
-</script>
-<!-- /HACKATHON_RIVALS_V5_TOOLKIT -->
-
-
-<!-- HACKATHON_RIVALS_V6_TOOLKIT: additive, browser-local utilities -->
-<style>
-#hrv6-launcher{position:fixed;right:18px;bottom:210px;z-index:2147483000;background:#0f766e;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
-#hrv6-panel{position:fixed;inset:0;z-index:2147483001;background:#07131aee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#e6fffb}
-#hrv6-panel *{box-sizing:border-box}#hrv6-panel .wrap{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#10212a;border:1px solid #28515a;border-radius:18px;padding:18px}
-#hrv6-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#hrv6-panel h2{margin:0;font-size:22px}#hrv6-panel h3{font-size:16px;margin:0 0 10px}
-#hrv6-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
-#hrv6-panel button{cursor:pointer;border:1px solid #32606a;background:#183640;color:#f0fdfa;border-radius:9px;padding:8px 11px}
-#hrv6-panel button.primary{background:#0f766e;border-color:#14b8a6}
-#hrv6-panel .tab.active{background:#0f766e}
-#hrv6-panel input,#hrv6-panel textarea,#hrv6-panel select{width:100%;background:#09171d;color:#f0fdfa;border:1px solid #32606a;border-radius:8px;padding:9px;margin:4px 0 9px}
-#hrv6-panel textarea{min-height:76px;resize:vertical}#hrv6-panel label{display:block;color:#b8d8d8;font-size:12px}
-#hrv6-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#hrv6-panel .card{border:1px solid #28515a;border-radius:12px;padding:13px;margin:8px 0;background:#132b35}
-#hrv6-panel .muted{color:#9bb8bc;font-size:12px}#hrv6-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #28515a;padding:10px 0}
-#hrv6-panel .item:last-child{border-bottom:0}#hrv6-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-#hrv6-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#134e4a;font-size:11px}
-@media(max-width:650px){#hrv6-panel .grid{grid-template-columns:1fr}#hrv6-panel .wrap{padding:12px}}
-</style>
-<button id="hrv6-launcher" type="button">Extra Tools 6</button>
-<div id="hrv6-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Extra Tools 6">
- <div class="wrap">
-  <div class="top"><div><h2>Hackathon Rivals · Extra Tools 6</h2><div class="muted">Volunteer operations and judging utilities · local browser storage</div></div><button id="hrv6-close" type="button">Close ✕</button></div>
-  <div class="tabs">
-   <button class="tab active" data-tab="volunteers">Volunteers</button>
-   <button class="tab" data-tab="shifts">Shift Planner</button>
-   <button class="tab" data-tab="judges">Judging Rubric</button>
-   <button class="tab" data-tab="certs">Certificate Log</button>
-  </div>
-  <section data-page="volunteers">
-   <div class="grid"><div class="card"><h3>Volunteer directory</h3>
-    <label>Name<input id="hrv6-vname" placeholder="Volunteer name"></label>
-    <label>Role / skill<input id="hrv6-vrole" placeholder="Registration, tech support, stage"></label>
-    <label>Contact (optional)<input id="hrv6-vcontact" placeholder="Email or phone"></label>
-    <label>Availability<select id="hrv6-vavail"><option>Available</option><option>Limited</option><option>Unavailable</option></select></label>
-    <button class="primary" id="hrv6-vadd">Add volunteer</button><button id="hrv6-vexport">Export CSV</button>
-   </div><div class="card"><h3>Volunteer summary</h3><div id="hrv6-vsummary"></div></div></div>
-   <div class="card"><h3>Volunteers</h3><div id="hrv6-vlist"></div></div>
-  </section>
-  <section data-page="shifts" hidden>
-   <div class="grid"><div class="card"><h3>Shift planner</h3>
-    <label>Shift / duty<input id="hrv6-sname" placeholder="Registration desk"></label>
-    <label>Date<input id="hrv6-sdate" type="date"></label>
-    <label>Start time<input id="hrv6-sstart" type="time"></label>
-    <label>End time<input id="hrv6-send" type="time"></label>
-    <label>Assigned volunteer<input id="hrv6-sowner" placeholder="Volunteer name"></label>
-    <label>Status<select id="hrv6-sstatus"><option>Planned</option><option>Confirmed</option><option>Completed</option><option>Needs cover</option></select></label>
-    <button class="primary" id="hrv6-sadd">Add shift</button><button id="hrv6-sexport">Export CSV</button>
-   </div><div class="card"><h3>Shift summary</h3><div id="hrv6-ssummary"></div></div></div>
-   <div class="card"><h3>Shifts</h3><div id="hrv6-slist"></div></div>
-  </section>
-  <section data-page="judges" hidden>
-   <div class="grid"><div class="card"><h3>Judging scorecard</h3>
-    <label>Project / team<input id="hrv6-jteam" placeholder="Project name"></label>
-    <label>Judge name<input id="hrv6-jjudge" placeholder="Judge name"></label>
-    <label>Innovation (0–10)<input id="hrv6-jinnovation" type="number" min="0" max="10" step="0.5" value="7"></label>
-    <label>Technical execution (0–10)<input id="hrv6-jtech" type="number" min="0" max="10" step="0.5" value="7"></label>
-    <label>Impact (0–10)<input id="hrv6-jimpact" type="number" min="0" max="10" step="0.5" value="7"></label>
-    <label>Presentation (0–10)<input id="hrv6-jpresentation" type="number" min="0" max="10" step="0.5" value="7"></label>
-    <label>Comments<textarea id="hrv6-jcomments" placeholder="Strengths, concerns, suggestions"></textarea></label>
-    <button class="primary" id="hrv6-jadd">Save scorecard</button><button id="hrv6-jexport">Export CSV</button>
-   </div><div class="card"><h3>Scoring guidance</h3><p class="muted">Each criterion is 0–10. Total is shown out of 40. Use the same rubric for every team and have organizers verify final results.</p><div id="hrv6-jsummary"></div></div></div>
-   <div class="card"><h3>Scorecards</h3><div id="hrv6-jlist"></div></div>
-  </section>
-  <section data-page="certs" hidden>
-   <div class="grid"><div class="card"><h3>Certificate issue log</h3>
-    <label>Recipient name<input id="hrv6-rname" placeholder="Name exactly as printed"></label>
-    <label>Certificate type<select id="hrv6-rtype"><option>Participation</option><option>Winner</option><option>Runner-up</option><option>Volunteer</option><option>Judge</option><option>Organizer</option></select></label>
-    <label>Certificate reference ID<input id="hrv6-rid" placeholder="Unique reference"></label>
-    <label>Issue status<select id="hrv6-rstatus"><option>Draft</option><option>Approved</option><option>Issued</option><option>Revoked</option></select></label>
-    <label>Notes<input id="hrv6-rnotes" placeholder="Optional"></label>
-    <button class="primary" id="hrv6-radd">Add certificate record</button><button id="hrv6-rexport">Export CSV</button>
-   </div><div class="card"><h3>Certificate summary</h3><div id="hrv6-rsummary"></div></div></div>
-   <div class="card"><h3>Certificate records</h3><div id="hrv6-rlist"></div></div>
-  </section>
-  <div class="top"><span class="muted" id="hrv6-status" aria-live="polite"></span><button id="hrv6-backup">Export all V6 data (JSON)</button></div>
- </div>
-</div>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const keys={vol:'hrv6_volunteers_v1',shifts:'hrv6_shifts_v1',judges:'hrv6_scorecards_v1',certs:'hrv6_certlog_v1'};
-const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
-const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv6-status').textContent='Saved locally in this browser.'}catch(_){$('hrv6-status').textContent='Could not save: browser storage may be full or disabled.'}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-let volunteers=load(keys.vol),shifts=load(keys.shifts),scorecards=load(keys.judges),certs=load(keys.certs);
-const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
-function renderVol(){ $('hrv6-vsummary').textContent=`Total: ${volunteers.length} · Available: ${volunteers.filter(x=>x.availability==='Available').length} · Limited: ${volunteers.filter(x=>x.availability==='Limited').length}`;list('hrv6-vlist',volunteers,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.availability)}</span><p>${esc(x.role||'Role not set')} · ${esc(x.contact||'No contact')}</p>`,i=>{volunteers.splice(i,1);save(keys.vol,volunteers);renderVol()})}
-function renderShifts(){ $('hrv6-ssummary').textContent=`Total: ${shifts.length} · Needs cover: ${shifts.filter(x=>x.status==='Needs cover').length} · Completed: ${shifts.filter(x=>x.status==='Completed').length}`;list('hrv6-slist',shifts,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.date||'No date')} · ${esc(x.start||'—')}–${esc(x.end||'—')} · ${esc(x.owner||'Unassigned')}</p>`,i=>{shifts.splice(i,1);save(keys.shifts,shifts);renderShifts()})}
-function renderJudges(){const avg=scorecards.length?(scorecards.reduce((a,x)=>a+x.total,0)/scorecards.length).toFixed(1):'—';$('hrv6-jsummary').textContent=`Scorecards: ${scorecards.length} · Average total: ${avg}/40`;list('hrv6-jlist',scorecards,x=>`<strong>${esc(x.team)}</strong> <span class="pill">${x.total}/40</span><p>Judge: ${esc(x.judge||'—')} · Innovation ${x.innovation}, Tech ${x.tech}, Impact ${x.impact}, Presentation ${x.presentation}</p>${x.comments?`<p>${esc(x.comments)}</p>`:''}`,i=>{scorecards.splice(i,1);save(keys.judges,scorecards);renderJudges()})}
-function renderCerts(){ $('hrv6-rsummary').textContent=`Total: ${certs.length} · Issued: ${certs.filter(x=>x.status==='Issued').length} · Draft: ${certs.filter(x=>x.status==='Draft').length}`;list('hrv6-rlist',certs,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.type)} · Ref: ${esc(x.ref||'—')} · ${esc(x.notes||'')}</p>`,i=>{certs.splice(i,1);save(keys.certs,certs);renderCerts()})}
-$('hrv6-launcher').addEventListener('click',()=>{$('hrv6-panel').style.display='flex'});
-$('hrv6-close').addEventListener('click',()=>{$('hrv6-panel').style.display='none'});
-$('hrv6-panel').addEventListener('click',e=>{if(e.target===$('hrv6-panel'))$('hrv6-panel').style.display='none'});
-$('hrv6-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv6-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv6-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
-$('hrv6-vadd').addEventListener('click',()=>{const name=$('hrv6-vname').value.trim();if(!name){alert('Volunteer name is required.');return}volunteers.unshift({id:id(),name,role:$('hrv6-vrole').value.trim(),contact:$('hrv6-vcontact').value.trim(),availability:$('hrv6-vavail').value});save(keys.vol,volunteers);$('hrv6-vname').value='';renderVol()});
-$('hrv6-vexport').addEventListener('click',()=>csv([['Name','Role/Skill','Contact','Availability'],...volunteers.map(x=>[x.name,x.role,x.contact,x.availability])],'volunteers.csv'));
-$('hrv6-sadd').addEventListener('click',()=>{const name=$('hrv6-sname').value.trim(),start=$('hrv6-sstart').value,end=$('hrv6-send').value;if(!name){alert('Shift name is required.');return}if(start&&end&&end<=start){alert('End time must be later than start time. Overnight shifts are not supported in this version.');return}shifts.unshift({id:id(),name,date:$('hrv6-sdate').value,start,end,owner:$('hrv6-sowner').value.trim(),status:$('hrv6-sstatus').value});save(keys.shifts,shifts);$('hrv6-sname').value='';renderShifts()});
-$('hrv6-sexport').addEventListener('click',()=>csv([['Shift','Date','Start','End','Assigned volunteer','Status'],...shifts.map(x=>[x.name,x.date,x.start,x.end,x.owner,x.status])],'volunteer-shifts.csv'));
-$('hrv6-jadd').addEventListener('click',()=>{const team=$('hrv6-jteam').value.trim();if(!team){alert('Project/team name is required.');return}const vals=['innovation','tech','impact','presentation'].map(k=>Number($('hrv6-j'+k).value));if(vals.some(v=>!Number.isFinite(v)||v<0||v>10)){alert('Each score must be between 0 and 10.');return}const [innovation,tech,impact,presentation]=vals;scorecards.unshift({id:id(),team,judge:$('hrv6-jjudge').value.trim(),innovation,tech,impact,presentation,total:innovation+tech+impact+presentation,comments:$('hrv6-jcomments').value.trim()});save(keys.judges,scorecards);$('hrv6-jteam').value='';$('hrv6-jcomments').value='';renderJudges()});
-$('hrv6-jexport').addEventListener('click',()=>csv([['Project/Team','Judge','Innovation','Technical execution','Impact','Presentation','Total / 40','Comments'],...scorecards.map(x=>[x.team,x.judge,x.innovation,x.tech,x.impact,x.presentation,x.total,x.comments])],'judging-scorecards.csv'));
-$('hrv6-radd').addEventListener('click',()=>{const name=$('hrv6-rname').value.trim(),ref=$('hrv6-rid').value.trim();if(!name){alert('Recipient name is required.');return}if(ref&&certs.some(x=>x.ref.toLowerCase()===ref.toLowerCase())){alert('That certificate reference already exists.');return}certs.unshift({id:id(),name,type:$('hrv6-rtype').value,ref,status:$('hrv6-rstatus').value,notes:$('hrv6-rnotes').value.trim()});save(keys.certs,certs);$('hrv6-rname').value='';$('hrv6-rid').value='';renderCerts()});
-$('hrv6-rexport').addEventListener('click',()=>csv([['Recipient','Certificate type','Reference ID','Status','Notes'],...certs.map(x=>[x.name,x.type,x.ref,x.status,x.notes])],'certificate-issue-log.csv'));
-$('hrv6-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v6-data.json',{exportedAt:new Date().toISOString(),volunteers,shifts,scorecards,certs}));
-renderVol();renderShifts();renderJudges();renderCerts();
-})();
-</script>
-<!-- /HACKATHON_RIVALS_V6_TOOLKIT -->
-
-
-<!-- HACKATHON_RIVALS_V7_TOOLKIT: additive browser-local utilities -->
-<style>
-#hrv7-launcher{position:fixed;right:18px;bottom:262px;z-index:2147483000;background:#b45309;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
-#hrv7-panel{position:fixed;inset:0;z-index:2147483001;background:#120d08ee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#fff7ed}
-#hrv7-panel *{box-sizing:border-box}#hrv7-panel .wrap{width:min(1080px,100%);max-height:92vh;overflow:auto;background:#21170e;border:1px solid #674522;border-radius:18px;padding:18px}
-#hrv7-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#hrv7-panel h2{margin:0;font-size:22px}#hrv7-panel h3{font-size:16px;margin:0 0 10px}
-#hrv7-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
-#hrv7-panel button{cursor:pointer;border:1px solid #805b35;background:#3b2817;color:#fff7ed;border-radius:9px;padding:8px 11px}
-#hrv7-panel button.primary{background:#b45309;border-color:#d97706}
-#hrv7-panel .tab.active{background:#b45309}
-#hrv7-panel input,#hrv7-panel textarea,#hrv7-panel select{width:100%;background:#160f09;color:#fff7ed;border:1px solid #805b35;border-radius:8px;padding:9px;margin:4px 0 9px}
-#hrv7-panel textarea{min-height:76px;resize:vertical}#hrv7-panel label{display:block;color:#fed7aa;font-size:12px}
-#hrv7-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#hrv7-panel .card{border:1px solid #674522;border-radius:12px;padding:13px;margin:8px 0;background:#2a1c10}
-#hrv7-panel .muted{color:#d6b99a;font-size:12px}#hrv7-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #674522;padding:10px 0}
-#hrv7-panel .item:last-child{border-bottom:0}#hrv7-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-#hrv7-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#78350f;font-size:11px}
-@media(max-width:650px){#hrv7-panel .grid{grid-template-columns:1fr}#hrv7-panel .wrap{padding:12px}}
-</style>
-<button id="hrv7-launcher" type="button">Extra Tools 7</button>
-<div id="hrv7-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Extra Tools 7">
- <div class="wrap">
-  <div class="top"><div><h2>Hackathon Rivals · Extra Tools 7</h2><div class="muted">Incident, communications and run-of-show tools · browser-local data</div></div><button id="hrv7-close" type="button">Close ✕</button></div>
-  <div class="tabs">
-   <button class="tab active" data-tab="incidents">Incident Log</button>
-   <button class="tab" data-tab="announcements">Announcements</button>
-   <button class="tab" data-tab="runshow">Run of Show</button>
-   <button class="tab" data-tab="contacts">Emergency Contacts</button>
-  </div>
-  <section data-page="incidents">
-   <div class="grid"><div class="card"><h3>Incident / issue report</h3>
-    <label>Short title<input id="hrv7-ititle" placeholder="Wi-Fi down at room B"></label>
-    <label>Category<select id="hrv7-icat"><option>Technical</option><option>Safety</option><option>Venue</option><option>Registration</option><option>Schedule</option><option>Other</option></select></label>
-    <label>Severity<select id="hrv7-isev"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></label>
-    <label>Reported by<input id="hrv7-ireporter" placeholder="Name or role"></label>
-    <label>Details<textarea id="hrv7-idetails" placeholder="What happened? Avoid entering sensitive personal information."></textarea></label>
-    <label>Status<select id="hrv7-istatus"><option>Open</option><option>Investigating</option><option>Resolved</option><option>Closed</option></select></label>
-    <button class="primary" id="hrv7-iadd">Save incident</button><button id="hrv7-iexport">Export CSV</button>
-   </div><div class="card"><h3>Incident overview</h3><div id="hrv7-isummary"></div><p class="muted">For emergencies, contact local emergency services; this log does not dispatch help or send alerts.</p></div></div>
-   <div class="card"><h3>Incident records</h3><div id="hrv7-ilist"></div></div>
-  </section>
-  <section data-page="announcements" hidden>
-   <div class="grid"><div class="card"><h3>Announcement composer</h3>
-    <label>Title<input id="hrv7-atitle" placeholder="Workshop starts in 10 minutes"></label>
-    <label>Audience<select id="hrv7-aaudience"><option>All participants</option><option>Mentors</option><option>Judges</option><option>Volunteers</option><option>Organizers</option></select></label>
-    <label>Channel<select id="hrv7-achannel"><option>Website</option><option>Email</option><option>WhatsApp</option><option>Stage announcement</option><option>Social media</option></select></label>
-    <label>Message<textarea id="hrv7-amessage" placeholder="Write the announcement"></textarea></label>
-    <label>Status<select id="hrv7-astatus"><option>Draft</option><option>Approved</option><option>Sent manually</option></select></label>
-    <button class="primary" id="hrv7-aadd">Save announcement</button><button id="hrv7-aexport">Export CSV</button>
-   </div><div class="card"><h3>Announcement summary</h3><div id="hrv7-asummary"></div><p class="muted">This tool stores drafts only; it does not send messages or publish posts.</p></div></div>
-   <div class="card"><h3>Announcements</h3><div id="hrv7-alist"></div></div>
-  </section>
-  <section data-page="runshow" hidden>
-   <div class="grid"><div class="card"><h3>Event run of show</h3>
-    <label>Agenda item<input id="hrv7-rname" placeholder="Opening remarks"></label>
-    <label>Date<input id="hrv7-rdate" type="date"></label>
-    <label>Start time<input id="hrv7-rstart" type="time"></label>
-    <label>End time<input id="hrv7-rend" type="time"></label>
-    <label>Stage owner<input id="hrv7-rowner" placeholder="Host / AV / volunteer"></label>
-    <label>Location<input id="hrv7-rlocation" placeholder="Main hall / online"></label>
-    <label>Notes<textarea id="hrv7-rnotes" placeholder="Cue, equipment, transition"></textarea></label>
-    <button class="primary" id="hrv7-radd">Add agenda item</button><button id="hrv7-rexport">Export CSV</button>
-   </div><div class="card"><h3>Agenda overview</h3><div id="hrv7-rsummary"></div></div></div>
-   <div class="card"><h3>Agenda items</h3><div id="hrv7-rlist"></div></div>
-  </section>
-  <section data-page="contacts" hidden>
-   <div class="grid"><div class="card"><h3>Emergency / venue contacts</h3>
-    <label>Contact / service<input id="hrv7-ename" placeholder="Venue manager / campus security"></label>
-    <label>Role / organization<input id="hrv7-erole" placeholder="Role or department"></label>
-    <label>Phone or email<input id="hrv7-econtact" placeholder="Contact details"></label>
-    <label>Availability / notes<input id="hrv7-enotes" placeholder="Hours, location, escalation notes"></label>
-    <button class="primary" id="hrv7-eadd">Add contact</button><button id="hrv7-eexport">Export CSV</button>
-   </div><div class="card"><h3>Contact list guidance</h3><p class="muted">Verify every number with the venue or official source before the event. Access to this browser profile may expose saved contacts.</p><div id="hrv7-esummary"></div></div></div>
-   <div class="card"><h3>Contacts</h3><div id="hrv7-elist"></div></div>
-  </section>
-  <div class="top"><span class="muted" id="hrv7-status" aria-live="polite"></span><button id="hrv7-backup">Export all V7 data (JSON)</button></div>
- </div>
-</div>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const keys={incidents:'hrv7_incidents_v1',announcements:'hrv7_announcements_v1',runshow:'hrv7_runshow_v1',contacts:'hrv7_contacts_v1'};
-const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
-const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv7-status').textContent='Saved locally in this browser.'}catch(_){$('hrv7-status').textContent='Could not save: browser storage may be full or disabled.'}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-let incidents=load(keys.incidents),announcements=load(keys.announcements),runshow=load(keys.runshow),contacts=load(keys.contacts);
-const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
-function renderInc(){ $('hrv7-isummary').textContent=`Total: ${incidents.length} · Open: ${incidents.filter(x=>!['Resolved','Closed'].includes(x.status)).length} · High/Critical: ${incidents.filter(x=>['High','Critical'].includes(x.severity)).length}`;list('hrv7-ilist',incidents,x=>`<strong>${esc(x.title)}</strong> <span class="pill">${esc(x.severity)} · ${esc(x.status)}</span><p>${esc(x.category)} · Reported by: ${esc(x.reporter||'—')}</p><p>${esc(x.details||'')}</p><span class="muted">${esc(x.created)}</span>`,i=>{incidents.splice(i,1);save(keys.incidents,incidents);renderInc()})}
-function renderAnn(){ $('hrv7-asummary').textContent=`Total: ${announcements.length} · Drafts: ${announcements.filter(x=>x.status==='Draft').length} · Sent manually: ${announcements.filter(x=>x.status==='Sent manually').length}`;list('hrv7-alist',announcements,x=>`<strong>${esc(x.title)}</strong> <span class="pill">${esc(x.status)}</span><p>Audience: ${esc(x.audience)} · Channel: ${esc(x.channel)}</p><p>${esc(x.message)}</p>`,i=>{announcements.splice(i,1);save(keys.announcements,announcements);renderAnn()})}
-function renderRun(){ $('hrv7-rsummary').textContent=`Agenda items: ${runshow.length} · With owner: ${runshow.filter(x=>x.owner).length}`;list('hrv7-rlist',runshow,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.start||'No start')}–${esc(x.end||'No end')}</span><p>${esc(x.date||'No date')} · ${esc(x.location||'No location')} · Owner: ${esc(x.owner||'—')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{runshow.splice(i,1);save(keys.runshow,runshow);renderRun()})}
-function renderContacts(){ $('hrv7-esummary').textContent=`Saved contacts: ${contacts.length}`;list('hrv7-elist',contacts,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.role||'Contact')}</span><p>${esc(x.contact||'No contact details')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{contacts.splice(i,1);save(keys.contacts,contacts);renderContacts()})}
-$('hrv7-launcher').addEventListener('click',()=>{$('hrv7-panel').style.display='flex'});
-$('hrv7-close').addEventListener('click',()=>{$('hrv7-panel').style.display='none'});
-$('hrv7-panel').addEventListener('click',e=>{if(e.target===$('hrv7-panel'))$('hrv7-panel').style.display='none'});
-$('hrv7-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv7-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv7-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
-$('hrv7-iadd').addEventListener('click',()=>{const title=$('hrv7-ititle').value.trim();if(!title){alert('Incident title is required.');return}incidents.unshift({id:id(),title,category:$('hrv7-icat').value,severity:$('hrv7-isev').value,reporter:$('hrv7-ireporter').value.trim(),details:$('hrv7-idetails').value.trim(),status:$('hrv7-istatus').value,created:new Date().toLocaleString()});save(keys.incidents,incidents);$('hrv7-ititle').value='';$('hrv7-idetails').value='';renderInc()});
-$('hrv7-iexport').addEventListener('click',()=>csv([['Title','Category','Severity','Reporter','Details','Status','Created'],...incidents.map(x=>[x.title,x.category,x.severity,x.reporter,x.details,x.status,x.created])],'incident-log.csv'));
-$('hrv7-aadd').addEventListener('click',()=>{const title=$('hrv7-atitle').value.trim(),message=$('hrv7-amessage').value.trim();if(!title||!message){alert('Announcement title and message are required.');return}announcements.unshift({id:id(),title,audience:$('hrv7-aaudience').value,channel:$('hrv7-achannel').value,message,status:$('hrv7-astatus').value});save(keys.announcements,announcements);$('hrv7-atitle').value='';$('hrv7-amessage').value='';renderAnn()});
-$('hrv7-aexport').addEventListener('click',()=>csv([['Title','Audience','Channel','Message','Status'],...announcements.map(x=>[x.title,x.audience,x.channel,x.message,x.status])],'announcements.csv'));
-$('hrv7-radd').addEventListener('click',()=>{const name=$('hrv7-rname').value.trim(),start=$('hrv7-rstart').value,end=$('hrv7-rend').value;if(!name){alert('Agenda item is required.');return}if(start&&end&&end<=start){alert('End time must be later than start time. Overnight entries are not supported.');return}runshow.unshift({id:id(),name,date:$('hrv7-rdate').value,start,end,owner:$('hrv7-rowner').value.trim(),location:$('hrv7-rlocation').value.trim(),notes:$('hrv7-rnotes').value.trim()});save(keys.runshow,runshow);$('hrv7-rname').value='';$('hrv7-rnotes').value='';renderRun()});
-$('hrv7-rexport').addEventListener('click',()=>csv([['Agenda item','Date','Start','End','Owner','Location','Notes'],...runshow.map(x=>[x.name,x.date,x.start,x.end,x.owner,x.location,x.notes])],'event-run-of-show.csv'));
-$('hrv7-eadd').addEventListener('click',()=>{const name=$('hrv7-ename').value.trim();if(!name){alert('Contact or service name is required.');return}contacts.unshift({id:id(),name,role:$('hrv7-erole').value.trim(),contact:$('hrv7-econtact').value.trim(),notes:$('hrv7-enotes').value.trim()});save(keys.contacts,contacts);$('hrv7-ename').value='';renderContacts()});
-$('hrv7-eexport').addEventListener('click',()=>csv([['Contact/service','Role/organization','Phone/email','Notes'],...contacts.map(x=>[x.name,x.role,x.contact,x.notes])],'emergency-venue-contacts.csv'));
-$('hrv7-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v7-data.json',{exportedAt:new Date().toISOString(),incidents,announcements,runshow,contacts}));
-renderInc();renderAnn();renderRun();renderContacts();
-})();
-</script>
-<!-- /HACKATHON_RIVALS_V7_TOOLKIT -->
-
-
-<!-- HR_ALL_IN_ONE_HUB: unified launcher + searchable index for all additive toolkits -->
-<style>
-#hraio-launcher{position:fixed;right:18px;bottom:18px;z-index:2147483645;background:linear-gradient(135deg,#4f46e5,#0f766e);color:white;border:0;border-radius:999px;padding:13px 17px;font:700 13px system-ui;box-shadow:0 8px 30px #0005;cursor:pointer}
-#hraio-panel{position:fixed;inset:0;z-index:2147483646;background:#080d18ee;display:none;align-items:center;justify-content:center;padding:12px;color:#eef2ff;font:14px system-ui}
-#hraio-panel *{box-sizing:border-box}#hraio-panel .wrap{width:min(1000px,100%);max-height:94vh;overflow:auto;background:#111827;border:1px solid #374151;border-radius:18px;padding:18px}
-#hraio-panel .head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#hraio-panel h2{margin:0;font-size:23px}#hraio-panel h3{margin:0 0 7px;font-size:15px}
-#hraio-panel .sub{color:#9ca3af;font-size:12px;margin-top:5px}
-#hraio-panel input{width:100%;padding:11px;border:1px solid #4b5563;border-radius:10px;background:#0b1220;color:#fff;margin:14px 0}
-#hraio-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-#hraio-panel .tool{padding:13px;border:1px solid #374151;border-radius:12px;background:#172033}
-#hraio-panel .tool p{margin:5px 0 0;color:#cbd5e1;font-size:12px;line-height:1.5}
-#hraio-panel .badge{display:inline-block;border-radius:99px;padding:3px 7px;background:#312e81;font-size:10px;margin-bottom:7px}
-#hraio-panel button{border:1px solid #4b5563;background:#263247;color:#fff;border-radius:9px;padding:8px 11px;cursor:pointer}
-#hraio-panel .close{background:#7f1d1d}
-#hraio-panel .notice{background:#172033;border-radius:10px;padding:12px;margin:12px 0;color:#cbd5e1;font-size:12px;line-height:1.6}
-@media(max-width:650px){#hraio-panel .grid{grid-template-columns:1fr}#hraio-panel .wrap{padding:12px}}
-</style>
-<button id="hraio-launcher" type="button">All-in-One Hub ☰</button>
-<div id="hraio-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals All-in-One Hub">
- <div class="wrap">
-  <div class="head"><div><h2>Hackathon Rivals · All-in-One Hub</h2><div class="sub">Sab toolkits ek jagah · search karke apna tool kholne ki jagah tak pahunch sakte ho</div></div><button class="close" id="hraio-close" type="button">Close ✕</button></div>
-  <input id="hraio-search" type="search" placeholder="Search tools: tasks, judging, budget, API, certificates…">
-  <div class="notice">Yeh hub available toolkits ko ek directory mein organize karta hai. Har toolkit ka apna button/panel hai. Existing app pages aur authentication ko replace nahi karta.</div>
-  <div class="grid" id="hraio-grid"></div>
-  <div class="notice"><strong>Important:</strong> Browser-local tools ka data isi browser/device mein hota hai. Automatic team sync, email/WhatsApp sending, real certificate verification aur secure judge/admin permissions ke liye backend integration alag se zaroori hai.</div>
- </div>
-</div>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const tools=[
-{v:'Toolkit 1',name:'Extra Toolkit',desc:'Team tasks, idea board, pitch timer, text utilities, JSON tools and launch checklist.',launcher:'Extra Toolkit'},
-{v:'Toolkit 2',name:'Project Workspace',desc:'Sprint board, bug tracker, meeting notes, risk register and JSON workspace backup.',launcher:'Project Workspace'},
-{v:'Toolkit 3',name:'Submission & Planning',desc:'Submission pack builder, event schedule, decision log and API request tester.',launcher:'Extra Tools 3'},
-{v:'Toolkit 4',name:'Operations Workspace',desc:'Team directory, budget tracker, sponsor/partner tracker and handover notes.',launcher:'Extra Tools 4'},
-{v:'Toolkit 5',name:'Event Management',desc:'Participant check-in, asset inventory, feedback manager and milestone planner.',launcher:'Extra Tools 5'},
-{v:'Toolkit 6',name:'Volunteer & Judging',desc:'Volunteer directory, shift planner, judging scorecards and certificate issue log.',launcher:'Extra Tools 6'},
-{v:'Toolkit 7',name:'Event Control',desc:'Incident log, announcement drafts, run of show and emergency/venue contacts.',launcher:'Extra Tools 7'}
-];
-function render(q=''){const grid=$('hraio-grid');grid.replaceChildren();const filtered=tools.filter(t=>(t.name+' '+t.desc+' '+t.v).toLowerCase().includes(q.toLowerCase()));if(!filtered.length){grid.innerHTML='<div class="tool">No matching tool found.</div>';return}filtered.forEach(t=>{const card=document.createElement('div');card.className='tool';const badge=document.createElement('span');badge.className='badge';badge.textContent=t.v;const title=document.createElement('h3');title.textContent=t.name;const p=document.createElement('p');p.textContent=t.desc;const btn=document.createElement('button');btn.type='button';btn.textContent='Open toolkit';btn.style.marginTop='10px';btn.addEventListener('click',()=>{const candidates=[...document.querySelectorAll('button')].filter(b=>b.id!=='hraio-launcher'&&b.textContent.trim()===t.launcher);const target=candidates.find(b=>(b.id||'').startsWith('hrv'))||candidates[0];if(target){$('hraio-panel').style.display='none';target.click()}else{alert('Toolkit launcher "'+t.launcher+'" nahi mila. Page refresh karke dobara try karo.')}});card.append(badge,title,p,btn);grid.append(card)})}
-$('hraio-launcher').addEventListener('click',()=>{$('hraio-panel').style.display='flex';render($('hraio-search').value);$('hraio-search').focus()});
-$('hraio-close').addEventListener('click',()=>{$('hraio-panel').style.display='none'});
-$('hraio-panel').addEventListener('click',e=>{if(e.target===$('hraio-panel'))$('hraio-panel').style.display='none'});
-$('hraio-search').addEventListener('input',e=>render(e.target.value));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')$('hraio-panel').style.display='none'});
-})();
-</script>
-<!-- /HR_ALL_IN_ONE_HUB -->
 
 </body>
 </html>
@@ -14599,5 +13978,715 @@ $('hrv4-exportBudget').addEventListener('click',()=>{const rows=[['Expense','Amo
 function handover(){return {project:$('hrv4-project').value.trim(),setup:$('hrv4-setup').value,environmentVariableNames:$('hrv4-env').value,knownIssuesAndNextSteps:$('hrv4-known').value,updatedAt:new Date().toISOString()}};$('hrv4-saveHandover').addEventListener('click',()=>{save(keys.handover,handover());$('hrv4-status').textContent='Handover notes saved in this browser.'});$('hrv4-exportHandover').addEventListener('click',()=>download('project-handover.json',JSON.stringify(handover(),null,2)));try{const h=JSON.parse(localStorage.getItem(keys.handover)||'null');if(h){$('hrv4-project').value=h.project||'';$('hrv4-setup').value=h.setup||'';$('hrv4-env').value=h.environmentVariableNames||'';$('hrv4-known').value=h.knownIssuesAndNextSteps||''}}catch(_){}renderMembers();renderBudget();renderSponsors();
 })();
 </script>
+
+<!-- ===== HR+ EXTRA TOOLKIT (added without replacing existing features) ===== -->
+<style id="hr-extra-toolkit-css">
+#hrExtraFab{position:fixed;right:18px;bottom:88px;z-index:9998;border:0;border-radius:999px;padding:13px 17px;background:linear-gradient(135deg,#7c5cff,#22d3ee);color:#08090d;font:700 13px Inter,system-ui,sans-serif;box-shadow:0 10px 30px #0006;cursor:pointer}
+#hrExtraPanel{position:fixed;right:16px;bottom:142px;z-index:9999;width:min(440px,calc(100vw - 24px));max-height:min(76vh,720px);overflow:auto;background:var(--surface,#111522);color:var(--text,#eee);border:1px solid var(--border-strong, #444);border-radius:18px;box-shadow:0 24px 70px #0009;padding:16px;display:none;font:14px/1.45 Inter,system-ui,sans-serif}
+#hrExtraPanel.open{display:block}
+#hrExtraPanel *{box-sizing:border-box}
+#hrExtraPanel .hrx-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+#hrExtraPanel .hrx-head h3{margin:0;font-size:18px}
+#hrExtraPanel .hrx-close,#hrExtraPanel .hrx-btn{border:1px solid var(--border-strong,#444);background:var(--surface-2,#1b2030);color:inherit;border-radius:9px;padding:8px 11px;cursor:pointer;font:inherit}
+#hrExtraPanel .hrx-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+#hrExtraPanel .hrx-tab{border:1px solid var(--border,#444);background:transparent;color:inherit;border-radius:8px;padding:7px 9px;cursor:pointer;font:inherit;font-size:12px}
+#hrExtraPanel .hrx-tab.active{background:#7c5cff2b;border-color:#7c5cff}
+#hrExtraPanel .hrx-page{display:none}
+#hrExtraPanel .hrx-page.active{display:block}
+#hrExtraPanel input,#hrExtraPanel textarea,#hrExtraPanel select{width:100%;margin:5px 0 10px;padding:10px;border:1px solid var(--border-strong,#444);border-radius:9px;background:var(--bg,#08090d);color:inherit;font:inherit}
+#hrExtraPanel textarea{min-height:100px;resize:vertical}
+#hrExtraPanel .hrx-row{display:flex;gap:8px;flex-wrap:wrap}
+#hrExtraPanel .hrx-row>*{flex:1}
+#hrExtraPanel .hrx-muted{color:var(--muted,#999);font-size:12px}
+#hrExtraPanel .hrx-list{display:grid;gap:7px;margin:8px 0}
+#hrExtraPanel .hrx-item{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--border,#444);border-radius:9px}
+#hrExtraPanel .hrx-item span{flex:1;overflow-wrap:anywhere}
+#hrExtraPanel .hrx-item input{width:auto;margin:0}
+#hrExtraPanel .hrx-item button{background:transparent;color:inherit;border:0;cursor:pointer}
+#hrExtraPanel .hrx-result{padding:10px;border:1px solid var(--border,#444);border-radius:9px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px}
+@media(max-width:520px){#hrExtraFab{right:12px;bottom:76px;padding:11px 13px}#hrExtraPanel{right:8px;bottom:128px;width:calc(100vw - 16px);padding:12px}}
+</style>
+<button id="hrExtraFab" type="button" aria-controls="hrExtraPanel" aria-expanded="false">Team Productivity</button>
+<section id="hrExtraPanel" aria-label="Extra Hackathon Rivals tools" aria-hidden="true">
+  <div class="hrx-head"><h3>Team Productivity Suite</h3><button class="hrx-close" type="button" id="hrxClose" aria-label="Close toolkit">✕</button></div>
+  <div class="hrx-muted" style="margin-bottom:12px">Extra browser-based utilities. Saved items remain on this device.</div>
+  <div class="hrx-tabs" role="tablist">
+    <button class="hrx-tab active" data-hrx-tab="tasks" role="tab">Team tasks</button>
+    <button class="hrx-tab" data-hrx-tab="ideas" role="tab">Idea board</button>
+    <button class="hrx-tab" data-hrx-tab="pitch" role="tab">Pitch timer</button>
+    <button class="hrx-tab" data-hrx-tab="text" role="tab">Text tools</button>
+    <button class="hrx-tab" data-hrx-tab="json" role="tab">JSON checker</button>
+    <button class="hrx-tab" data-hrx-tab="check" role="tab">Launch checklist</button>
+  </div>
+  <div class="hrx-page active" data-hrx-page="tasks" role="tabpanel">
+    <label for="hrxTask">New task</label><input id="hrxTask" maxlength="180" placeholder="e.g. Test login on mobile">
+    <div class="hrx-row"><select id="hrxPriority" aria-label="Task priority"><option>Normal</option><option>High</option><option>Low</option></select><button class="hrx-btn" id="hrxAddTask" type="button">Add task</button></div>
+    <div id="hrxTasks" class="hrx-list"></div>
+  </div>
+  <div class="hrx-page" data-hrx-page="ideas" role="tabpanel">
+    <label for="hrxIdea">Capture a project idea or decision</label><textarea id="hrxIdea" maxlength="4000" placeholder="Problem → proposed solution → who benefits"></textarea>
+    <div class="hrx-row"><button class="hrx-btn" id="hrxSaveIdea" type="button">Save idea</button><button class="hrx-btn" id="hrxExportIdeas" type="button">Export notes</button></div>
+    <div id="hrxIdeas" class="hrx-list"></div>
+  </div>
+  <div class="hrx-page" data-hrx-page="pitch" role="tabpanel">
+    <p class="hrx-muted">Use a rehearsal timer for your demo or pitch. Keep the page open while it runs.</p>
+    <label for="hrxPitchSeconds">Duration (seconds)</label><input id="hrxPitchSeconds" type="number" min="15" max="3600" value="180">
+    <div class="hrx-result" id="hrxPitchDisplay" aria-live="polite" style="font-size:26px;text-align:center;font-weight:700">03:00</div>
+    <div class="hrx-row" style="margin-top:8px"><button class="hrx-btn" id="hrxPitchStart" type="button">Start</button><button class="hrx-btn" id="hrxPitchPause" type="button">Pause</button><button class="hrx-btn" id="hrxPitchReset" type="button">Reset</button></div>
+  </div>
+  <div class="hrx-page" data-hrx-page="text" role="tabpanel">
+    <label for="hrxText">Paste your abstract, README, or pitch</label><textarea id="hrxText" maxlength="50000" placeholder="Paste text here…"></textarea>
+    <div class="hrx-result" id="hrxTextStats" aria-live="polite">0 words · 0 characters · 0 sentences · ~0 min read</div>
+    <div class="hrx-row" style="margin-top:8px"><button class="hrx-btn" id="hrxCopyText" type="button">Copy text</button><button class="hrx-btn" id="hrxDownloadText" type="button">Download .txt</button></div>
+  </div>
+  <div class="hrx-page" data-hrx-page="json" role="tabpanel">
+    <label for="hrxJSON">Paste JSON to validate and format</label><textarea id="hrxJSON" spellcheck="false" placeholder='{"project":"My Hackathon Project"}'></textarea>
+    <div class="hrx-row"><button class="hrx-btn" id="hrxFormatJSON" type="button">Validate & format</button><button class="hrx-btn" id="hrxMinifyJSON" type="button">Minify</button></div>
+    <div id="hrxJSONStatus" class="hrx-result" role="status">JSON has not been checked yet.</div>
+  </div>
+  <div class="hrx-page" data-hrx-page="check" role="tabpanel">
+    <p class="hrx-muted">A practical pre-submission checklist. Tick items as your team completes them.</p>
+    <div id="hrxLaunchList" class="hrx-list"></div>
+    <div class="hrx-row"><button class="hrx-btn" id="hrxExportChecklist" type="button">Export checklist</button><button class="hrx-btn" id="hrxResetChecklist" type="button">Reset ticks</button></div>
+  </div>
+  <p class="hrx-muted" id="hrxStatus" aria-live="polite" style="margin-top:12px"></p>
+</section>
+<script id="hr-extra-toolkit-js">
+(function(){
+  'use strict';
+  const $ = (s, r=document) => r.querySelector(s);
+  const panel = $('#hrExtraPanel'), fab = $('#hrExtraFab');
+  if (!panel || !fab || panel.dataset.ready) return;
+  panel.dataset.ready = '1';
+  const KEY = 'hr-extra-toolkit-v1';
+  const defaults = {tasks:[], ideas:[], checklist:{}};
+  let state = defaults, pitchRemaining = 180, pitchEnd = 0, pitchInterval = null;
+  try { state = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); status('Saved on this device.'); } catch(e) { status('Browser storage is unavailable; export your work to keep it.'); } };
+  const status = m => { const el = $('#hrxStatus'); if (el) el.textContent = m; };
+  const safe = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const download = (name, text, type='text/plain;charset=utf-8') => { const a=document.createElement('a'); const u=URL.createObjectURL(new Blob([text],{type})); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); };
+  const fmt = n => { n=Math.max(0,Math.floor(n)); return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0'); };
+  fab.addEventListener('click', () => { const open=!panel.classList.contains('open'); panel.classList.toggle('open',open); panel.setAttribute('aria-hidden',String(!open)); fab.setAttribute('aria-expanded',String(open)); if(open) $('#hrxTask').focus(); });
+  $('#hrxClose').addEventListener('click', () => { panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); fab.setAttribute('aria-expanded','false'); fab.focus(); });
+  document.addEventListener('keydown', e => { if(e.key==='Escape' && panel.classList.contains('open')) $('#hrxClose').click(); });
+  panel.addEventListener('click', e => {
+    const tab=e.target.closest('[data-hrx-tab]');
+    if(tab){ panel.querySelectorAll('[data-hrx-tab]').forEach(b=>b.classList.toggle('active',b===tab)); panel.querySelectorAll('[data-hrx-page]').forEach(p=>p.classList.toggle('active',p.dataset.hrxPage===tab.dataset.hrxTab)); }
+    const done=e.target.closest('[data-hrx-done]'); if(done){const t=state.tasks[Number(done.dataset.hrxDone)]; if(t){t.done=!t.done;save();renderTasks();}}
+    const del=e.target.closest('[data-hrx-del]'); if(del){const i=Number(del.dataset.hrxDel); if(Number.isInteger(i)){state.tasks.splice(i,1);save();renderTasks();}}
+    const ideadel=e.target.closest('[data-hrx-ideadel]'); if(ideadel){state.ideas.splice(Number(ideadel.dataset.hrxIdeadel),1);save();renderIdeas();}
+    const check=e.target.closest('[data-hrx-check]'); if(check){state.checklist[check.dataset.hrxCheck]=check.checked;save();renderChecklist();}
+  });
+  function renderTasks(){
+    const box=$('#hrxTasks'); if(!box)return;
+    box.innerHTML=state.tasks.map((t,i)=>`<div class="hrx-item"><input type="checkbox" data-hrx-done="${i}" ${t.done?'checked':''} aria-label="Mark ${safe(t.text)} complete"><span style="${t.done?'text-decoration:line-through;opacity:.65':''}"><b>${safe(t.text)}</b><small style="display:block" class="hrx-muted">${safe(t.priority)} priority</small></span><button type="button" data-hrx-del="${i}" aria-label="Delete task">✕</button></div>`).join('')||'<p class="hrx-muted">No team tasks yet.</p>';
+  }
+  function renderIdeas(){const box=$('#hrxIdeas');if(!box)return;box.innerHTML=state.ideas.map((x,i)=>`<div class="hrx-item"><span>${safe(x.text)}<small style="display:block" class="hrx-muted">${new Date(x.at).toLocaleString()}</small></span><button type="button" data-hrx-ideadel="${i}" aria-label="Delete idea">✕</button></div>`).join('')||'<p class="hrx-muted">No saved ideas yet.</p>';}
+  const launchItems=['Problem statement and judging criteria reviewed','Prototype tested on a clean browser/device','Repository and README are up to date','No API keys or passwords committed to source control','Demo link tested on mobile and desktop','Pitch and demo video rehearsed','Team roles and contact details confirmed','Submission deadline and timezone verified','Fallback demo/screenshots prepared','Final submission confirmation saved'];
+  function renderChecklist(){const box=$('#hrxLaunchList');if(!box)return;box.innerHTML=launchItems.map((x,i)=>`<label class="hrx-item"><input type="checkbox" data-hrx-check="${i}" ${state.checklist[i]?'checked':''}><span>${safe(x)}</span></label>`).join('');}
+  $('#hrxAddTask').addEventListener('click',()=>{const input=$('#hrxTask'),text=input.value.trim();if(!text)return status('Enter a task first.');if(state.tasks.length>=100)return status('Maximum 100 tasks reached.');state.tasks.unshift({text:text.slice(0,180),priority:$('#hrxPriority').value,done:false,at:Date.now()});input.value='';save();renderTasks();});
+  $('#hrxTask').addEventListener('keydown',e=>{if(e.key==='Enter')$('#hrxAddTask').click();});
+  $('#hrxSaveIdea').addEventListener('click',()=>{const input=$('#hrxIdea'),text=input.value.trim();if(!text)return status('Write an idea first.');if(state.ideas.length>=100)return status('Maximum 100 notes reached.');state.ideas.unshift({text:text.slice(0,4000),at:Date.now()});input.value='';save();renderIdeas();});
+  $('#hrxExportIdeas').addEventListener('click',()=>download('hackathon-rivals-ideas.json',JSON.stringify(state.ideas,null,2),'application/json'));
+  function updateTextStats(){const t=$('#hrxText').value;const words=(t.trim().match(/\S+/g)||[]).length;const sentences=(t.match(/[.!?]+(?=\s|$)/g)||[]).length;$('#hrxTextStats').textContent=`${words} words · ${t.length} characters · ${sentences} sentences · ~${Math.ceil(words/200)} min read`;}
+  $('#hrxText').addEventListener('input',updateTextStats);
+  $('#hrxCopyText').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#hrxText').value);status('Text copied.');}catch(e){$('#hrxText').select();status('Text selected; use Copy from your device/browser.');}});
+  $('#hrxDownloadText').addEventListener('click',()=>download('hackathon-rivals-draft.txt',$('#hrxText').value));
+  function checkJSON(minify){const out=$('#hrxJSONStatus');try{const obj=JSON.parse($('#hrxJSON').value);$('#hrxJSON').value=minify?JSON.stringify(obj):JSON.stringify(obj,null,2);out.textContent='Valid JSON ✓';out.style.borderColor='#3ddc84';status('JSON validated successfully.');}catch(e){out.textContent='Invalid JSON: '+e.message;out.style.borderColor='#ff6b6b';status('Please fix the JSON error shown above.');}}
+  $('#hrxFormatJSON').addEventListener('click',()=>checkJSON(false));$('#hrxMinifyJSON').addEventListener('click',()=>checkJSON(true));
+  function pitchDisplay(){$('#hrxPitchDisplay').textContent=fmt(pitchRemaining);}
+  function stopPitch(){if(pitchInterval){clearInterval(pitchInterval);pitchInterval=null;}}
+  $('#hrxPitchSeconds').addEventListener('change',()=>{stopPitch();pitchRemaining=Math.min(3600,Math.max(15,Number($('#hrxPitchSeconds').value)||180));$('#hrxPitchSeconds').value=pitchRemaining;pitchDisplay();});
+  $('#hrxPitchStart').addEventListener('click',()=>{if(pitchInterval)return;pitchEnd=Date.now()+pitchRemaining*1000;pitchInterval=setInterval(()=>{pitchRemaining=Math.max(0,Math.ceil((pitchEnd-Date.now())/1000));pitchDisplay();if(!pitchRemaining){stopPitch();status('Pitch time is up!');try{if('vibrate'in navigator)navigator.vibrate([150,80,150]);}catch(e){}}},250);status('Pitch timer running.');});
+  $('#hrxPitchPause').addEventListener('click',()=>{if(pitchInterval){pitchRemaining=Math.max(0,Math.ceil((pitchEnd-Date.now())/1000));stopPitch();pitchDisplay();status('Pitch timer paused.');}});
+  $('#hrxPitchReset').addEventListener('click',()=>{stopPitch();pitchRemaining=Math.min(3600,Math.max(15,Number($('#hrxPitchSeconds').value)||180));pitchDisplay();status('Pitch timer reset.');});
+  $('#hrxExportChecklist').addEventListener('click',()=>download('hackathon-rivals-launch-checklist.txt',launchItems.map((x,i)=>(state.checklist[i]?'[x] ':'[ ] ')+x).join('\n')));
+  $('#hrxResetChecklist').addEventListener('click',()=>{if(confirm('Reset all launch checklist ticks?')){state.checklist={};save();renderChecklist();}});
+  renderTasks();renderIdeas();renderChecklist();updateTextStats();pitchDisplay();
+})();
+</script>
+<!-- ===== END HR+ EXTRA TOOLKIT ===== -->
+
+
+<!-- ===== HR+ PROJECT WORKSPACE (batch 2; additive only) ===== -->
+<style id="hr-project-workspace-css">
+#hrWorkspaceFab{position:fixed;right:18px;bottom:24px;z-index:9997;border:1px solid #22d3ee66;border-radius:999px;padding:12px 15px;background:var(--surface-2,#151824);color:var(--text,#e9ebf2);font:700 12px Inter,system-ui,sans-serif;box-shadow:0 8px 26px #0007;cursor:pointer}
+#hrWorkspace{position:fixed;right:16px;bottom:76px;z-index:9996;width:min(500px,calc(100vw - 24px));max-height:min(78vh,760px);overflow:auto;display:none;background:var(--surface,#0f1119);color:var(--text,#e9ebf2);border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:18px;padding:15px;box-shadow:0 24px 70px #000a;font:14px/1.45 Inter,system-ui,sans-serif}
+#hrWorkspace.open{display:block}#hrWorkspace *{box-sizing:border-box}
+#hrWorkspace .hw-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+#hrWorkspace .hw-head h3{font-size:17px;margin:0}#hrWorkspace button{cursor:pointer;font:inherit}
+#hrWorkspace .hw-close,#hrWorkspace .hw-btn{border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:9px;padding:8px 10px;background:var(--surface-2,#151824);color:inherit}
+#hrWorkspace .hw-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+#hrWorkspace .hw-tab{border:1px solid var(--border,rgba(255,255,255,.08));border-radius:8px;padding:7px 9px;background:transparent;color:inherit;font-size:12px}
+#hrWorkspace .hw-tab.active{border-color:#22d3ee;background:#22d3ee18}
+#hrWorkspace .hw-page{display:none}#hrWorkspace .hw-page.active{display:block}
+#hrWorkspace input,#hrWorkspace textarea,#hrWorkspace select{width:100%;margin:5px 0 9px;padding:9px 10px;border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:9px;background:var(--bg,#08090d);color:inherit;font:inherit}
+#hrWorkspace textarea{min-height:72px;resize:vertical}
+#hrWorkspace .hw-row{display:flex;gap:7px;flex-wrap:wrap}#hrWorkspace .hw-row>*{flex:1}
+#hrWorkspace .hw-muted{font-size:12px;color:var(--muted,#8b90a4)}
+#hrWorkspace .hw-list{display:grid;gap:7px;margin:9px 0}
+#hrWorkspace .hw-item{border:1px solid var(--border,rgba(255,255,255,.08));border-radius:10px;padding:9px;display:flex;gap:8px;align-items:flex-start}
+#hrWorkspace .hw-item>span{flex:1;min-width:0;overflow-wrap:anywhere}
+#hrWorkspace .hw-item button{border:0;background:transparent;color:inherit;padding:2px 4px}
+#hrWorkspace .hw-item small{display:block;color:var(--muted,#8b90a4);margin-top:3px}
+@media(max-width:520px){#hrWorkspaceFab{right:10px;bottom:16px;padding:10px 12px}#hrWorkspace{right:8px;bottom:66px;width:calc(100vw - 16px);padding:11px}}
+</style>
+<button id="hrWorkspaceFab" type="button" aria-controls="hrWorkspace" aria-expanded="false">Project Delivery</button>
+<section id="hrWorkspace" aria-label="Project workspace" aria-hidden="true">
+ <div class="hw-head"><h3>Project Delivery</h3><button class="hw-close" id="hwClose" type="button" aria-label="Close workspace">✕</button></div>
+ <p class="hw-muted">Sprint board, bug log, meeting notes and risk register. Data stays in this browser; export it for sharing.</p>
+ <div class="hw-tabs" role="tablist">
+  <button class="hw-tab active" data-hw-tab="sprint" role="tab">Sprint board</button>
+  <button class="hw-tab" data-hw-tab="bugs" role="tab">Bug tracker</button>
+  <button class="hw-tab" data-hw-tab="meet" role="tab">Meeting notes</button>
+  <button class="hw-tab" data-hw-tab="risk" role="tab">Risk register</button>
+  <button class="hw-tab" data-hw-tab="export" role="tab">Export data</button>
+ </div>
+ <div class="hw-page active" data-hw-page="sprint" role="tabpanel">
+  <label for="hwSprintTask">Sprint task</label><input id="hwSprintTask" maxlength="180" placeholder="Task / deliverable">
+  <div class="hw-row"><input id="hwSprintOwner" maxlength="80" placeholder="Owner (optional)"><select id="hwSprintState" aria-label="Task status"><option>To do</option><option>In progress</option><option>Blocked</option><option>Done</option></select></div>
+  <button class="hw-btn" id="hwAddSprint" type="button">Add sprint task</button><div id="hwSprintList" class="hw-list"></div>
+ </div>
+ <div class="hw-page" data-hw-page="bugs" role="tabpanel">
+  <label for="hwBugTitle">Bug / issue</label><input id="hwBugTitle" maxlength="180" placeholder="Short issue title">
+  <label for="hwBugDetails">Steps or expected behaviour</label><textarea id="hwBugDetails" maxlength="2000" placeholder="Steps to reproduce, expected vs actual result"></textarea>
+  <div class="hw-row"><select id="hwBugSeverity" aria-label="Bug severity"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select><select id="hwBugStatus" aria-label="Bug status"><option>Open</option><option>Investigating</option><option>Fixed</option><option>Won't fix</option></select></div>
+  <button class="hw-btn" id="hwAddBug" type="button">Log issue</button><div id="hwBugList" class="hw-list"></div>
+ </div>
+ <div class="hw-page" data-hw-page="meet" role="tabpanel">
+  <label for="hwMeetTitle">Meeting title</label><input id="hwMeetTitle" maxlength="160" placeholder="e.g. Demo rehearsal">
+  <label for="hwMeetNotes">Notes / decisions / action items</label><textarea id="hwMeetNotes" maxlength="6000" placeholder="Decisions made, action owner, deadline…"></textarea>
+  <button class="hw-btn" id="hwSaveMeet" type="button">Save meeting note</button><div id="hwMeetList" class="hw-list"></div>
+ </div>
+ <div class="hw-page" data-hw-page="risk" role="tabpanel">
+  <label for="hwRisk">Risk or blocker</label><input id="hwRisk" maxlength="180" placeholder="e.g. API provider unavailable">
+  <div class="hw-row"><select id="hwRiskLevel" aria-label="Risk level"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select><input id="hwRiskOwner" maxlength="80" placeholder="Owner (optional)"></div>
+  <label for="hwMitigation">Mitigation plan</label><textarea id="hwMitigation" maxlength="2000" placeholder="Fallback, prevention or next action"></textarea>
+  <button class="hw-btn" id="hwAddRisk" type="button">Add risk</button><div id="hwRiskList" class="hw-list"></div>
+ </div>
+ <div class="hw-page" data-hw-page="export" role="tabpanel">
+  <p class="hw-muted">Export a JSON backup of this workspace, or import a previous workspace backup. Import replaces this workspace's local data after confirmation.</p>
+  <div class="hw-row"><button class="hw-btn" id="hwExport" type="button">Download JSON</button><button class="hw-btn" id="hwCopy" type="button">Copy JSON</button></div>
+  <label for="hwImportFile">Import workspace JSON</label><input id="hwImportFile" type="file" accept=".json,application/json">
+  <button class="hw-btn" id="hwImport" type="button">Import backup</button>
+  <p id="hwStatus" class="hw-muted" role="status" aria-live="polite"></p>
+ </div>
+</section>
+<script id="hr-project-workspace-js">
+(function(){
+ 'use strict';
+ const $=(s,r=document)=>r.querySelector(s),panel=$('#hrWorkspace'),fab=$('#hrWorkspaceFab');
+ if(!panel||!fab||panel.dataset.ready)return;panel.dataset.ready='1';
+ const KEY='hr-project-workspace-v1',blank={sprint:[],bugs:[],meetings:[],risks:[]};
+ let data=blank;
+ try{data=Object.assign({},blank,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){}
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const say=m=>{const e=$('#hwStatus');if(e)e.textContent=m;};
+ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));say('Saved locally.');}catch(e){say('Storage unavailable; export your workspace to keep changes.');}};
+ const download=(name,text)=>{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([text],{type:'application/json'}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
+ const stamp=t=>new Date(t).toLocaleString();
+ fab.addEventListener('click',()=>{const open=!panel.classList.contains('open');panel.classList.toggle('open',open);panel.setAttribute('aria-hidden',String(!open));fab.setAttribute('aria-expanded',String(open));});
+ $('#hwClose').addEventListener('click',()=>{panel.classList.remove('open');panel.setAttribute('aria-hidden','true');fab.setAttribute('aria-expanded','false');fab.focus();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panel.classList.contains('open'))$('#hwClose').click();});
+ panel.addEventListener('click',e=>{
+  const tab=e.target.closest('[data-hw-tab]');if(tab){panel.querySelectorAll('[data-hw-tab]').forEach(b=>b.classList.toggle('active',b===tab));panel.querySelectorAll('[data-hw-page]').forEach(p=>p.classList.toggle('active',p.dataset.hwPage===tab.dataset.hwTab));}
+  const del=e.target.closest('[data-hw-del]');if(del){const [kind,idx]=del.dataset.hwDel.split(':');if(data[kind]&&Number.isInteger(+idx)){data[kind].splice(+idx,1);save();renderAll();}}
+  const state=e.target.closest('[data-hw-state]');if(state){const [idx]=state.dataset.hwState.split(':');const item=data.sprint[+idx];if(item){item.status=state.value;save();renderSprint();}}
+  const bugstate=e.target.closest('[data-hw-bugstate]');if(bugstate){const item=data.bugs[+bugstate.dataset.hwBugstate];if(item){item.status=bugstate.value;save();renderBugs();}}
+ });
+ function renderSprint(){const box=$('#hwSprintList');box.innerHTML=data.sprint.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>Owner: ${esc(x.owner||'Unassigned')} · Added ${stamp(x.at)}</small><select data-hw-state="${i}" aria-label="Status for ${esc(x.title)}">${['To do','In progress','Blocked','Done'].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></span><button type="button" data-hw-del="sprint:${i}" aria-label="Delete task">✕</button></div>`).join('')||'<p class="hw-muted">No sprint tasks yet.</p>';}
+ function renderBugs(){const box=$('#hwBugList');box.innerHTML=data.bugs.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${esc(x.severity)} · ${stamp(x.at)}<br>${esc(x.details||'No reproduction notes')}</small><select data-hw-bugstate="${i}" aria-label="Status for ${esc(x.title)}">${['Open','Investigating','Fixed',"Won't fix"].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></span><button type="button" data-hw-del="bugs:${i}" aria-label="Delete issue">✕</button></div>`).join('')||'<p class="hw-muted">No issues logged.</p>';}
+ function renderMeetings(){const box=$('#hwMeetList');box.innerHTML=data.meetings.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${stamp(x.at)}</small><div style="white-space:pre-wrap;margin-top:5px">${esc(x.notes)}</div></span><button type="button" data-hw-del="meetings:${i}" aria-label="Delete meeting note">✕</button></div>`).join('')||'<p class="hw-muted">No meeting notes yet.</p>';}
+ function renderRisks(){const box=$('#hwRiskList');box.innerHTML=data.risks.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${esc(x.level)} · Owner: ${esc(x.owner||'Unassigned')}</small><div style="white-space:pre-wrap;margin-top:5px">${esc(x.mitigation||'No mitigation plan yet')}</div></span><button type="button" data-hw-del="risks:${i}" aria-label="Delete risk">✕</button></div>`).join('')||'<p class="hw-muted">No risks recorded.</p>';}
+ function renderAll(){renderSprint();renderBugs();renderMeetings();renderRisks();}
+ $('#hwAddSprint').addEventListener('click',()=>{const title=$('#hwSprintTask').value.trim();if(!title)return say('Enter a task title first.');if(data.sprint.length>=150)return say('Sprint task limit reached.');data.sprint.unshift({title:title.slice(0,180),owner:$('#hwSprintOwner').value.trim().slice(0,80),status:$('#hwSprintState').value,at:Date.now()});$('#hwSprintTask').value='';$('#hwSprintOwner').value='';save();renderSprint();});
+ $('#hwAddBug').addEventListener('click',()=>{const title=$('#hwBugTitle').value.trim();if(!title)return say('Enter a bug title first.');if(data.bugs.length>=150)return say('Issue limit reached.');data.bugs.unshift({title:title.slice(0,180),details:$('#hwBugDetails').value.trim().slice(0,2000),severity:$('#hwBugSeverity').value,status:$('#hwBugStatus').value,at:Date.now()});$('#hwBugTitle').value='';$('#hwBugDetails').value='';save();renderBugs();});
+ $('#hwSaveMeet').addEventListener('click',()=>{const title=$('#hwMeetTitle').value.trim(),notes=$('#hwMeetNotes').value.trim();if(!title||!notes)return say('Enter a meeting title and notes.');if(data.meetings.length>=100)return say('Meeting note limit reached.');data.meetings.unshift({title:title.slice(0,160),notes:notes.slice(0,6000),at:Date.now()});$('#hwMeetTitle').value='';$('#hwMeetNotes').value='';save();renderMeetings();});
+ $('#hwAddRisk').addEventListener('click',()=>{const title=$('#hwRisk').value.trim();if(!title)return say('Enter a risk or blocker first.');if(data.risks.length>=100)return say('Risk limit reached.');data.risks.unshift({title:title.slice(0,180),level:$('#hwRiskLevel').value,owner:$('#hwRiskOwner').value.trim().slice(0,80),mitigation:$('#hwMitigation').value.trim().slice(0,2000),at:Date.now()});$('#hwRisk').value='';$('#hwRiskOwner').value='';$('#hwMitigation').value='';save();renderRisks();});
+ $('#hwExport').addEventListener('click',()=>download('hackathon-rivals-workspace.json',JSON.stringify(data,null,2)));
+ $('#hwCopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(JSON.stringify(data,null,2));say('Workspace JSON copied.');}catch(e){say('Clipboard permission unavailable; use Download JSON.');}});
+ $('#hwImport').addEventListener('click',async()=>{const f=$('#hwImportFile').files[0];if(!f)return say('Choose a JSON backup file first.');try{const parsed=JSON.parse(await f.text());if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.sprint)||!Array.isArray(parsed.bugs)||!Array.isArray(parsed.meetings)||!Array.isArray(parsed.risks))throw new Error('This file is not a compatible workspace backup.');if(!confirm('Replace the current local workspace with this backup?'))return;data={sprint:parsed.sprint.slice(0,150),bugs:parsed.bugs.slice(0,150),meetings:parsed.meetings.slice(0,100),risks:parsed.risks.slice(0,100)};save();renderAll();say('Workspace imported.');}catch(e){say('Import failed: '+e.message);}});
+ renderAll();
+})();
+</script>
+<!-- ===== END HR+ PROJECT WORKSPACE ===== -->
+
+
+<!-- HACKATHON_RIVALS_V5_TOOLKIT: additive, browser-local utilities -->
+<style>
+#hrv5-launcher{position:fixed;right:18px;bottom:158px;z-index:2147483000;background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
+#hrv5-panel{position:fixed;inset:0;z-index:2147483001;background:#080b16ee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#eef2ff}
+#hrv5-panel *{box-sizing:border-box}#hrv5-panel .wrap{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#111827;border:1px solid #374151;border-radius:18px;padding:18px}
+#hrv5-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#hrv5-panel h2{margin:0;font-size:22px}#hrv5-panel h3{font-size:16px;margin:0 0 10px}
+#hrv5-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
+#hrv5-panel button,#hrv5-panel select{cursor:pointer}
+#hrv5-panel button{border:1px solid #4b5563;background:#253047;color:#f9fafb;border-radius:9px;padding:8px 11px}
+#hrv5-panel button.primary{background:#6d28d9;border-color:#7c3aed}
+#hrv5-panel .tab.active{background:#6d28d9}
+#hrv5-panel input,#hrv5-panel textarea,#hrv5-panel select{width:100%;background:#0b1220;color:#f9fafb;border:1px solid #4b5563;border-radius:8px;padding:9px;margin:4px 0 9px}
+#hrv5-panel textarea{min-height:76px;resize:vertical}#hrv5-panel label{display:block;color:#cbd5e1;font-size:12px}
+#hrv5-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#hrv5-panel .card{border:1px solid #374151;border-radius:12px;padding:13px;margin:8px 0;background:#151f31}
+#hrv5-panel .muted{color:#9ca3af;font-size:12px}#hrv5-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #374151;padding:10px 0}
+#hrv5-panel .item:last-child{border-bottom:0}#hrv5-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+#hrv5-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#312e81;font-size:11px}
+@media(max-width:650px){#hrv5-panel .grid{grid-template-columns:1fr}#hrv5-panel .wrap{padding:12px}}
+</style>
+<button id="hrv5-launcher" type="button">Event Operations</button>
+<div id="hrv5-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Event Operations">
+ <div class="wrap">
+  <div class="top"><div><h2>Hackathon Rivals · Event Operations Suite</h2><div class="muted">New productivity utilities · data stays in this browser</div></div><button id="hrv5-close" type="button">Close ✕</button></div>
+  <div class="tabs">
+   <button class="tab active" data-tab="checkin">Check-in</button>
+   <button class="tab" data-tab="assets">Asset Inventory</button>
+   <button class="tab" data-tab="feedback">Feedback</button>
+   <button class="tab" data-tab="timeline">Milestones</button>
+  </div>
+  <section data-page="checkin">
+   <div class="grid"><div class="card"><h3>Participant check-in</h3>
+    <label>Participant name<input id="hrv5-cname" placeholder="Name"></label>
+    <label>Team / college<input id="hrv5-cteam" placeholder="Team or college"></label>
+    <label>Ticket / registration ID<input id="hrv5-cid" placeholder="Optional ID"></label>
+    <label>Check-in status<select id="hrv5-cstatus"><option>Checked in</option><option>Pending</option><option>Needs help</option></select></label>
+    <button class="primary" id="hrv5-cadd">Add participant</button>
+    <button id="hrv5-cexport">Export CSV</button><div class="muted" id="hrv5-cmsg" aria-live="polite"></div>
+   </div><div class="card"><h3>Attendance summary</h3><div id="hrv5-csummary"></div><p class="muted">This is a local organizer log, not a verified registration-system check.</p></div></div>
+   <div class="card"><h3>Check-in records</h3><div id="hrv5-clist"></div></div>
+  </section>
+  <section data-page="assets" hidden>
+   <div class="grid"><div class="card"><h3>Asset inventory</h3>
+    <label>Asset / equipment<input id="hrv5-aname" placeholder="Projector, laptop, badge..."></label>
+    <label>Quantity<input id="hrv5-aqty" type="number" min="1" step="1" value="1"></label>
+    <label>Assigned to / location<input id="hrv5-aowner" placeholder="Person, room, team"></label>
+    <label>Status<select id="hrv5-astatus"><option>Available</option><option>Assigned</option><option>Needs repair</option><option>Returned</option></select></label>
+    <button class="primary" id="hrv5-aadd">Add asset</button><button id="hrv5-aexport">Export CSV</button>
+   </div><div class="card"><h3>Inventory summary</h3><div id="hrv5-asummary"></div></div></div>
+   <div class="card"><h3>Assets</h3><div id="hrv5-alist"></div></div>
+  </section>
+  <section data-page="feedback" hidden>
+   <div class="grid"><div class="card"><h3>Feedback collector</h3>
+    <label>Session / project<input id="hrv5-fsession" placeholder="Workshop or project name"></label>
+    <label>Rating (1–5)<select id="hrv5-frating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></label>
+    <label>Feedback<textarea id="hrv5-ftext" placeholder="What worked? What can improve?"></textarea></label>
+    <label>Follow-up needed<select id="hrv5-ffollow"><option>No</option><option>Yes</option></select></label>
+    <button class="primary" id="hrv5-fadd">Save feedback</button><button id="hrv5-fexport">Export CSV</button>
+   </div><div class="card"><h3>Feedback summary</h3><div id="hrv5-fsummary"></div></div></div>
+   <div class="card"><h3>Feedback records</h3><div id="hrv5-flist"></div></div>
+  </section>
+  <section data-page="timeline" hidden>
+   <div class="grid"><div class="card"><h3>Milestone planner</h3>
+    <label>Milestone<input id="hrv5-mname" placeholder="Prototype freeze"></label>
+    <label>Due date<input id="hrv5-mdate" type="date"></label>
+    <label>Owner<input id="hrv5-mowner" placeholder="Responsible person"></label>
+    <label>Status<select id="hrv5-mstatus"><option>Planned</option><option>In progress</option><option>Blocked</option><option>Done</option></select></label>
+    <label>Notes<textarea id="hrv5-mnotes" placeholder="Dependencies / details"></textarea></label>
+    <button class="primary" id="hrv5-madd">Add milestone</button><button id="hrv5-mexport">Export CSV</button>
+   </div><div class="card"><h3>Milestone summary</h3><div id="hrv5-msummary"></div></div></div>
+   <div class="card"><h3>Milestones</h3><div id="hrv5-mlist"></div></div>
+  </section>
+  <div class="top"><span class="muted" id="hrv5-status" aria-live="polite"></span><button id="hrv5-backup">Export all V5 data (JSON)</button></div>
+ </div>
+</div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const keys={check:'hrv5_checkin_v1',assets:'hrv5_assets_v1',feedback:'hrv5_feedback_v1',milestones:'hrv5_milestones_v1'};
+const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv5-status').textContent='Saved locally in this browser.'}catch(_){$('hrv5-status').textContent='Could not save: browser storage may be full or disabled.'}};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+let checkins=load(keys.check),assets=load(keys.assets),feedback=load(keys.feedback),milestones=load(keys.milestones);
+const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
+function renderCheck(){ $('hrv5-csummary').textContent=`Total: ${checkins.length} · Checked in: ${checkins.filter(x=>x.status==='Checked in').length} · Pending: ${checkins.filter(x=>x.status==='Pending').length} · Needs help: ${checkins.filter(x=>x.status==='Needs help').length}`;list('hrv5-clist',checkins,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.team||'No team')} · ID: ${esc(x.reg||'—')}</p><span class="muted">${esc(x.created)}</span>`,i=>{checkins.splice(i,1);save(keys.check,checkins);renderCheck()})}
+function renderAssets(){ $('hrv5-asummary').textContent=`Entries: ${assets.length} · Units: ${assets.reduce((a,x)=>a+x.qty,0)} · Needs repair: ${assets.filter(x=>x.status==='Needs repair').length}`;list('hrv5-alist',assets,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>Qty: ${x.qty} · Assigned/location: ${esc(x.owner||'—')}</p>`,i=>{assets.splice(i,1);save(keys.assets,assets);renderAssets()})}
+function renderFeedback(){const avg=feedback.length?(feedback.reduce((a,x)=>a+x.rating,0)/feedback.length).toFixed(1):'—';$('hrv5-fsummary').textContent=`Responses: ${feedback.length} · Average rating: ${avg}/5 · Follow-up: ${feedback.filter(x=>x.follow==='Yes').length}`;list('hrv5-flist',feedback,x=>`<strong>${esc(x.session||'General')} · ${x.rating}/5</strong> <span class="pill">${x.follow==='Yes'?'Follow-up':'No follow-up'}</span><p>${esc(x.text||'(No written comment)')}</p><span class="muted">${esc(x.created)}</span>`,i=>{feedback.splice(i,1);save(keys.feedback,feedback);renderFeedback()})}
+function renderMilestones(){const done=milestones.filter(x=>x.status==='Done').length;$('hrv5-msummary').textContent=`Total: ${milestones.length} · Done: ${done} · Blocked: ${milestones.filter(x=>x.status==='Blocked').length}`;list('hrv5-mlist',milestones,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>Due: ${esc(x.date||'Unscheduled')} · Owner: ${esc(x.owner||'—')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{milestones.splice(i,1);save(keys.milestones,milestones);renderMilestones()})}
+$('hrv5-launcher').addEventListener('click',()=>{$('hrv5-panel').style.display='flex'});
+$('hrv5-close').addEventListener('click',()=>{$('hrv5-panel').style.display='none'});
+$('hrv5-panel').addEventListener('click',e=>{if(e.target===$('hrv5-panel'))$('hrv5-panel').style.display='none'});
+$('hrv5-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv5-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv5-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
+$('hrv5-cadd').addEventListener('click',()=>{const name=$('hrv5-cname').value.trim();if(!name){$('hrv5-cmsg').textContent='Participant name is required.';return}checkins.unshift({id:id(),name,team:$('hrv5-cteam').value.trim(),reg:$('hrv5-cid').value.trim(),status:$('hrv5-cstatus').value,created:new Date().toLocaleString()});save(keys.check,checkins);$('hrv5-cname').value='';$('hrv5-cteam').value='';$('hrv5-cid').value='';$('hrv5-cmsg').textContent='Participant added.';renderCheck()});
+$('hrv5-cexport').addEventListener('click',()=>csv([['Name','Team/College','Registration ID','Status','Created'],...checkins.map(x=>[x.name,x.team,x.reg,x.status,x.created])],'participant-checkin.csv'));
+$('hrv5-aadd').addEventListener('click',()=>{const name=$('hrv5-aname').value.trim(),qty=Number($('hrv5-aqty').value);if(!name||!Number.isInteger(qty)||qty<1){alert('Enter an asset name and a whole quantity of at least 1.');return}assets.unshift({id:id(),name,qty,owner:$('hrv5-aowner').value.trim(),status:$('hrv5-astatus').value});save(keys.assets,assets);$('hrv5-aname').value='';$('hrv5-aowner').value='';renderAssets()});
+$('hrv5-aexport').addEventListener('click',()=>csv([['Asset','Quantity','Assigned/Location','Status'],...assets.map(x=>[x.name,x.qty,x.owner,x.status])],'asset-inventory.csv'));
+$('hrv5-fadd').addEventListener('click',()=>{const text=$('hrv5-ftext').value.trim();if(!text){alert('Please enter feedback first.');return}feedback.unshift({id:id(),session:$('hrv5-fsession').value.trim(),rating:Number($('hrv5-frating').value),text,follow:$('hrv5-ffollow').value,created:new Date().toLocaleString()});save(keys.feedback,feedback);$('hrv5-ftext').value='';renderFeedback()});
+$('hrv5-fexport').addEventListener('click',()=>csv([['Session','Rating','Feedback','Follow-up','Created'],...feedback.map(x=>[x.session,x.rating,x.text,x.follow,x.created])],'event-feedback.csv'));
+$('hrv5-madd').addEventListener('click',()=>{const name=$('hrv5-mname').value.trim();if(!name){alert('Milestone name is required.');return}milestones.unshift({id:id(),name,date:$('hrv5-mdate').value,owner:$('hrv5-mowner').value.trim(),status:$('hrv5-mstatus').value,notes:$('hrv5-mnotes').value.trim()});save(keys.milestones,milestones);$('hrv5-mname').value='';$('hrv5-mnotes').value='';renderMilestones()});
+$('hrv5-mexport').addEventListener('click',()=>csv([['Milestone','Due date','Owner','Status','Notes'],...milestones.map(x=>[x.name,x.date,x.owner,x.status,x.notes])],'project-milestones.csv'));
+$('hrv5-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v5-data.json',{exportedAt:new Date().toISOString(),checkins,assets,feedback,milestones}));
+renderCheck();renderAssets();renderFeedback();renderMilestones();
+})();
+</script>
+<!-- /HACKATHON_RIVALS_V5_TOOLKIT -->
+
+
+<!-- HACKATHON_RIVALS_V6_TOOLKIT: additive, browser-local utilities -->
+<style>
+#hrv6-launcher{position:fixed;right:18px;bottom:210px;z-index:2147483000;background:#0f766e;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
+#hrv6-panel{position:fixed;inset:0;z-index:2147483001;background:#07131aee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#e6fffb}
+#hrv6-panel *{box-sizing:border-box}#hrv6-panel .wrap{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#10212a;border:1px solid #28515a;border-radius:18px;padding:18px}
+#hrv6-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#hrv6-panel h2{margin:0;font-size:22px}#hrv6-panel h3{font-size:16px;margin:0 0 10px}
+#hrv6-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
+#hrv6-panel button{cursor:pointer;border:1px solid #32606a;background:#183640;color:#f0fdfa;border-radius:9px;padding:8px 11px}
+#hrv6-panel button.primary{background:#0f766e;border-color:#14b8a6}
+#hrv6-panel .tab.active{background:#0f766e}
+#hrv6-panel input,#hrv6-panel textarea,#hrv6-panel select{width:100%;background:#09171d;color:#f0fdfa;border:1px solid #32606a;border-radius:8px;padding:9px;margin:4px 0 9px}
+#hrv6-panel textarea{min-height:76px;resize:vertical}#hrv6-panel label{display:block;color:#b8d8d8;font-size:12px}
+#hrv6-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#hrv6-panel .card{border:1px solid #28515a;border-radius:12px;padding:13px;margin:8px 0;background:#132b35}
+#hrv6-panel .muted{color:#9bb8bc;font-size:12px}#hrv6-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #28515a;padding:10px 0}
+#hrv6-panel .item:last-child{border-bottom:0}#hrv6-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+#hrv6-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#134e4a;font-size:11px}
+@media(max-width:650px){#hrv6-panel .grid{grid-template-columns:1fr}#hrv6-panel .wrap{padding:12px}}
+</style>
+<button id="hrv6-launcher" type="button">Volunteer & Judging</button>
+<div id="hrv6-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Volunteer & Judging">
+ <div class="wrap">
+  <div class="top"><div><h2>Hackathon Rivals · Volunteer & Judge Center</h2><div class="muted">Volunteer operations and judging utilities · local browser storage</div></div><button id="hrv6-close" type="button">Close ✕</button></div>
+  <div class="tabs">
+   <button class="tab active" data-tab="volunteers">Volunteers</button>
+   <button class="tab" data-tab="shifts">Shift Planner</button>
+   <button class="tab" data-tab="judges">Judging Rubric</button>
+   <button class="tab" data-tab="certs">Certificate Log</button>
+  </div>
+  <section data-page="volunteers">
+   <div class="grid"><div class="card"><h3>Volunteer directory</h3>
+    <label>Name<input id="hrv6-vname" placeholder="Volunteer name"></label>
+    <label>Role / skill<input id="hrv6-vrole" placeholder="Registration, tech support, stage"></label>
+    <label>Contact (optional)<input id="hrv6-vcontact" placeholder="Email or phone"></label>
+    <label>Availability<select id="hrv6-vavail"><option>Available</option><option>Limited</option><option>Unavailable</option></select></label>
+    <button class="primary" id="hrv6-vadd">Add volunteer</button><button id="hrv6-vexport">Export CSV</button>
+   </div><div class="card"><h3>Volunteer summary</h3><div id="hrv6-vsummary"></div></div></div>
+   <div class="card"><h3>Volunteers</h3><div id="hrv6-vlist"></div></div>
+  </section>
+  <section data-page="shifts" hidden>
+   <div class="grid"><div class="card"><h3>Shift planner</h3>
+    <label>Shift / duty<input id="hrv6-sname" placeholder="Registration desk"></label>
+    <label>Date<input id="hrv6-sdate" type="date"></label>
+    <label>Start time<input id="hrv6-sstart" type="time"></label>
+    <label>End time<input id="hrv6-send" type="time"></label>
+    <label>Assigned volunteer<input id="hrv6-sowner" placeholder="Volunteer name"></label>
+    <label>Status<select id="hrv6-sstatus"><option>Planned</option><option>Confirmed</option><option>Completed</option><option>Needs cover</option></select></label>
+    <button class="primary" id="hrv6-sadd">Add shift</button><button id="hrv6-sexport">Export CSV</button>
+   </div><div class="card"><h3>Shift summary</h3><div id="hrv6-ssummary"></div></div></div>
+   <div class="card"><h3>Shifts</h3><div id="hrv6-slist"></div></div>
+  </section>
+  <section data-page="judges" hidden>
+   <div class="grid"><div class="card"><h3>Judging scorecard</h3>
+    <label>Project / team<input id="hrv6-jteam" placeholder="Project name"></label>
+    <label>Judge name<input id="hrv6-jjudge" placeholder="Judge name"></label>
+    <label>Innovation (0–10)<input id="hrv6-jinnovation" type="number" min="0" max="10" step="0.5" value="7"></label>
+    <label>Technical execution (0–10)<input id="hrv6-jtech" type="number" min="0" max="10" step="0.5" value="7"></label>
+    <label>Impact (0–10)<input id="hrv6-jimpact" type="number" min="0" max="10" step="0.5" value="7"></label>
+    <label>Presentation (0–10)<input id="hrv6-jpresentation" type="number" min="0" max="10" step="0.5" value="7"></label>
+    <label>Comments<textarea id="hrv6-jcomments" placeholder="Strengths, concerns, suggestions"></textarea></label>
+    <button class="primary" id="hrv6-jadd">Save scorecard</button><button id="hrv6-jexport">Export CSV</button>
+   </div><div class="card"><h3>Scoring guidance</h3><p class="muted">Each criterion is 0–10. Total is shown out of 40. Use the same rubric for every team and have organizers verify final results.</p><div id="hrv6-jsummary"></div></div></div>
+   <div class="card"><h3>Scorecards</h3><div id="hrv6-jlist"></div></div>
+  </section>
+  <section data-page="certs" hidden>
+   <div class="grid"><div class="card"><h3>Certificate issue log</h3>
+    <label>Recipient name<input id="hrv6-rname" placeholder="Name exactly as printed"></label>
+    <label>Certificate type<select id="hrv6-rtype"><option>Participation</option><option>Winner</option><option>Runner-up</option><option>Volunteer</option><option>Judge</option><option>Organizer</option></select></label>
+    <label>Certificate reference ID<input id="hrv6-rid" placeholder="Unique reference"></label>
+    <label>Issue status<select id="hrv6-rstatus"><option>Draft</option><option>Approved</option><option>Issued</option><option>Revoked</option></select></label>
+    <label>Notes<input id="hrv6-rnotes" placeholder="Optional"></label>
+    <button class="primary" id="hrv6-radd">Add certificate record</button><button id="hrv6-rexport">Export CSV</button>
+   </div><div class="card"><h3>Certificate summary</h3><div id="hrv6-rsummary"></div></div></div>
+   <div class="card"><h3>Certificate records</h3><div id="hrv6-rlist"></div></div>
+  </section>
+  <div class="top"><span class="muted" id="hrv6-status" aria-live="polite"></span><button id="hrv6-backup">Export all V6 data (JSON)</button></div>
+ </div>
+</div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const keys={vol:'hrv6_volunteers_v1',shifts:'hrv6_shifts_v1',judges:'hrv6_scorecards_v1',certs:'hrv6_certlog_v1'};
+const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv6-status').textContent='Saved locally in this browser.'}catch(_){$('hrv6-status').textContent='Could not save: browser storage may be full or disabled.'}};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+let volunteers=load(keys.vol),shifts=load(keys.shifts),scorecards=load(keys.judges),certs=load(keys.certs);
+const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
+function renderVol(){ $('hrv6-vsummary').textContent=`Total: ${volunteers.length} · Available: ${volunteers.filter(x=>x.availability==='Available').length} · Limited: ${volunteers.filter(x=>x.availability==='Limited').length}`;list('hrv6-vlist',volunteers,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.availability)}</span><p>${esc(x.role||'Role not set')} · ${esc(x.contact||'No contact')}</p>`,i=>{volunteers.splice(i,1);save(keys.vol,volunteers);renderVol()})}
+function renderShifts(){ $('hrv6-ssummary').textContent=`Total: ${shifts.length} · Needs cover: ${shifts.filter(x=>x.status==='Needs cover').length} · Completed: ${shifts.filter(x=>x.status==='Completed').length}`;list('hrv6-slist',shifts,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.date||'No date')} · ${esc(x.start||'—')}–${esc(x.end||'—')} · ${esc(x.owner||'Unassigned')}</p>`,i=>{shifts.splice(i,1);save(keys.shifts,shifts);renderShifts()})}
+function renderJudges(){const avg=scorecards.length?(scorecards.reduce((a,x)=>a+x.total,0)/scorecards.length).toFixed(1):'—';$('hrv6-jsummary').textContent=`Scorecards: ${scorecards.length} · Average total: ${avg}/40`;list('hrv6-jlist',scorecards,x=>`<strong>${esc(x.team)}</strong> <span class="pill">${x.total}/40</span><p>Judge: ${esc(x.judge||'—')} · Innovation ${x.innovation}, Tech ${x.tech}, Impact ${x.impact}, Presentation ${x.presentation}</p>${x.comments?`<p>${esc(x.comments)}</p>`:''}`,i=>{scorecards.splice(i,1);save(keys.judges,scorecards);renderJudges()})}
+function renderCerts(){ $('hrv6-rsummary').textContent=`Total: ${certs.length} · Issued: ${certs.filter(x=>x.status==='Issued').length} · Draft: ${certs.filter(x=>x.status==='Draft').length}`;list('hrv6-rlist',certs,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.type)} · Ref: ${esc(x.ref||'—')} · ${esc(x.notes||'')}</p>`,i=>{certs.splice(i,1);save(keys.certs,certs);renderCerts()})}
+$('hrv6-launcher').addEventListener('click',()=>{$('hrv6-panel').style.display='flex'});
+$('hrv6-close').addEventListener('click',()=>{$('hrv6-panel').style.display='none'});
+$('hrv6-panel').addEventListener('click',e=>{if(e.target===$('hrv6-panel'))$('hrv6-panel').style.display='none'});
+$('hrv6-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv6-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv6-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
+$('hrv6-vadd').addEventListener('click',()=>{const name=$('hrv6-vname').value.trim();if(!name){alert('Volunteer name is required.');return}volunteers.unshift({id:id(),name,role:$('hrv6-vrole').value.trim(),contact:$('hrv6-vcontact').value.trim(),availability:$('hrv6-vavail').value});save(keys.vol,volunteers);$('hrv6-vname').value='';renderVol()});
+$('hrv6-vexport').addEventListener('click',()=>csv([['Name','Role/Skill','Contact','Availability'],...volunteers.map(x=>[x.name,x.role,x.contact,x.availability])],'volunteers.csv'));
+$('hrv6-sadd').addEventListener('click',()=>{const name=$('hrv6-sname').value.trim(),start=$('hrv6-sstart').value,end=$('hrv6-send').value;if(!name){alert('Shift name is required.');return}if(start&&end&&end<=start){alert('End time must be later than start time. Overnight shifts are not supported in this version.');return}shifts.unshift({id:id(),name,date:$('hrv6-sdate').value,start,end,owner:$('hrv6-sowner').value.trim(),status:$('hrv6-sstatus').value});save(keys.shifts,shifts);$('hrv6-sname').value='';renderShifts()});
+$('hrv6-sexport').addEventListener('click',()=>csv([['Shift','Date','Start','End','Assigned volunteer','Status'],...shifts.map(x=>[x.name,x.date,x.start,x.end,x.owner,x.status])],'volunteer-shifts.csv'));
+$('hrv6-jadd').addEventListener('click',()=>{const team=$('hrv6-jteam').value.trim();if(!team){alert('Project/team name is required.');return}const vals=['innovation','tech','impact','presentation'].map(k=>Number($('hrv6-j'+k).value));if(vals.some(v=>!Number.isFinite(v)||v<0||v>10)){alert('Each score must be between 0 and 10.');return}const [innovation,tech,impact,presentation]=vals;scorecards.unshift({id:id(),team,judge:$('hrv6-jjudge').value.trim(),innovation,tech,impact,presentation,total:innovation+tech+impact+presentation,comments:$('hrv6-jcomments').value.trim()});save(keys.judges,scorecards);$('hrv6-jteam').value='';$('hrv6-jcomments').value='';renderJudges()});
+$('hrv6-jexport').addEventListener('click',()=>csv([['Project/Team','Judge','Innovation','Technical execution','Impact','Presentation','Total / 40','Comments'],...scorecards.map(x=>[x.team,x.judge,x.innovation,x.tech,x.impact,x.presentation,x.total,x.comments])],'judging-scorecards.csv'));
+$('hrv6-radd').addEventListener('click',()=>{const name=$('hrv6-rname').value.trim(),ref=$('hrv6-rid').value.trim();if(!name){alert('Recipient name is required.');return}if(ref&&certs.some(x=>x.ref.toLowerCase()===ref.toLowerCase())){alert('That certificate reference already exists.');return}certs.unshift({id:id(),name,type:$('hrv6-rtype').value,ref,status:$('hrv6-rstatus').value,notes:$('hrv6-rnotes').value.trim()});save(keys.certs,certs);$('hrv6-rname').value='';$('hrv6-rid').value='';renderCerts()});
+$('hrv6-rexport').addEventListener('click',()=>csv([['Recipient','Certificate type','Reference ID','Status','Notes'],...certs.map(x=>[x.name,x.type,x.ref,x.status,x.notes])],'certificate-issue-log.csv'));
+$('hrv6-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v6-data.json',{exportedAt:new Date().toISOString(),volunteers,shifts,scorecards,certs}));
+renderVol();renderShifts();renderJudges();renderCerts();
+})();
+</script>
+<!-- /HACKATHON_RIVALS_V6_TOOLKIT -->
+
+
+<!-- HACKATHON_RIVALS_V7_TOOLKIT: additive browser-local utilities -->
+<style>
+#hrv7-launcher{position:fixed;right:18px;bottom:262px;z-index:2147483000;background:#b45309;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
+#hrv7-panel{position:fixed;inset:0;z-index:2147483001;background:#120d08ee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#fff7ed}
+#hrv7-panel *{box-sizing:border-box}#hrv7-panel .wrap{width:min(1080px,100%);max-height:92vh;overflow:auto;background:#21170e;border:1px solid #674522;border-radius:18px;padding:18px}
+#hrv7-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#hrv7-panel h2{margin:0;font-size:22px}#hrv7-panel h3{font-size:16px;margin:0 0 10px}
+#hrv7-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
+#hrv7-panel button{cursor:pointer;border:1px solid #805b35;background:#3b2817;color:#fff7ed;border-radius:9px;padding:8px 11px}
+#hrv7-panel button.primary{background:#b45309;border-color:#d97706}
+#hrv7-panel .tab.active{background:#b45309}
+#hrv7-panel input,#hrv7-panel textarea,#hrv7-panel select{width:100%;background:#160f09;color:#fff7ed;border:1px solid #805b35;border-radius:8px;padding:9px;margin:4px 0 9px}
+#hrv7-panel textarea{min-height:76px;resize:vertical}#hrv7-panel label{display:block;color:#fed7aa;font-size:12px}
+#hrv7-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#hrv7-panel .card{border:1px solid #674522;border-radius:12px;padding:13px;margin:8px 0;background:#2a1c10}
+#hrv7-panel .muted{color:#d6b99a;font-size:12px}#hrv7-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #674522;padding:10px 0}
+#hrv7-panel .item:last-child{border-bottom:0}#hrv7-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+#hrv7-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#78350f;font-size:11px}
+@media(max-width:650px){#hrv7-panel .grid{grid-template-columns:1fr}#hrv7-panel .wrap{padding:12px}}
+</style>
+<button id="hrv7-launcher" type="button">Event Control</button>
+<div id="hrv7-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Event Control">
+ <div class="wrap">
+  <div class="top"><div><h2>Hackathon Rivals · Event Control Center</h2><div class="muted">Incident, communications and run-of-show tools · browser-local data</div></div><button id="hrv7-close" type="button">Close ✕</button></div>
+  <div class="tabs">
+   <button class="tab active" data-tab="incidents">Incident Log</button>
+   <button class="tab" data-tab="announcements">Announcements</button>
+   <button class="tab" data-tab="runshow">Run of Show</button>
+   <button class="tab" data-tab="contacts">Emergency Contacts</button>
+  </div>
+  <section data-page="incidents">
+   <div class="grid"><div class="card"><h3>Incident / issue report</h3>
+    <label>Short title<input id="hrv7-ititle" placeholder="Wi-Fi down at room B"></label>
+    <label>Category<select id="hrv7-icat"><option>Technical</option><option>Safety</option><option>Venue</option><option>Registration</option><option>Schedule</option><option>Other</option></select></label>
+    <label>Severity<select id="hrv7-isev"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></label>
+    <label>Reported by<input id="hrv7-ireporter" placeholder="Name or role"></label>
+    <label>Details<textarea id="hrv7-idetails" placeholder="What happened? Avoid entering sensitive personal information."></textarea></label>
+    <label>Status<select id="hrv7-istatus"><option>Open</option><option>Investigating</option><option>Resolved</option><option>Closed</option></select></label>
+    <button class="primary" id="hrv7-iadd">Save incident</button><button id="hrv7-iexport">Export CSV</button>
+   </div><div class="card"><h3>Incident overview</h3><div id="hrv7-isummary"></div><p class="muted">For emergencies, contact local emergency services; this log does not dispatch help or send alerts.</p></div></div>
+   <div class="card"><h3>Incident records</h3><div id="hrv7-ilist"></div></div>
+  </section>
+  <section data-page="announcements" hidden>
+   <div class="grid"><div class="card"><h3>Announcement composer</h3>
+    <label>Title<input id="hrv7-atitle" placeholder="Workshop starts in 10 minutes"></label>
+    <label>Audience<select id="hrv7-aaudience"><option>All participants</option><option>Mentors</option><option>Judges</option><option>Volunteers</option><option>Organizers</option></select></label>
+    <label>Channel<select id="hrv7-achannel"><option>Website</option><option>Email</option><option>WhatsApp</option><option>Stage announcement</option><option>Social media</option></select></label>
+    <label>Message<textarea id="hrv7-amessage" placeholder="Write the announcement"></textarea></label>
+    <label>Status<select id="hrv7-astatus"><option>Draft</option><option>Approved</option><option>Sent manually</option></select></label>
+    <button class="primary" id="hrv7-aadd">Save announcement</button><button id="hrv7-aexport">Export CSV</button>
+   </div><div class="card"><h3>Announcement summary</h3><div id="hrv7-asummary"></div><p class="muted">This tool stores drafts only; it does not send messages or publish posts.</p></div></div>
+   <div class="card"><h3>Announcements</h3><div id="hrv7-alist"></div></div>
+  </section>
+  <section data-page="runshow" hidden>
+   <div class="grid"><div class="card"><h3>Event run of show</h3>
+    <label>Agenda item<input id="hrv7-rname" placeholder="Opening remarks"></label>
+    <label>Date<input id="hrv7-rdate" type="date"></label>
+    <label>Start time<input id="hrv7-rstart" type="time"></label>
+    <label>End time<input id="hrv7-rend" type="time"></label>
+    <label>Stage owner<input id="hrv7-rowner" placeholder="Host / AV / volunteer"></label>
+    <label>Location<input id="hrv7-rlocation" placeholder="Main hall / online"></label>
+    <label>Notes<textarea id="hrv7-rnotes" placeholder="Cue, equipment, transition"></textarea></label>
+    <button class="primary" id="hrv7-radd">Add agenda item</button><button id="hrv7-rexport">Export CSV</button>
+   </div><div class="card"><h3>Agenda overview</h3><div id="hrv7-rsummary"></div></div></div>
+   <div class="card"><h3>Agenda items</h3><div id="hrv7-rlist"></div></div>
+  </section>
+  <section data-page="contacts" hidden>
+   <div class="grid"><div class="card"><h3>Emergency / venue contacts</h3>
+    <label>Contact / service<input id="hrv7-ename" placeholder="Venue manager / campus security"></label>
+    <label>Role / organization<input id="hrv7-erole" placeholder="Role or department"></label>
+    <label>Phone or email<input id="hrv7-econtact" placeholder="Contact details"></label>
+    <label>Availability / notes<input id="hrv7-enotes" placeholder="Hours, location, escalation notes"></label>
+    <button class="primary" id="hrv7-eadd">Add contact</button><button id="hrv7-eexport">Export CSV</button>
+   </div><div class="card"><h3>Contact list guidance</h3><p class="muted">Verify every number with the venue or official source before the event. Access to this browser profile may expose saved contacts.</p><div id="hrv7-esummary"></div></div></div>
+   <div class="card"><h3>Contacts</h3><div id="hrv7-elist"></div></div>
+  </section>
+  <div class="top"><span class="muted" id="hrv7-status" aria-live="polite"></span><button id="hrv7-backup">Export all V7 data (JSON)</button></div>
+ </div>
+</div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const keys={incidents:'hrv7_incidents_v1',announcements:'hrv7_announcements_v1',runshow:'hrv7_runshow_v1',contacts:'hrv7_contacts_v1'};
+const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv7-status').textContent='Saved locally in this browser.'}catch(_){$('hrv7-status').textContent='Could not save: browser storage may be full or disabled.'}};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+let incidents=load(keys.incidents),announcements=load(keys.announcements),runshow=load(keys.runshow),contacts=load(keys.contacts);
+const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
+function renderInc(){ $('hrv7-isummary').textContent=`Total: ${incidents.length} · Open: ${incidents.filter(x=>!['Resolved','Closed'].includes(x.status)).length} · High/Critical: ${incidents.filter(x=>['High','Critical'].includes(x.severity)).length}`;list('hrv7-ilist',incidents,x=>`<strong>${esc(x.title)}</strong> <span class="pill">${esc(x.severity)} · ${esc(x.status)}</span><p>${esc(x.category)} · Reported by: ${esc(x.reporter||'—')}</p><p>${esc(x.details||'')}</p><span class="muted">${esc(x.created)}</span>`,i=>{incidents.splice(i,1);save(keys.incidents,incidents);renderInc()})}
+function renderAnn(){ $('hrv7-asummary').textContent=`Total: ${announcements.length} · Drafts: ${announcements.filter(x=>x.status==='Draft').length} · Sent manually: ${announcements.filter(x=>x.status==='Sent manually').length}`;list('hrv7-alist',announcements,x=>`<strong>${esc(x.title)}</strong> <span class="pill">${esc(x.status)}</span><p>Audience: ${esc(x.audience)} · Channel: ${esc(x.channel)}</p><p>${esc(x.message)}</p>`,i=>{announcements.splice(i,1);save(keys.announcements,announcements);renderAnn()})}
+function renderRun(){ $('hrv7-rsummary').textContent=`Agenda items: ${runshow.length} · With owner: ${runshow.filter(x=>x.owner).length}`;list('hrv7-rlist',runshow,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.start||'No start')}–${esc(x.end||'No end')}</span><p>${esc(x.date||'No date')} · ${esc(x.location||'No location')} · Owner: ${esc(x.owner||'—')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{runshow.splice(i,1);save(keys.runshow,runshow);renderRun()})}
+function renderContacts(){ $('hrv7-esummary').textContent=`Saved contacts: ${contacts.length}`;list('hrv7-elist',contacts,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.role||'Contact')}</span><p>${esc(x.contact||'No contact details')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{contacts.splice(i,1);save(keys.contacts,contacts);renderContacts()})}
+$('hrv7-launcher').addEventListener('click',()=>{$('hrv7-panel').style.display='flex'});
+$('hrv7-close').addEventListener('click',()=>{$('hrv7-panel').style.display='none'});
+$('hrv7-panel').addEventListener('click',e=>{if(e.target===$('hrv7-panel'))$('hrv7-panel').style.display='none'});
+$('hrv7-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv7-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv7-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
+$('hrv7-iadd').addEventListener('click',()=>{const title=$('hrv7-ititle').value.trim();if(!title){alert('Incident title is required.');return}incidents.unshift({id:id(),title,category:$('hrv7-icat').value,severity:$('hrv7-isev').value,reporter:$('hrv7-ireporter').value.trim(),details:$('hrv7-idetails').value.trim(),status:$('hrv7-istatus').value,created:new Date().toLocaleString()});save(keys.incidents,incidents);$('hrv7-ititle').value='';$('hrv7-idetails').value='';renderInc()});
+$('hrv7-iexport').addEventListener('click',()=>csv([['Title','Category','Severity','Reporter','Details','Status','Created'],...incidents.map(x=>[x.title,x.category,x.severity,x.reporter,x.details,x.status,x.created])],'incident-log.csv'));
+$('hrv7-aadd').addEventListener('click',()=>{const title=$('hrv7-atitle').value.trim(),message=$('hrv7-amessage').value.trim();if(!title||!message){alert('Announcement title and message are required.');return}announcements.unshift({id:id(),title,audience:$('hrv7-aaudience').value,channel:$('hrv7-achannel').value,message,status:$('hrv7-astatus').value});save(keys.announcements,announcements);$('hrv7-atitle').value='';$('hrv7-amessage').value='';renderAnn()});
+$('hrv7-aexport').addEventListener('click',()=>csv([['Title','Audience','Channel','Message','Status'],...announcements.map(x=>[x.title,x.audience,x.channel,x.message,x.status])],'announcements.csv'));
+$('hrv7-radd').addEventListener('click',()=>{const name=$('hrv7-rname').value.trim(),start=$('hrv7-rstart').value,end=$('hrv7-rend').value;if(!name){alert('Agenda item is required.');return}if(start&&end&&end<=start){alert('End time must be later than start time. Overnight entries are not supported.');return}runshow.unshift({id:id(),name,date:$('hrv7-rdate').value,start,end,owner:$('hrv7-rowner').value.trim(),location:$('hrv7-rlocation').value.trim(),notes:$('hrv7-rnotes').value.trim()});save(keys.runshow,runshow);$('hrv7-rname').value='';$('hrv7-rnotes').value='';renderRun()});
+$('hrv7-rexport').addEventListener('click',()=>csv([['Agenda item','Date','Start','End','Owner','Location','Notes'],...runshow.map(x=>[x.name,x.date,x.start,x.end,x.owner,x.location,x.notes])],'event-run-of-show.csv'));
+$('hrv7-eadd').addEventListener('click',()=>{const name=$('hrv7-ename').value.trim();if(!name){alert('Contact or service name is required.');return}contacts.unshift({id:id(),name,role:$('hrv7-erole').value.trim(),contact:$('hrv7-econtact').value.trim(),notes:$('hrv7-enotes').value.trim()});save(keys.contacts,contacts);$('hrv7-ename').value='';renderContacts()});
+$('hrv7-eexport').addEventListener('click',()=>csv([['Contact/service','Role/organization','Phone/email','Notes'],...contacts.map(x=>[x.name,x.role,x.contact,x.notes])],'emergency-venue-contacts.csv'));
+$('hrv7-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v7-data.json',{exportedAt:new Date().toISOString(),incidents,announcements,runshow,contacts}));
+renderInc();renderAnn();renderRun();renderContacts();
+})();
+</script>
+<!-- /HACKATHON_RIVALS_V7_TOOLKIT -->
+
+
+<!-- HR_ALL_IN_ONE_HUB: unified launcher + searchable index for all additive toolkits -->
+<style>
+#hraio-launcher{position:fixed;right:18px;bottom:18px;z-index:2147483645;background:linear-gradient(135deg,#4f46e5,#0f766e);color:white;border:0;border-radius:999px;padding:13px 17px;font:700 13px system-ui;box-shadow:0 8px 30px #0005;cursor:pointer}
+#hraio-panel{position:fixed;inset:0;z-index:2147483646;background:#080d18ee;display:none;align-items:center;justify-content:center;padding:12px;color:#eef2ff;font:14px system-ui}
+#hraio-panel *{box-sizing:border-box}#hraio-panel .wrap{width:min(1000px,100%);max-height:94vh;overflow:auto;background:#111827;border:1px solid #374151;border-radius:18px;padding:18px}
+#hraio-panel .head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#hraio-panel h2{margin:0;font-size:23px}#hraio-panel h3{margin:0 0 7px;font-size:15px}
+#hraio-panel .sub{color:#9ca3af;font-size:12px;margin-top:5px}
+#hraio-panel input{width:100%;padding:11px;border:1px solid #4b5563;border-radius:10px;background:#0b1220;color:#fff;margin:14px 0}
+#hraio-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#hraio-panel .tool{padding:13px;border:1px solid #374151;border-radius:12px;background:#172033}
+#hraio-panel .tool p{margin:5px 0 0;color:#cbd5e1;font-size:12px;line-height:1.5}
+#hraio-panel .badge{display:inline-block;border-radius:99px;padding:3px 7px;background:#312e81;font-size:10px;margin-bottom:7px}
+#hraio-panel button{border:1px solid #4b5563;background:#263247;color:#fff;border-radius:9px;padding:8px 11px;cursor:pointer}
+#hraio-panel .close{background:#7f1d1d}
+#hraio-panel .notice{background:#172033;border-radius:10px;padding:12px;margin:12px 0;color:#cbd5e1;font-size:12px;line-height:1.6}
+@media(max-width:650px){#hraio-panel .grid{grid-template-columns:1fr}#hraio-panel .wrap{padding:12px}}
+</style>
+<button id="hraio-launcher" type="button">Rivals Hub ☰</button>
+<div id="hraio-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals All-in-One Hub">
+ <div class="wrap">
+  <div class="head"><div><h2>Hackathon Rivals · Rivals Command Center</h2><div class="sub">Sab toolkits ek jagah · search karke apna tool kholne ki jagah tak pahunch sakte ho</div></div><button class="close" id="hraio-close" type="button">Close ✕</button></div>
+  <input id="hraio-search" type="search" placeholder="Search tools: tasks, judging, budget, API, certificates…">
+  <div class="notice">Saare tools yahin se open karo. Kisi workspace ko select karne par uske related tools khulenge.</div>
+  <div class="grid" id="hraio-grid"></div>
+  <div class="notice"><strong>Important:</strong> Browser-local tools ka data isi browser/device mein hota hai. Automatic team sync, email/WhatsApp sending, real certificate verification aur secure judge/admin permissions ke liye backend integration alag se zaroori hai.</div>
+ </div>
+</div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const tools=[
+{v:'WORKSPACE 01',name:'Team Productivity',desc:'Tasks, idea board, pitch timer, text utilities, JSON tools and launch checklist.',launcherId:'hrExtraFab'},
+{v:'WORKSPACE 02',name:'Project Delivery',desc:'Sprint board, bug tracker, meeting notes, risk register and workspace backup.',launcherId:'hrWorkspaceFab'},
+{v:'WORKSPACE 03',name:'Submission & API Studio',desc:'Submission pack builder, event schedule, decision log and API request tester.',launcherId:'hrV3Launcher'},
+{v:'WORKSPACE 04',name:'Team & Resource Operations',desc:'Team directory, budget, sponsors/partners and project handover notes.',launcherId:'hrv4-launch'},
+{v:'WORKSPACE 05',name:'Event Operations',desc:'Participant check-in, equipment inventory, feedback and milestone planner.',launcherId:'hrv5-launcher'},
+{v:'WORKSPACE 06',name:'Volunteer & Judge Center',desc:'Volunteer roster, shift planner, evaluation scorecards and certificate log.',launcherId:'hrv6-launcher'},
+{v:'WORKSPACE 07',name:'Event Control Center',desc:'Incident reports, announcement drafts, run of show and venue contacts.',launcherId:'hrv7-launcher'}
+];
+function render(q=''){const grid=$('hraio-grid');grid.replaceChildren();const filtered=tools.filter(t=>(t.name+' '+t.desc+' '+t.v).toLowerCase().includes(q.toLowerCase()));if(!filtered.length){grid.innerHTML='<div class="tool">No matching tool found.</div>';return}filtered.forEach(t=>{const card=document.createElement('div');card.className='tool';const badge=document.createElement('span');badge.className='badge';badge.textContent=t.v;const title=document.createElement('h3');title.textContent=t.name;const p=document.createElement('p');p.textContent=t.desc;const btn=document.createElement('button');btn.type='button';btn.textContent='Open toolkit';btn.style.marginTop='10px';btn.addEventListener('click',()=>{const target=document.getElementById(t.launcherId);if(target){$('hraio-panel').style.display='none';target.click()}else{alert('Toolkit launcher "'+t.launcher+'" nahi mila. Page refresh karke dobara try karo.')}});card.append(badge,title,p,btn);grid.append(card)})}
+$('hraio-launcher').addEventListener('click',()=>{$('hraio-panel').style.display='flex';render($('hraio-search').value);$('hraio-search').focus()});
+$('hraio-close').addEventListener('click',()=>{$('hraio-panel').style.display='none'});
+$('hraio-panel').addEventListener('click',e=>{if(e.target===$('hraio-panel'))$('hraio-panel').style.display='none'});
+$('hraio-search').addEventListener('input',e=>render(e.target.value));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('hraio-panel').style.display='none'});
+})();
+</script>
+<!-- /HR_ALL_IN_ONE_HUB -->
+
+<!-- HACKATHON_RIVALS_REFINED_UI -->
+<style id="hr-refined-ui">
+/* Keep one clean command-center launcher instead of seven stacked floating buttons. */
+#hrExtraFab,#hrWorkspaceFab,#hrV3Launcher,#hrv4-launch,#hrv5-launcher,#hrv6-launcher,#hrv7-launcher{display:none!important}
+#hraio-launcher{
+  right:16px!important;bottom:20px!important;z-index:2147483645!important;
+  padding:13px 17px!important;border-radius:999px!important;
+  background:linear-gradient(120deg,#635bff,#08b8cb)!important;color:#fff!important;
+  font-weight:800!important;letter-spacing:.01em!important;
+  box-shadow:0 10px 32px rgba(73,77,255,.34)!important;
+}
+#hraio-panel{z-index:2147483646!important}
+#hraio-panel .wrap{box-shadow:0 24px 90px #0008}
+#hraio-panel .tool{transition:transform .18s ease,border-color .18s ease,background .18s ease}
+#hraio-panel .tool:hover{transform:translateY(-2px);border-color:#655df4;background:#1b2940}
+#hraio-panel .badge{letter-spacing:.05em;color:#ddd9ff}
+
+/* Hero overview: the dashboard preview must not stay invisible on first load. */
+.hero{padding:clamp(28px,4.2vw,52px) 0 28px!important}
+.hero-grid{gap:clamp(22px,3.6vw,40px)!important;align-items:center!important}
+.hero .mockup.reveal{opacity:1!important;transform:none!important;visibility:visible!important;display:block!important}
+.hero .mockup{border-radius:18px!important;box-shadow:0 24px 60px -24px rgba(0,0,0,.82),0 0 44px -24px rgba(124,92,255,.42)!important}
+.hero .mockup-body{padding:15px!important}
+.hero .mock-row{margin-bottom:10px!important}
+.hero #heroMockupRows>div[style*="text-align:center"]{padding:26px 12px!important;line-height:1.6}
+.hero .stats.reveal{opacity:1!important;transform:none!important;visibility:visible!important}
+.hero .stats{margin-top:28px!important;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,.018)}
+.hero .stat{padding:22px 14px!important;min-width:0}
+.hero .stat b{font-size:clamp(22px,3vw,30px)!important}
+.hero .stat span{font-size:11px!important;line-height:1.5}
+.hero-title{line-height:1.1!important;letter-spacing:-.035em}
+.hero-sub{line-height:1.65!important}
+@media(max-width:980px){
+  .hero-grid{grid-template-columns:1fr!important;gap:24px!important}
+  .hero .mockup{max-width:640px;width:100%;margin:0 auto}
+}
+@media(max-width:720px){
+  .hero{padding:26px 0 22px!important}
+  .hero .pill{margin-bottom:17px!important;font-size:11.5px!important;flex-wrap:wrap}
+  h1.hero-title{font-size:clamp(33px,8.2vw,44px)!important;margin-bottom:14px!important}
+  .hero-sub{font-size:14px!important;margin-bottom:20px!important}
+  .hero-actions{gap:9px!important;margin-bottom:17px!important}
+  .hero-actions .btn{font-size:12px!important;padding:12px 14px!important}
+  .hero-note{font-size:12px!important}
+  .hero .stats{margin-top:20px!important}
+  .hero .stat{padding:16px 9px!important}
+  .hero .stat span{font-size:10px!important;letter-spacing:.04em!important}
+  .sponsors{padding:28px 0!important}
+  .sponsors .label{letter-spacing:.12em!important;font-size:10px!important;margin-bottom:18px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #hraio-panel .tool{transition:none}
+}
+</style>
+<script id="hr-refined-labels">
+(()=>{'use strict';
+const setText=(id,text)=>{const el=document.getElementById(id);if(el)el.textContent=text};
+setText('hrExtraFab','Team Productivity');
+setText('hrWorkspaceFab','Project Delivery');
+setText('hrV3Launcher','Submission & API Studio');
+setText('hrv4-launch','Team & Resource Operations');
+setText('hrv5-launcher','Event Operations');
+setText('hrv6-launcher','Volunteer & Judge Center');
+setText('hrv7-launcher','Event Control Center');
+setText('hraio-launcher','Rivals Hub ☰');
+const titleMap=[
+['hrExtraPanel','Team Productivity Suite'],
+['hrWorkspace','Project Delivery Workspace'],
+['hrV3Panel','Submission & API Studio'],
+['hrv4-panel','Team & Resource Operations'],
+['hrv5-panel','Event Operations Suite'],
+['hrv6-panel','Volunteer & Judge Center'],
+['hrv7-panel','Event Control Center']
+];
+titleMap.forEach(([id,title])=>{
+  const root=document.getElementById(id);if(!root)return;
+  const heading=root.querySelector('h2,h3');
+  if(heading)heading.textContent='Hackathon Rivals · '+title;
+  root.setAttribute('aria-label',title);
+});
+const row=document.querySelector('.mock-row .mock-title');
+if(row)row.textContent='Season 2026 · Live Overview';
+})();
+</script>
+<!-- /HACKATHON_RIVALS_REFINED_UI -->
+
 </body>
 </html>
