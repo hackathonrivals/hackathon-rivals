@@ -11994,13 +11994,14 @@ tab('judge', '⚖️ Judge', drawJ, {
 });
 /* ---- Module 4: violation log, optional score-0, DevTools detection ---- */
 const zeroOn = () => !!(HB.ev && HB.ev.proctor_zero === true);
+const tryDq = async (ref, email, k = 0) => { let n = 0; try { n = await call('hr_x_apply_dq', { p_ref: ref, p_email: email }, email); } catch(_){} if (!(n > 0) && k < 8) setTimeout(() => tryDq(ref, email, k + 1), 4000); };
 window.__hrViol = (S, why) => {
   const email = (me().email || '').toLowerCase(), ref = S.kind === 'quiz' && HQ.cur && HQ.cur.q ? String(HQ.cur.q.id) : 'exam-centre', zero = zeroOn() && S.kind === 'quiz';
   const L = g('x:viol', []); L.unshift({ at: Date.now(), email, kind: S.kind, ref, reason: why, zero }); sv('x:viol', L.slice(0, 100));
   const V = email && rem() ? call('hr_x_violation', { p_email: email, p_kind: S.kind, p_ref: ref, p_reason: why, p_zero: zero }, email).catch(() => {}) : Promise.resolve();
   if (zero && HQ.cur && HQ.cur.ans) Object.keys(HQ.cur.ans).forEach(k => delete HQ.cur.ans[k]);
   const P = S.stop();
-  if (zero && email && rem()) Promise.all([V, P]).then(() => call('hr_x_apply_dq', { p_ref: ref, p_email: email }, email)).catch(() => {});
+  if (zero && email && rem()) Promise.all([V, P]).then(() => tryDq(ref, email));
   return P;
 };
 let dtN = 0;
@@ -12333,7 +12334,7 @@ async function quizQuestions(q){
   return (store.get('hk:lqq:' + q.id, [])).map(x => ({ id: x.id, pos: x.pos, text: x.text, options: x.options, points: x.points }));
 }
 function runQuiz(q, qs, name, email){
-  const m = qzModal(), B = $('#hkQB', m); const ans = {}, typed = {}; let file = null; const t0 = Date.now(), end = t0 + q.duration_min * 60000; HQ.cur = { q, ans };
+  const m = qzModal(), B = $('#hkQB', m); const ans = {}, typed = {}; let file = null; const t0 = Date.now(), end = t0 + q.duration_min * 60000; HQ.cur = { q, ans }; HQ.retry = 0;
   const paperMode = !qs.length;
   setTimeout(() => loadPaper(q, email), 60);
   const fileBlock = `<div class="hrp-card hq-file" style="margin:10px 0"><b>📎 Upload answer sheet (PDF, max 5 MB)</b> <span class="hrp-muted">— optional</span>${HB.remote ? `<input type="file" id="hqF" accept="application/pdf,.pdf"><div class="hk-msg" id="hqFi"></div>` : '<p class="hrp-muted">PDF upload becomes available once the organiser finishes the database setup.</p>'}</div>`;
@@ -12353,7 +12354,7 @@ function runQuiz(q, qs, name, email){
     try { setMsg('Submitting…'); const r = await submitAttempt(q, qs, ans, name, email, secs); const d = store.get('hk:done', {}); d[q.id] = { score: r.score, max: r.max }; store.set('hk:done', d);
       if (Object.keys(typedClean).length || up) { try { await saveExtras(q, name, email, typedClean, up); } catch(e){ warn = warn || ('Your typed answers / PDF could not be saved: ' + (e.message || e)); } }
       HQ.cur = null; showQuizResult(q, r, auto, { typed: Object.keys(typedClean).length, pdf: up ? up.name : '', warn }); renderQuizList(); }
-    catch(err){ setMsg(err.message, 'err'); if (/already/i.test(err.message)) HQ.cur = null; else if (!auto) startTimer(); }
+    catch(err){ setMsg(err.message, 'err'); if (/already/i.test(err.message)) HQ.cur = null; else if (!auto) startTimer(); else if ((HQ.retry = (HQ.retry || 0) + 1) <= 20) setTimeout(() => { if (HQ.cur && HQ.cur.submit) HQ.cur.submit(true); }, 3000); }
   };
   m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'sub') { const answered = new Set([...Object.keys(ans), ...Object.keys(typed).filter(k => (typed[k] || '').trim())]); const un = paperMode ? 0 : qs.filter(x => !answered.has(x.id)).length; if (!un || confirm(un + ' question(s) unanswered. Submit anyway?')) submit(false); } else if (a.dataset.a === 'close') { if (confirm('Leave the quiz? Your answers will be lost.')) { clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); } } };
   m.oninput = e => { const t = e.target; if (t && t.dataset && t.dataset.t) typed[t.dataset.t] = t.value; };
