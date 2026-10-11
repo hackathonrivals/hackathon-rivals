@@ -2356,7 +2356,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 
 <div class="marquee">
   <div class="marquee-track">
-    <span class="marquee-item"><span class="tag-new">NEW</span> Season 2026 registrations open — deadline <span id="evDeadlineMq">30 April 2026</span></span>
+    <span class="marquee-item"><span class="tag-new">NEW</span> Season 2026 registrations open — deadline <span id="evDeadlineMq">TBA</span></span>
     <span class="marquee-item"><span class="dot-live"></span> <span id="mqTeams">—</span> teams registered from <span id="mqColleges">—</span> colleges</span>   
     <span class="marquee-item"><span class="tag-new">HOT</span> Grand Finale: <span id="evDatesMq">15–17 November 2026</span> · <span id="evVenueMq">New Delhi</span></span>
     <span class="marquee-item">💰 Prize pool: <b>TBA</b> · across all tracks</span>    
@@ -2448,7 +2448,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
         <div class="countdown-info">
           <div class="eyebrow">Grand Finale 2026</div>
           <h2>36 hours. One shot. Zero sleep.</h2>
-          <p>Registrations close on <span id="evDeadlineTxt">30 April</span>. Lock in your team before the deadline.</p>
+          <p>Registrations close on <span id="evDeadlineTxt">the deadline</span>. Lock in your team before the deadline.</p>
           <a href="#register" class="btn btn-primary btn-lg">Register before it's too late →</a>
         </div>
         <div class="countdown-timer">
@@ -3037,7 +3037,7 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
           </div>
 
           <div class="support-hours">
-            <h4>🕒 Support Hours <span class="live-badge">● ONLINE NOW</span></h4>
+            <h4>🕒 Support Hours</h4>
             <div class="hours-row"><span class="day">Monday – Friday</span><span class="time green">10:00 AM – 8:00 PM</span></div>
             <div class="hours-row"><span class="day">Saturday</span><span class="time">10:00 AM – 6:00 PM</span></div>
             <div class="hours-row"><span class="day">Sunday</span><span class="time">Email only</span></div>
@@ -3354,11 +3354,11 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 
         <tr><td colspan="6" class="admin-empty">Loading teams…</td></tr>
       </tbody>
-      <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
+    </table>
+    <div id="teamPagination" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px">
   <span style="font-size:12.5px;color:var(--muted)" id="teamPageInfo">—</span>
   <div style="display:flex;gap:6px" id="teamPageBtns"></div>
 </div>
-    </table>
   </div>
   </div>
 
@@ -4238,7 +4238,7 @@ async function loadLeaderboard(period = 'live'){
     (data || []).forEach(r => {
       const key = r.email || 'unknown';
       if (!agg[key]) agg[key] = { email: key, name: r.full_name || '', total: 0, count: 0 };
-      agg[key].total += (r.score || 0);
+      agg[key].total = Math.max(agg[key].total, (r.score || 0));
       agg[key].count++;
     });
 
@@ -4267,7 +4267,7 @@ async function loadLeaderboard(period = 'live'){
           <div class="rank ${rankCls}">${medals[i] || '#' + rank}</div>
           <div class="team">
             <span class="avatar" style="background:${colors[i]}">${inits(u.name || u.email)}</span>
-            <div>${escapeHtml(u.name || u.email.split('@')[0])}<small>${escapeHtml(u.email)}</small></div>
+            <div>${escapeHtml(u.name || u.email.split('@')[0])}<small>${escapeHtml(u.email.replace(/^(.{2}).*(@.*)$/,'$1***$2'))}</small></div>
           </div>
           <div class="pts">${val.toLocaleString()}</div>
           <div class="trend flat">${meta}</div>
@@ -4492,7 +4492,7 @@ async function loadHeroMockup(){
     (data || []).forEach(r => {
       const key = r.email || 'unknown';
       if (!agg[key]) agg[key] = { email: key, name: r.full_name || '', total: 0 };
-      agg[key].total += (r.score || 0);
+      agg[key].total = Math.max(agg[key].total, (r.score || 0));
     });
 
     const top3 = Object.values(agg)
@@ -4956,24 +4956,30 @@ loadHeroMockup();
     btn.disabled = true;
 
     // Save to Supabase (admin console ke liye)
-supabase.from('contact_messages').insert([{
+const dbP = supabase.from('contact_messages').insert([{
   name, email,
   phone: $('#qPhone').value.trim() || null,
   org: $('#qOrg').value.trim() || null,
   category: selectedCat || 'General',
   subject, message
-}]).then(({ error }) => {
-  if (error) console.warn('Contact save failed:', error);
-});
+}]).then(({ error }) => { if (error) console.warn('Contact save failed:', error); return !error; })
+  .catch(() => false);
 
-    fetch(FORMSPREE_URL, {
+    const fsP = fetch(FORMSPREE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({ name, email, phone: $('#qPhone').value.trim(),
         org: $('#qOrg').value.trim(), category: selectedCat, subject, message })
-    }).catch(()=>{});
+    }).then(r => r.ok).catch(() => false);
 
-    setTimeout(() => {
+    Promise.all([dbP, fsP]).then(([dbOk, fsOk]) => {
+     if (!dbOk && !fsOk) {
+      btn.textContent = orig;
+      btn.disabled = false;
+      showToast('Could not send your message. Please try again or email us directly.', 'warn', '⚠️');
+      return;
+     }
+     setTimeout(() => {
       btn.textContent = 'Message Sent ✓';
       btn.style.background = 'linear-gradient(135deg,#3ddc84,#22d3ee)';
       showToast(`Query submitted! We'll reply to ${email} within 24 hours.`, 'success', '✓');
@@ -4983,7 +4989,8 @@ supabase.from('contact_messages').insert([{
         btn.style.background = '';
         btn.disabled = false;
       }, 2500);
-    }, 900);
+    }, 300);
+    });
   });
 
   /* ============ NEWSLETTER ============ */
@@ -4994,8 +5001,19 @@ supabase.from('contact_messages').insert([{
       showToast('Please enter a valid email', 'warn', '⚠️');
       return;
     }
-    showToast('Subscribed! Check your inbox for confirmation.', 'success', '📬');
-    $('#newsletterEmail').value = '';
+    const nlBtn = e.target.querySelector('button[type="submit"]');
+    if (nlBtn) nlBtn.disabled = true;
+    fetch(FORMSPREE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ email, subject: 'Newsletter subscription', category: 'Newsletter', message: 'Newsletter signup: ' + email })
+    }).then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      showToast("Subscribed! We'll keep you posted.", 'success', '📬');
+      $('#newsletterEmail').value = '';
+    }).catch(() => {
+      showToast('Could not subscribe right now. Please try again.', 'warn', '⚠️');
+    }).finally(() => { if (nlBtn) nlBtn.disabled = false; });
   });
 
   /* ============ AI CHAT ============ */
@@ -5132,7 +5150,8 @@ async function getAIResponse(msg){
       email: user.email,
       name: name,
       role: role,
-      college: college
+      college: college,
+      created_at: user.created_at
     };
   } catch(e){ console.warn('Auth check failed:', e); return null; }
 }
@@ -5489,7 +5508,7 @@ async function getAIResponse(msg){
       e.preventDefault();
       const email = loginEmail.value.trim();
       if (!email){ showToast('Enter your email first', 'warn', '📧'); loginEmail.focus(); return; }
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
       if (error){ showToast(error.message, 'warn', '⚠️'); return; }
       showToast('Password reset link sent to your email', 'success', '📧');
     });
@@ -5980,6 +5999,8 @@ async function submitTeamRegistration(){
   if (!spoc.spoc_name) return showToast('SPOC name required', 'warn', '⚠️');
   if (!spoc.spoc_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(spoc.spoc_email))
     return showToast('Valid SPOC email required', 'warn', '⚠️');
+  if (spoc.spoc_mobile && !/^[+0-9\s-]{10,15}$/.test(spoc.spoc_mobile))
+    return showToast('Enter a valid mobile number', 'warn', '⚠️');
   if (!spoc.college_name) return showToast('College name required', 'warn', '⚠️');
   if (!team.team_name) return showToast('Team name required', 'warn', '⚠️');
   if (!team.theme || team.theme === 'Select a theme')
@@ -6010,6 +6031,7 @@ if (editingRegistrationId){
       ...spoc,
       ...team,
       members,
+      ...(uploadedPptUrl ? { ppt_url: uploadedPptUrl } : {}),
       updated_at: new Date().toISOString()
     })
     .eq('id', editingRegistrationId)
@@ -6038,8 +6060,6 @@ const successMsg = editingRegistrationId
   : '🎉 Registration submitted successfully!';
 
 showToast(successMsg, 'success', '✓');
-
-    showToast('🎉 Registration submitted successfully!', 'success', '✓');
 
 // Send emails (background)
 fetch('/api/send-email', {
@@ -6467,9 +6487,6 @@ function populateReviewSection(){
       document.getElementById('out').textContent = '1, 2, 3, 4, 5!';
     }
   <\/script>
-
-
-
 </body>
 </html>
 `,
@@ -9658,6 +9675,7 @@ function initCustomSelects(){
   });
 
   setInterval(() => {
+    if (document.hidden) return;
     document.querySelectorAll('.cs-wrapper').forEach(w => {
       const select = w.querySelector('select');
       const btn = w.querySelector('.cs-btn');
@@ -9670,7 +9688,7 @@ function initCustomSelects(){
         item.classList.toggle('active', item.dataset.value === select.value);
       });
     });
-  }, 500);
+  }, 1500);
 }
 
 document.addEventListener('click', e => {
@@ -11459,6 +11477,44 @@ document.addEventListener('keydown', e => {
   else if (k === 'n' || k === 'arrowright') EXACT.next(); else if (k === 'p' || k === 'arrowleft') EXACT.prev(); else if (k === 'm') EXACT.mark();
 }, true);
 document.addEventListener('visibilitychange', () => { const T = EXS.T; if (T && !T.fin && T.mode === 'mock' && document.hidden) { T.tabSw++; saveResume(); } });
+
+/* ---------- Exam guard (admin can switch ON/OFF: Admin → Hackathon settings) ----------
+   While a test/quiz is running: leaving the page (tab/app switch, window blur) or a screenshot /
+   print / copy attempt auto-submits it. Browsers cannot truly block OS screenshots or a phone camera,
+   so this is a deterrent: PrintScreen & screenshot shortcuts are caught, content is hidden on blur. */
+const GUARD = { fp: 0, busy: false };
+const guardOn = () => !(typeof HB !== "undefined" && HB.ev && HB.ev.proctor === false);
+function guardSession(){
+  if (EXS.T && !EXS.T.fin && EXS.view === 'run') return { kind: 'test', t0: EXS.T.start, stop: () => finishTest() };
+  if (HQ.cur && HQ.cur.submit) return { kind: 'quiz', t0: HQ.cur.t0 || 0, stop: () => HQ.cur.submit(true) };
+  return null;
+}
+function guardViolation(why){
+  if (GUARD.busy || !guardOn()) return; const S = guardSession(); if (!S) return;
+  if (Date.now() - S.t0 < 2000) return; if (GUARD.fp && Date.now() < GUARD.fp) return;
+  GUARD.busy = true; try { toast(why + ' — your ' + S.kind + ' was auto-submitted.', 'warn', '🚫'); S.stop(); } catch(e){ console.warn(e); }
+  setTimeout(() => { GUARD.busy = false; }, 1500);
+}
+function guardShield(on){ document.documentElement.classList.toggle('hr-shield', !!on && guardOn() && !!guardSession()); }
+(function(){
+  const st = document.createElement('style'); st.textContent = '@media print{body{display:none!important}} html.hr-shield body>*{visibility:hidden!important} html.hr-shield body::before{content:"Test in progress — content hidden";visibility:visible;position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0b14;color:#fff;font:600 18px sans-serif;z-index:2147483647}'; document.head.appendChild(st);
+  const oc = window.confirm; window.confirm = function(m){ GUARD.fp = Date.now() + 600000; try { return oc.call(window, m); } finally { GUARD.fp = Date.now() + 1500; } };
+  document.addEventListener('click', e => { if (e.target && e.target.type === 'file') GUARD.fp = Date.now() + 300000; }, true);
+  document.addEventListener('change', e => { if (e.target && e.target.type === 'file') GUARD.fp = Date.now() + 1500; }, true);
+  document.addEventListener('cancel', e => { if (e.target && e.target.type === 'file') GUARD.fp = Date.now() + 1500; }, true);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) guardViolation('You left the page'); });
+  window.addEventListener('blur', () => { guardShield(true); setTimeout(() => { if (!document.hasFocus()) guardViolation('You switched away from the page'); }, 250); });
+  window.addEventListener('focus', () => { if (!GUARD.busy) guardShield(false); });
+  window.addEventListener('pagehide', () => guardViolation('You left the page'));
+  window.addEventListener('beforeprint', () => guardViolation('Print attempt'));
+  document.addEventListener('keyup', e => { if (e.key === 'PrintScreen' && guardSession() && guardOn()) { try { navigator.clipboard.writeText(' '); } catch(_){} guardViolation('Screenshot attempt'); } });
+  document.addEventListener('keydown', e => {
+    if (!guardSession() || !guardOn()) return; const k = (e.key || '').toLowerCase();
+    if (e.key === 'PrintScreen' || (e.metaKey && e.shiftKey && ['3','4','5','s'].includes(k)) || (e.ctrlKey && e.shiftKey && k === 's') || (e.metaKey && e.shiftKey && k === 's')) { e.preventDefault(); guardViolation('Screenshot attempt'); return; }
+    if ((e.ctrlKey || e.metaKey) && ['p','s','u'].includes(k)) { e.preventDefault(); guardViolation('Blocked shortcut'); }
+  }, true);
+  ['contextmenu','copy','cut','dragstart'].forEach(ev => document.addEventListener(ev, e => { if (guardSession() && guardOn() && !(e.target && e.target.closest && e.target.closest('textarea,input'))) e.preventDefault(); }, true));
+})();
 window.addEventListener('beforeunload', e => { const T = EXS.T; if (T && !T.fin && T.mode === 'mock') { e.preventDefault(); e.returnValue = ''; } });
 ['Practice mode with instant explanations', 'Timed mock test with auto-submit', 'Negative-marking toggle (−¼)', Object.keys(SUBJ).length + '-subject question bank (' + QB.length + ' questions, ' + QB.filter(q => q.b).length + ' at B.Tech level)', 'B.Tech-level filter (semester / GATE-style questions)', 'Difficulty filter (easy / medium / hard)', 'Choose 5–50 questions per test',
   'Shuffle answer options', 'Question palette (answered / marked colours)', 'Mark-for-review and clear-answer', 'Keyboard control during tests (1–4, N, P, M)', 'Time-left warnings at 5 min and 1 min with beep', 'Submit summary before final submission',
@@ -11811,7 +11867,119 @@ TABS.push(['calc', '🧮 Calc', c => multi(c, CALCS, 'calcSel')]);
 TABS.push(['forms', '📐 Formulas', c => multi(c, FORMS, 'formSel')]);
 TABS.push(['study', '🎯 Study', c => multi(c, STUDY, 'studySel')]);
 TABS.push(['drills', '⌨️ Drills', c => multi(c, DRILLS, 'drillSel')]);
-const ORDER = ['home', 'exam', 'cards', 'calc', 'forms', 'study', 'drills', 'tools', 'cheats', 'plan', 'lists', 'badges', 'share', 'settings', 'help'];
+/* ===== UP Rivals guide modules: Team codes (M2), Events & tickets (M8), College co-hosting (M9) =====
+   Shared via Supabase (run Setup SQL once); falls back to this browser only if the tables are missing. */
+(function(){
+const SQL = "-- ============================================================\n-- Hackathon Rivals \u2014 Team codes, Events & tickets, College co-hosting\n-- Run once in Supabase \u2192 SQL Editor. Safe to run again.\n-- Needs the main setup SQL first (hr_is_admin, hr_token_ok, email verification).\n-- ============================================================\ncreate table if not exists public.hr_x_events(id text primary key, title text not null, starts_at timestamptz not null, venue text, seats int not null check (seats > 0), created_at timestamptz default now());\ncreate table if not exists public.hr_x_tickets(id uuid primary key default gen_random_uuid(), event_id text not null references public.hr_x_events(id) on delete cascade, name text, email text not null, code text not null unique, created_at timestamptz default now());\ncreate unique index if not exists hr_x_tickets_uq on public.hr_x_tickets(event_id, email);\ncreate table if not exists public.hr_x_colleges(id uuid primary key default gen_random_uuid(), college text, city text, club text, name text, email text, footfall int, plan_date date, status text not null default 'pending' check (status in ('pending','approved','rejected')), note text default '', created_at timestamptz default now());\ncreate table if not exists public.hr_x_teams(id uuid primary key default gen_random_uuid(), name text not null, skills text, code text not null unique, leader text not null, created_at timestamptz default now());\ncreate table if not exists public.hr_x_members(team_id uuid not null references public.hr_x_teams(id) on delete cascade, name text, email text not null unique, role text not null default 'Member', primary key (team_id, email));\ncreate table if not exists public.hr_x_invites(token text primary key, team_id uuid not null references public.hr_x_teams(id) on delete cascade, status text not null default 'pending');\nalter table public.hr_x_events enable row level security; alter table public.hr_x_tickets enable row level security; alter table public.hr_x_colleges enable row level security;\nalter table public.hr_x_teams enable row level security; alter table public.hr_x_members enable row level security; alter table public.hr_x_invites enable row level security;\ndrop policy if exists hr_x_ev_read on public.hr_x_events; create policy hr_x_ev_read on public.hr_x_events for select using (true);\ndrop policy if exists hr_x_ev_admin on public.hr_x_events; create policy hr_x_ev_admin on public.hr_x_events for all using (public.hr_is_admin()) with check (public.hr_is_admin());\ndrop policy if exists hr_x_tk_admin on public.hr_x_tickets; create policy hr_x_tk_admin on public.hr_x_tickets for all using (public.hr_is_admin()) with check (public.hr_is_admin());\ndrop policy if exists hr_x_co_admin on public.hr_x_colleges; create policy hr_x_co_admin on public.hr_x_colleges for all using (public.hr_is_admin()) with check (public.hr_is_admin());\ndrop policy if exists hr_x_tm_admin on public.hr_x_teams; create policy hr_x_tm_admin on public.hr_x_teams for all using (public.hr_is_admin()) with check (public.hr_is_admin());\ndrop policy if exists hr_x_mb_admin on public.hr_x_members; create policy hr_x_mb_admin on public.hr_x_members for all using (public.hr_is_admin()) with check (public.hr_is_admin());\ndrop policy if exists hr_x_iv_admin on public.hr_x_invites; create policy hr_x_iv_admin on public.hr_x_invites for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\n-- verified-email gate (same x-quiz-token header the quizzes use)\ncreate or replace function public.hr_x_ok(p_email text) returns boolean language plpgsql stable security definer set search_path = public as $$\ndeclare tok text;\nbegin\n  if public.hr_is_admin() then return true; end if;\n  begin tok := (nullif(current_setting('request.headers', true), '')::json) ->> 'x-quiz-token'; exception when others then tok := null; end;\n  if tok is null then tok := current_setting('request.header.x-quiz-token', true); end if;\n  return public.hr_token_ok(p_email, tok);\nend $$;\n\n-- Events\ncreate or replace function public.hr_x_ev_list() returns table(id text, title text, starts_at timestamptz, venue text, seats int, taken bigint) language sql stable security definer set search_path = public as $$\n  select e.id, e.title, e.starts_at, e.venue, e.seats, (select count(*) from public.hr_x_tickets t where t.event_id = e.id) from public.hr_x_events e order by e.starts_at $$;\ncreate or replace function public.hr_x_ev_mine(p_email text) returns table(event_id text, code text) language sql stable security definer set search_path = public as $$\n  select t.event_id, t.code from public.hr_x_tickets t where public.hr_x_ok(p_email) and t.email = lower(trim(p_email)) $$;\ncreate or replace function public.hr_x_ev_reg(p_event text, p_name text, p_email text) returns text language plpgsql security definer set search_path = public as $$\ndeclare e public.hr_x_events; c text; em text := lower(trim(p_email));\nbegin\n  if not public.hr_x_ok(em) then raise exception 'EMAIL_NOT_VERIFIED'; end if;\n  select * into e from public.hr_x_events where id = p_event for update;\n  if not found then raise exception 'EVENT_NOT_FOUND'; end if;\n  if e.starts_at < now() then raise exception 'EVENT_ENDED'; end if;\n  if exists (select 1 from public.hr_x_tickets where event_id = p_event and email = em) then raise exception 'ALREADY_REGISTERED'; end if;\n  if (select count(*) from public.hr_x_tickets where event_id = p_event) >= e.seats then raise exception 'HOUSEFULL'; end if;\n  c := 'TKT-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 8));\n  insert into public.hr_x_tickets(event_id, name, email, code) values (p_event, left(trim(p_name), 80), em, c);\n  return c;\nend $$;\n\n-- College co-hosting\ncreate or replace function public.hr_x_co_submit(p_college text, p_city text, p_club text, p_name text, p_email text, p_footfall int, p_date date) returns void language plpgsql security definer set search_path = public as $$\ndeclare em text := lower(trim(p_email));\nbegin\n  if not public.hr_x_ok(em) then raise exception 'EMAIL_NOT_VERIFIED'; end if;\n  if em ~ '@(gmail|yahoo|outlook|hotmail|rediffmail|live|icloud|proton)\\.' then raise exception 'FREE_EMAIL'; end if;\n  insert into public.hr_x_colleges(college, city, club, name, email, footfall, plan_date) values (left(p_college,120), left(p_city,80), left(p_club,120), left(p_name,80), em, p_footfall, p_date);\nend $$;\ncreate or replace function public.hr_x_co_list(p_email text) returns table(id uuid, college text, city text, club text, footfall int, plan_date date, status text, note text, email text) language sql stable security definer set search_path = public as $$\n  select c.id, c.college, c.city, c.club, c.footfall, c.plan_date, c.status, c.note,\n    case when public.hr_is_admin() or (c.email = lower(trim(p_email)) and public.hr_x_ok(p_email)) then c.email else '' end\n  from public.hr_x_colleges c\n  where c.status = 'approved' or public.hr_is_admin() or (c.email = lower(trim(p_email)) and public.hr_x_ok(p_email)) order by c.created_at desc $$;\ncreate or replace function public.hr_x_co_set(p_id uuid, p_status text, p_note text) returns void language plpgsql security definer set search_path = public as $$\nbegin\n  if not public.hr_is_admin() then raise exception 'ADMIN_ONLY'; end if;\n  if p_status not in ('approved','rejected') then raise exception 'BAD_STATUS'; end if;\n  update public.hr_x_colleges set status = p_status, note = left(coalesce(p_note,''), 300) where id = p_id and status = 'pending';\nend $$;\n\n-- Teams\ncreate or replace function public.hr_x_tm_my(p_email text) returns jsonb language plpgsql stable security definer set search_path = public as $$\ndeclare r jsonb;\nbegin\n  if not public.hr_x_ok(p_email) then return null; end if;\n  select jsonb_build_object('id', t.id, 'name', t.name, 'skills', t.skills, 'code', t.code, 'leader', t.leader,\n    'members', (select jsonb_agg(jsonb_build_object('name', m.name, 'email', m.email, 'role', m.role)) from public.hr_x_members m where m.team_id = t.id))\n  into r from public.hr_x_teams t join public.hr_x_members x on x.team_id = t.id where x.email = lower(trim(p_email)) limit 1;\n  return r;\nend $$;\ncreate or replace function public.hr_x_tm_new(p_name text, p_skills text, p_member text, p_email text) returns text language plpgsql security definer set search_path = public as $$\ndeclare em text := lower(trim(p_email)); tid uuid; c text;\nbegin\n  if not public.hr_x_ok(em) then raise exception 'EMAIL_NOT_VERIFIED'; end if;\n  if exists (select 1 from public.hr_x_members where email = em) then raise exception 'ALREADY_IN_TEAM'; end if;\n  c := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 8));\n  insert into public.hr_x_teams(name, skills, code, leader) values (left(trim(p_name),80), left(coalesce(p_skills,''),200), c, em) returning id into tid;\n  insert into public.hr_x_members(team_id, name, email, role) values (tid, left(p_member,80), em, 'Leader');\n  return c;\nend $$;\ncreate or replace function public.hr_x_tm_join(p_code text, p_name text, p_email text) returns void language plpgsql security definer set search_path = public as $$\ndeclare em text := lower(trim(p_email)); t public.hr_x_teams; ev record;\nbegin\n  if not public.hr_x_ok(em) then raise exception 'EMAIL_NOT_VERIFIED'; end if;\n  select * into t from public.hr_x_teams where code = upper(trim(p_code));\n  if not found then raise exception 'INVALID_CODE'; end if;\n  select reg_open, reg_closes_at into ev from public.hr_events where id = 'main';\n  if found and (ev.reg_open is false or now() >= ev.reg_closes_at) then raise exception 'REG_CLOSED'; end if;\n  if exists (select 1 from public.hr_x_members where email = em) then raise exception 'ALREADY_IN_TEAM'; end if;\n  insert into public.hr_x_members(team_id, name, email, role) values (t.id, left(p_name,80), em, 'Member');\nend $$;\ncreate or replace function public.hr_x_tm_inv(p_email text) returns text language plpgsql security definer set search_path = public as $$\ndeclare em text := lower(trim(p_email)); t public.hr_x_teams; k text;\nbegin\n  if not public.hr_x_ok(em) then raise exception 'EMAIL_NOT_VERIFIED'; end if;\n  select * into t from public.hr_x_teams where leader = em;\n  if not found then raise exception 'LEADER_ONLY'; end if;\n  k := md5(random()::text || clock_timestamp()::text) || md5(clock_timestamp()::text || random()::text);\n  insert into public.hr_x_invites(token, team_id) values (k, t.id); return k;\nend $$;\ncreate or replace function public.hr_x_tm_acc(p_token text, p_name text, p_email text) returns void language plpgsql security definer set search_path = public as $$\ndeclare em text := lower(trim(p_email)); i public.hr_x_invites;\nbegin\n  if not public.hr_x_ok(em) then raise exception 'EMAIL_NOT_VERIFIED'; end if;\n  select * into i from public.hr_x_invites where token = trim(p_token) and status = 'pending' for update;\n  if not found then raise exception 'INVALID_TOKEN'; end if;\n  if exists (select 1 from public.hr_x_members where email = em) then raise exception 'ALREADY_IN_TEAM'; end if;\n  insert into public.hr_x_members(team_id, name, email, role) values (i.team_id, left(p_name,80), em, 'Member');\n  update public.hr_x_invites set status = 'accepted' where token = i.token;\nend $$;\ncreate or replace function public.hr_x_tm_leave(p_email text) returns void language plpgsql security definer set search_path = public as $$\nbegin\n  if not public.hr_x_ok(p_email) then raise exception 'EMAIL_NOT_VERIFIED'; end if;\n  delete from public.hr_x_members where email = lower(trim(p_email)) and role <> 'Leader';\nend $$;\ncreate or replace function public.hr_x_tm_del(p_email text) returns void language plpgsql security definer set search_path = public as $$\nbegin\n  if not public.hr_x_ok(p_email) then raise exception 'EMAIL_NOT_VERIFIED'; end if;\n  delete from public.hr_x_teams where leader = lower(trim(p_email));\nend $$;\n";
+const K = { ev: 'x:events', er: 'x:evregs', co: 'x:colleges', tm: 'x:teams', ti: 'x:invites' };
+const g = (k, d) => store.get(k, d), sv = (k, v) => store.set(k, v);
+const hx = n => { const a = new Uint8Array(n / 2); crypto.getRandomValues(a); return [...a].map(b => b.toString(16).padStart(2, '0')).join(''); };
+const me = () => store.get('hk:me', {}) || {};
+const okMail = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+const FREE = /@(gmail|yahoo|outlook|hotmail|rediffmail|live|icloud|proton)\./i;
+const v = (c, id) => ((c.querySelector('#' + id) || {}).value || '').trim();
+const X = { miss: false };
+const rem = () => HB.remote && !X.miss;
+const ER = { HOUSEFULL: 'Housefull — registration is full.', ALREADY_REGISTERED: 'Already registered for this session.', EMAIL_NOT_VERIFIED: 'Verify your email first.', EVENT_ENDED: 'This event has ended.', INVALID_CODE: 'Invalid team code.', REG_CLOSED: 'Registration is closed — joining is locked.', ALREADY_IN_TEAM: 'You are already in a team.', INVALID_TOKEN: 'Invalid or already-used token.', LEADER_ONLY: 'Only the team leader can do that.', FREE_EMAIL: 'Please use an official college email domain.', ADMIN_ONLY: 'Admin only.' };
+const errTxt = e => { const m = Object.keys(ER).find(k => String(e && e.message).includes(k)); return m ? ER[m] : ((e && e.message) || 'Something went wrong'); };
+const call = async (fn, body, email) => { try { return await pgrest('rpc/' + fn, { method: 'POST', body, headers: email ? vtHdr(email) : {} }); } catch(e){ if (e.status === 404 || /PGRST20|42883|42P01|schema cache|does not exist/i.test((e.code || '') + (e.message || ''))) X.miss = true; throw e; } };
+const op = async (r, l) => { if (rem()) { try { return await r(); } catch(e){ if (!X.miss) throw e; } } return l(); };
+const ident = () => `<div class="hrp-row"><input class="hrp-in sm" id="xN" placeholder="Your name" value="${esc(me().name || '')}"><input class="hrp-in sm" id="xE" placeholder="Email" value="${esc(me().email || '')}"></div>`;
+const bar = () => (X.miss ? '<div class="hrp-card" style="border-color:var(--orange)">🟠 Database tables not set up — data is saved in this browser only.' + (isAdminUI() ? ' Run the setup SQL once in Supabase.' : ' Ask the organiser.') + '</div>' : '') + (isAdminUI() ? '<div class="hrp-row"><button class="hrp-btn" data-x="sql">📋 Copy setup SQL</button></div>' : '');
+const who = c => { const name = v(c, 'xN'), email = v(c, 'xE').toLowerCase(); if (!name || !okMail(email)) { msg(c, 'Enter your name and a valid email.'); return null; } store.set('hk:me', { ...me(), name, email }); return { name, email }; };
+const gate = async (c, w) => !rem() || !!(await ensureVerified(c.querySelector('#xM'), w.email));
+const msg = (c, t, ok) => { const m = c.querySelector('#xM'); if (m) { m.textContent = t; m.className = 'hk-msg ' + (ok ? 'ok' : 'err'); } };
+const pill = s => `<span class="hk-pill ${s === 'approved' ? 'ok' : s === 'rejected' ? 'bad' : ''}">${s}</span>`;
+const vf = () => rem() && me().email && !vtGet(me().email) ? '<div class="hrp-row"><button class="hrp-btn" data-x="vf">🔐 Verify email to see my data</button></div>' : '';
+function tab(id, label, draw, acts){
+  acts.sql = c => { try { navigator.clipboard.writeText(SQL); msg(c, 'SQL copied — paste it in Supabase → SQL Editor.', 1); } catch(_){ download('hr-x-setup.sql', SQL, 'text/plain'); } };
+  acts.vf = async c => { const e = me().email; if (e && await ensureVerified(c.querySelector('#xM'), e)) draw(c); };
+  TABS.push([id, label, c => { draw(c); c.onclick = async e => { const b = e.target.closest('[data-x]'); if (!b || b.disabled) return; const f = acts[b.dataset.x]; if (f) { try { await f(c, b); } catch(err){ msg(c, errTxt(err)); } } }; }]);
+}
+
+/* ---- Module 8: Events & digital tickets ---- */
+const evList = () => op(async () => (await pgrest('rpc/hr_x_ev_list', { method: 'POST', body: {} })).map(e => ({ id: e.id, title: e.title, date: e.starts_at, venue: e.venue, seats: e.seats, taken: +e.taken })), async () => { const R = g(K.er, []); return g(K.ev, []).map(e => ({ ...e, taken: R.filter(r => r.ev === e.id).length })); });
+const evMine = m => op(async () => m ? (await call('hr_x_ev_mine', { p_email: m }, m)).map(r => ({ ev: r.event_id, code: r.code })) : [], async () => g(K.er, []).filter(r => r.email === m));
+const drawEv = async c => {
+  let L = [], mine = []; try { L = await evList(); mine = await evMine(me().email); } catch(e){ msg(c, errTxt(e)); }
+  const adm = isAdminUI();
+  c.innerHTML = bar() + (adm ? `<div class="hrp-card"><b>🛡️ Admin — new event</b><div class="hrp-row"><input class="hrp-in sm" id="evT" placeholder="Title"><input class="hrp-in sm" id="evD" type="datetime-local"><input class="hrp-in sm" id="evV" placeholder="Venue / link"><input class="hrp-in sm" id="evS" type="number" min="1" placeholder="Seats"></div><button class="hrp-btn pri" data-x="evAdd">Create event</button></div>` : '')
+    + ident() + vf() + '<div class="hk-msg" id="xM"></div>'
+    + (L.length ? L.map(e => { const full = e.taken >= e.seats, past = Date.parse(e.date) < Date.now();
+      return `<div class="hrp-card" style="margin:8px 0"><b>${esc(e.title)}</b><br><span class="hrp-muted">${new Date(e.date).toLocaleString()} · ${esc(e.venue || 'TBA')} · ${e.taken}/${e.seats} seats</span><div class="hrp-row"><button class="hrp-btn pri" data-x="evReg" data-id="${e.id}" ${full || past ? 'disabled' : ''}>${past ? 'Ended' : full ? '🚫 Housefull' : 'Register'}</button>${adm ? `<button class="hrp-btn" data-x="evDel" data-id="${e.id}">Delete</button>` : ''}</div></div>`; }).join('') : '<p class="hrp-muted">No events yet.</p>')
+    + (mine.length ? '<div class="hrp-h">🎟️ My tickets</div>' + mine.map(r => { const e = L.find(x => x.id === r.ev); return e ? `<div class="hrp-card" style="margin:6px 0"><b>${esc(e.title)}</b> · <code>${r.code}</code><div class="hrp-row"><button class="hrp-btn" data-x="evIcs" data-id="${e.id}">📅 Add to calendar (.ics)</button></div></div>` : ''; }).join('') : '');
+};
+tab('events', '🎟️ Events', drawEv, {
+  async evAdd(c){ const title = v(c, 'evT'), d = v(c, 'evD'), seats = +v(c, 'evS'); if (!title || !d || !(seats > 0)) return msg(c, 'Title, date and seats are required.');
+    const row = { id: hx(8), title, starts_at: new Date(d).toISOString(), venue: v(c, 'evV'), seats };
+    await op(() => pgrest('hr_x_events', { method: 'POST', body: [row], headers: { Prefer: 'return=minimal' } }), async () => { const L = g(K.ev, []); L.push({ id: row.id, title, date: row.starts_at, venue: row.venue, seats }); sv(K.ev, L); }); drawEv(c); },
+  async evDel(c, b){ const id = b.dataset.id; await op(() => pgrest('hr_x_events?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }), async () => { sv(K.ev, g(K.ev, []).filter(e => e.id !== id)); sv(K.er, g(K.er, []).filter(r => r.ev !== id)); }); drawEv(c); },
+  async evReg(c, b){ const w = who(c); if (!w || !(await gate(c, w))) return; const id = b.dataset.id;
+    await op(() => call('hr_x_ev_reg', { p_event: id, p_name: w.name, p_email: w.email }, w.email), async () => { const e = g(K.ev, []).find(x => x.id === id), R = g(K.er, []); if (!e) throw new Error('EVENT_NOT_FOUND');
+      if (R.some(r => r.ev === id && r.email === w.email)) throw new Error('ALREADY_REGISTERED'); if (R.filter(r => r.ev === id).length >= e.seats) throw new Error('HOUSEFULL');
+      R.push({ ev: id, ...w, code: 'TKT-' + hx(8).toUpperCase(), at: Date.now() }); sv(K.er, R); });
+    await drawEv(c); msg(c, 'Registered ✔ — your ticket is below.', 1); },
+  async evIcs(c, b){ const e = (await evList()).find(x => x.id === b.dataset.id); if (!e) return; const f = t => new Date(t).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    download((e.title || 'event').replace(/\W+/g, '-') + '.ics', ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', 'UID:' + e.id + '@uprivals', 'DTSTAMP:' + f(Date.now()), 'DTSTART:' + f(e.date), 'DTEND:' + f(Date.parse(e.date) + 7200000), 'SUMMARY:' + e.title, 'LOCATION:' + (e.venue || ''), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n'), 'text/calendar'); }
+});
+
+/* ---- Module 9: College club co-hosting ---- */
+const coList = m => op(async () => (await call('hr_x_co_list', { p_email: m || '' }, m)).map(p => ({ id: p.id, college: p.college, city: p.city, club: p.club, footfall: p.footfall, date: p.plan_date, status: p.status, note: p.note, email: p.email })), async () => g(K.co, []));
+const drawCo = async c => {
+  let L = []; try { L = await coList(me().email); } catch(e){ msg(c, errTxt(e)); }
+  const m = me().email, adm = isAdminUI(), mineL = L.filter(p => p.email && p.email === m);
+  const row = (p, act) => `<div class="hrp-card" style="margin:6px 0"><b>${esc(p.club)}</b> — ${esc(p.college)}, ${esc(p.city)} ${pill(p.status)}<br><span class="hrp-muted">Footfall ${p.footfall} · ${esc(p.date)}${p.email ? ' · ' + esc(p.email) : ''}${p.note ? ' · Feedback: ' + esc(p.note) : ''}</span>${act || ''}</div>`;
+  c.innerHTML = bar() + `<div class="hrp-card"><b>🏫 Propose a co-hosted hackathon</b><div class="hrp-row"><input class="hrp-in sm" id="coC" placeholder="College name"><input class="hrp-in sm" id="coCity" placeholder="City"><input class="hrp-in sm" id="coClub" placeholder="Club title"></div>${ident()}<div class="hrp-row"><input class="hrp-in sm" id="coF" type="number" min="1" placeholder="Expected footfall"><input class="hrp-in sm" id="coD" type="date"></div><p class="hrp-muted">Use your official college email (free mail domains are not accepted).</p><button class="hrp-btn pri" data-x="coAdd">Submit proposal</button><div class="hk-msg" id="xM"></div></div>` + vf()
+    + (adm ? '<div class="hrp-h">🛡️ Admin review</div>' + (L.filter(p => p.status === 'pending').map(p => row(p, `<div class="hrp-row"><button class="hrp-btn pri" data-x="coOk" data-id="${p.id}">Approve</button><button class="hrp-btn" data-x="coNo" data-id="${p.id}">Reject</button></div>`)).join('') || '<p class="hrp-muted">No pending proposals.</p>') : '')
+    + (mineL.length ? '<div class="hrp-h">My proposals</div>' + mineL.map(p => row(p)).join('') : '')
+    + (L.some(p => p.status === 'approved') ? '<div class="hrp-h">🤝 Co-host partners</div>' + L.filter(p => p.status === 'approved').map(p => `<div class="hrp-card" style="margin:6px 0">✅ <b>${esc(p.college)}</b> — ${esc(p.club)} (${esc(p.city)})</div>`).join('') : '');
+};
+const setSt = async (c, id, st) => { const note = st === 'rejected' ? (prompt('Feedback for the college lead (optional):') || '').slice(0, 300) : '';
+  await op(() => call('hr_x_co_set', { p_id: id, p_status: st, p_note: note }), async () => { const L = g(K.co, []), p = L.find(x => x.id === id); if (p && p.status === 'pending') { p.status = st; p.note = note; sv(K.co, L); } }); drawCo(c); };
+tab('college', '🏫 Co-Host', drawCo, {
+  async coAdd(c){ const w = who(c); if (!w) return; const p = { id: hx(8), college: v(c, 'coC'), city: v(c, 'coCity'), club: v(c, 'coClub'), footfall: +v(c, 'coF'), date: v(c, 'coD'), ...w, status: 'pending', note: '' };
+    if (!p.college || !p.city || !p.club || !(p.footfall > 0) || !p.date) return msg(c, 'Fill in every field.'); if (FREE.test(p.email)) return msg(c, ER.FREE_EMAIL); if (!(await gate(c, w))) return;
+    await op(() => call('hr_x_co_submit', { p_college: p.college, p_city: p.city, p_club: p.club, p_name: p.name, p_email: p.email, p_footfall: p.footfall, p_date: p.date }, p.email), async () => { const L = g(K.co, []); L.unshift(p); sv(K.co, L); });
+    await drawCo(c); msg(c, 'Proposal submitted — status: pending.', 1); },
+  coOk: (c, b) => setSt(c, b.dataset.id, 'approved'), coNo: (c, b) => setSt(c, b.dataset.id, 'rejected')
+});
+
+/* ---- Module 2: Team codes, leader role, invite tokens ---- */
+const myTeamL = e => g(K.tm, []).find(t => t.members.some(m => m.email === e));
+const tmGet = m => op(async () => m ? await call('hr_x_tm_my', { p_email: m }, m) : null, async () => (m && myTeamL(m)) || null);
+const drawTm = async c => {
+  const m = me().email; let t = null; try { t = await tmGet(m); } catch(e){ msg(c, errTxt(e)); }
+  const lead = t && t.leader === m;
+  c.innerHTML = bar() + ident() + vf() + '<div class="hk-msg" id="xM"></div>' + (t
+    ? `<div class="hrp-card"><b>${esc(t.name)}</b> · code <code>${t.code}</code> <button class="hrp-btn" data-x="tmCopy" data-code="${t.code}">Copy code</button><br><span class="hrp-muted">${esc(t.skills || '')}</span>${(t.members || []).map(x => `<div>${x.role === 'Leader' ? '👑' : '👤'} ${esc(x.name)} <span class="hrp-muted">${esc(x.email)}</span></div>`).join('')}<div class="hrp-row">${lead ? '<button class="hrp-btn pri" data-x="tmInv">Generate invite token</button><button class="hrp-btn" data-x="tmDel">Dissolve team</button>' : '<button class="hrp-btn" data-x="tmLeave">Leave team</button>'}</div><div id="tmTok"></div></div>`
+    : `<div class="hrp-card"><b>Create a team</b><div class="hrp-row"><input class="hrp-in sm" id="tmN" placeholder="Team name"><input class="hrp-in sm" id="tmS" placeholder="Skills (comma separated)"></div><button class="hrp-btn pri" data-x="tmNew">Create</button></div>
+    <div class="hrp-card"><b>Join with an 8-character code</b><div class="hrp-row"><input class="hrp-in sm" id="tmC" maxlength="8" placeholder="TEAM CODE"><button class="hrp-btn pri" data-x="tmJoin">Join</button></div></div>
+    <div class="hrp-card"><b>Accept an invitation token</b><div class="hrp-row"><input class="hrp-in sm" id="tmT" placeholder="64-character token"><button class="hrp-btn" data-x="tmAcc">Accept</button></div></div>`);
+};
+const addL = (t, w) => { const L = g(K.tm, []); L.find(y => y.id === t.id).members.push({ ...w, role: 'Member' }); sv(K.tm, L); };
+const me2 = async c => { const w = who(c); return w && (await gate(c, w)) ? w : null; };
+tab('team', '👥 Team', drawTm, {
+  async tmNew(c){ const w = await me2(c); if (!w) return; const name = v(c, 'tmN'); if (!name) return msg(c, 'Give your team a name.');
+    await op(() => call('hr_x_tm_new', { p_name: name, p_skills: v(c, 'tmS'), p_member: w.name, p_email: w.email }, w.email), async () => { if (myTeamL(w.email)) throw new Error('ALREADY_IN_TEAM'); const L = g(K.tm, []); L.push({ id: hx(8), name, skills: v(c, 'tmS'), code: hx(8).toUpperCase(), leader: w.email, members: [{ ...w, role: 'Leader' }] }); sv(K.tm, L); }); drawTm(c); },
+  async tmJoin(c){ const w = await me2(c); if (!w) return; const code = v(c, 'tmC').toUpperCase();
+    await op(() => call('hr_x_tm_join', { p_code: code, p_name: w.name, p_email: w.email }, w.email), async () => { const t = g(K.tm, []).find(x => x.code === code); if (!t) throw new Error('INVALID_CODE');
+      let open = true; try { open = evState().regOpen; } catch(_){} if (!open) throw new Error('REG_CLOSED'); if (myTeamL(w.email)) throw new Error('ALREADY_IN_TEAM'); addL(t, w); }); drawTm(c); },
+  async tmInv(c){ const e = me().email;
+    const k = await op(() => call('hr_x_tm_inv', { p_email: e }, e), async () => { const t = myTeamL(e); if (!t || t.leader !== e) throw new Error('LEADER_ONLY'); const k = hx(64), I = g(K.ti, []); I.push({ token: k, team: t.id, status: 'pending' }); sv(K.ti, I); return k; });
+    c.querySelector('#tmTok').innerHTML = `<p class="hrp-muted">Share this token with your teammate:</p><code style="word-break:break-all">${k}</code>`; },
+  async tmAcc(c){ const w = await me2(c); if (!w) return; const tok = v(c, 'tmT');
+    await op(() => call('hr_x_tm_acc', { p_token: tok, p_name: w.name, p_email: w.email }, w.email), async () => { const I = g(K.ti, []), i = I.find(x => x.token === tok && x.status === 'pending'); if (!i) throw new Error('INVALID_TOKEN');
+      const t = g(K.tm, []).find(x => x.id === i.team); if (!t) throw new Error('INVALID_TOKEN'); if (myTeamL(w.email)) throw new Error('ALREADY_IN_TEAM'); i.status = 'accepted'; sv(K.ti, I); addL(t, w); }); drawTm(c); },
+  tmCopy(c, b){ try { navigator.clipboard.writeText(b.dataset.code); msg(c, 'Code copied.', 1); } catch(_){} },
+  async tmLeave(c){ const e = me().email; await op(() => call('hr_x_tm_leave', { p_email: e }, e), async () => { const L = g(K.tm, []), t = L.find(x => x.members.some(m => m.email === e)); if (t) t.members = t.members.filter(m => m.email !== e); sv(K.tm, L); }); drawTm(c); },
+  async tmDel(c){ const e = me().email; if (!confirm('Dissolve this team?')) return; await op(() => call('hr_x_tm_del', { p_email: e }, e), async () => { sv(K.tm, g(K.tm, []).filter(x => !(x.leader === e))); }); drawTm(c); }
+});
+feat('Team collaboration: 8-char join codes, leader role, invite tokens, one team per person (shared via Supabase)', () => {});
+feat('Events & digital tickets: atomic seat capacity, duplicate block, TKT codes, .ics file (shared via Supabase)', () => {});
+feat('College co-hosting portal: proposals, official-email check, admin approve / reject (shared via Supabase)', () => {});
+})();
+
+const ORDER = ['home', 'exam', 'team', 'events', 'college', 'cards', 'calc', 'forms', 'study', 'drills', 'tools', 'cheats', 'plan', 'lists', 'badges', 'share', 'settings', 'help'];
 TABS.sort((a, b) => ORDER.indexOf(a[0]) - ORDER.indexOf(b[0]));
 feat('Command palette: exam shortcuts', () => {
   const cm = window.__hrpCmds; if (!cm) return; const at = (id, sub) => () => { if (sub) store.set(sub[0], sub[1]); openHub(id); };
@@ -11869,7 +12037,7 @@ Object.assign(EXACT, {
 
 /* ============ HACKATHON: backend, countdown, registration ============ */
 const HK_URL = 'https://awvcorswnzbxsrrzepto.supabase.co', HK_KEY = 'sb_publishable_6GqdbyBWEX7cIkTzcp9yvw_WYNp5GJh', HK_FORM = 'https://formspree.io/f/mppwlbwq';
-const HK_DEFAULT = { id: 'main', name: 'Hackathon Rivals — Live Hackathon', starts_at: '2026-10-01T18:00:00+05:30', reg_closes_at: '2026-10-01T18:00:00+05:30', ends_at: null, reg_open: true, lock_main: true, message: 'Team up, pick a problem and build something great. Register before the countdown hits zero.' };
+const HK_DEFAULT = { id: 'main', name: 'Hackathon Rivals — Live Hackathon', starts_at: '2026-10-01T18:00:00+05:30', reg_closes_at: '2026-10-01T18:00:00+05:30', ends_at: null, reg_open: true, lock_main: true, proctor: true, message: 'Team up, pick a problem and build something great. Register before the countdown hits zero.' };
 const HB = { remote: false, checked: false, off: 0, tsrc: 'device clock', ev: { ...HK_DEFAULT }, lastReg: null, lastPhase: null, rt: 0 };
 function sbToken(){ try { const ref = new URL(HK_URL).hostname.split('.')[0]; const j = JSON.parse(localStorage.getItem('hr-auth-awvcorsw') || localStorage.getItem('sb-' + ref + '-auth-token') || 'null'); return j && (j.access_token || (j.currentSession && j.currentSession.access_token)) || null; } catch(e){ return null; } }
 async function pgrest(path, o = {}){
@@ -11894,7 +12062,8 @@ async function loadEvent(){
 }
 async function saveEvent(ev){
   const row = { id: 'main', name: ev.name, starts_at: ev.starts_at, reg_closes_at: ev.reg_closes_at, ends_at: ev.ends_at || null, reg_open: !!ev.reg_open, lock_main: !!ev.lock_main, message: ev.message || '', updated_at: new Date().toISOString() };
-  if (HB.remote) await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [row] }); else store.set('hk:ev', row);
+  row.proctor = ev.proctor !== false;
+  if (HB.remote) { try { await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [row] }); } catch(e){ if (/proctor/i.test(e.message || '')) { const r2 = { ...row }; delete r2.proctor; await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [r2] }); throw new Error('Saved, but the exam-guard switch needs the updated SQL: run Admin → Setup SQL once (adds the "proctor" column).'); } throw e; } } else store.set('hk:ev', row);
   HB.ev = { ...HB.ev, ...row };
 }
 /* hooks so the Site Content "Event dates" card drives this live countdown too */
@@ -12133,6 +12302,7 @@ function runQuiz(q, qs, name, email){
   m.onclick = e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'sub') { const answered = new Set([...Object.keys(ans), ...Object.keys(typed).filter(k => (typed[k] || '').trim())]); const un = paperMode ? 0 : qs.filter(x => !answered.has(x.id)).length; if (!un || confirm(un + ' question(s) unanswered. Submit anyway?')) submit(false); } else if (a.dataset.a === 'close') { if (confirm('Leave the quiz? Your answers will be lost.')) { clearInterval(HQ.iv); HQ.cur = null; m.classList.remove('open'); } } };
   m.oninput = e => { const t = e.target; if (t && t.dataset && t.dataset.t) typed[t.dataset.t] = t.value; };
   m.onchange = async e => { const t = e.target; if (t.type === 'radio') ans[t.dataset.q] = +t.value; else if (t.id === 'hqF') { const f = t.files && t.files[0]; if (!f) { file = null; const i0 = $('#hqFi', m); if (i0) { i0.textContent = ''; } return; } const err = await pdfCheck(f); const info = $('#hqFi', m); if (err) { file = null; t.value = ''; if (info) { info.textContent = '❌ ' + err; info.className = 'hk-msg err'; } return; } file = f; if (info) { info.textContent = '✅ ' + f.name + ' (' + fmtSize(f.size) + ') — will be uploaded when you submit'; info.className = 'hk-msg ok'; } } };
+  if (HQ.cur) { HQ.cur.submit = submit; HQ.cur.t0 = Date.now(); }
   startTimer();
 }
 async function saveExtras(q, name, email, typed, up){
@@ -12316,7 +12486,7 @@ feat('Question bank loads admin edits, additions and deletions from the database
 function isAdminUI(){ if (document.getElementById('ddAdmin')) return true; const a = document.getElementById('admin'); return !!(a && a.style.display !== 'none' && getComputedStyle(a).display !== 'none'); }
 
 /* ============ ADMIN CONSOLE ============ */
-const HK_SQL = "-- ============================================================\n-- Hackathon Rivals \u2014 hackathon, quizzes & question-bank backend\n-- Run once in: Supabase \u2192 SQL Editor \u2192 New query \u2192 Run.\n-- Safe to run again (uses IF NOT EXISTS / DROP POLICY IF EXISTS).\n-- Assumes your existing table public.profiles(id uuid, role text)\n-- where role = 'Admin' marks administrators (same as your site).\n-- ============================================================\n\ncreate extension if not exists pgcrypto;\n\n-- Who is an admin? (checked by every write policy below)\ncreate or replace function public.hr_is_admin() returns boolean\nlanguage sql stable security definer set search_path = public as $$\n  select exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'Admin');\n$$;\ngrant execute on function public.hr_is_admin() to anon, authenticated;\n\n-- Trusted server clock (used by the page so changing a phone clock cannot re-open registration)\ncreate or replace function public.hr_now() returns timestamptz\nlanguage sql stable as $$ select now(); $$;\ngrant execute on function public.hr_now() to anon, authenticated;\n\n-- ---------- event settings (one row: id = 'main') ----------\ncreate table if not exists public.hr_events (\n  id text primary key default 'main',\n  name text not null,\n  starts_at timestamptz not null,\n  reg_closes_at timestamptz not null,\n  ends_at timestamptz,\n  reg_open boolean not null default true,\n  lock_main boolean not null default true,\n  message text,\n  updated_at timestamptz not null default now()\n);\nalter table public.hr_events enable row level security;\ndrop policy if exists hr_events_read on public.hr_events;\ndrop policy if exists hr_events_write on public.hr_events;\ncreate policy hr_events_read on public.hr_events for select using (true);\ncreate policy hr_events_write on public.hr_events for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\n-- Default event: 1 Oct 2026, 6:00 PM IST (change it later from the Admin console)\ninsert into public.hr_events (id, name, starts_at, reg_closes_at, message)\nvalues ('main', 'Hackathon Rivals \u2014 Live Hackathon', '2026-10-01 18:00:00+05:30', '2026-10-01 18:00:00+05:30',\n        'Team up, pick a problem and build something great. Register before the countdown hits zero.')\non conflict (id) do nothing;\n\n-- ---------- registrations ----------\ncreate table if not exists public.hr_registrations (\n  id uuid primary key default gen_random_uuid(),\n  event_id text not null default 'main',\n  team_name text not null,\n  leader_name text not null,\n  email text not null,\n  phone text not null,\n  college text not null,\n  team_size int not null check (team_size between 1 and 6),\n  members text,\n  track text,\n  notes text,\n  created_at timestamptz not null default now()\n);\ncreate unique index if not exists hr_registrations_email_uq on public.hr_registrations (event_id, lower(email));\nalter table public.hr_registrations enable row level security;\ndrop policy if exists hr_reg_admin on public.hr_registrations;\ncreate policy hr_reg_admin on public.hr_registrations for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n-- (no INSERT policy on purpose: the only way in is hr_register(), which enforces the deadline)\n\ncreate or replace function public.hr_register(p jsonb) returns jsonb\nlanguage plpgsql security definer set search_path = public as $$\ndeclare ev public.hr_events%rowtype; rid uuid; sz int;\nbegin\n  select * into ev from public.hr_events where id = 'main';\n  if not found or not ev.reg_open or now() >= ev.reg_closes_at then\n    raise exception 'REGISTRATION_CLOSED';\n  end if;\n  if coalesce(trim(p->>'team_name'), '') = '' or coalesce(trim(p->>'leader_name'), '') = ''\n     or coalesce(trim(p->>'email'), '') = '' or coalesce(trim(p->>'phone'), '') = ''\n     or coalesce(trim(p->>'college'), '') = '' then\n    raise exception 'MISSING_FIELDS';\n  end if;\n  sz := least(6, greatest(1, coalesce(nullif(p->>'team_size', '')::int, 1)));\n  insert into public.hr_registrations (event_id, team_name, leader_name, email, phone, college, team_size, members, track, notes)\n  values ('main', left(trim(p->>'team_name'), 60), left(trim(p->>'leader_name'), 80), lower(left(trim(p->>'email'), 120)),\n          left(trim(p->>'phone'), 20), left(trim(p->>'college'), 120), sz,\n          left(p->>'members', 600), left(p->>'track', 120), left(p->>'notes', 400))\n  returning id into rid;\n  return jsonb_build_object('ok', true, 'id', rid);\nend $$;\ngrant execute on function public.hr_register(jsonb) to anon, authenticated;\n\n-- ---------- question bank edits (built-in question overrides, hidden questions, new questions) ----------\ncreate table if not exists public.hr_bank (\n  id text primary key,\n  subj text, subj_name text, sem int, br text, lvl int,\n  text text, opts jsonb, ans int, expl text,\n  deleted boolean not null default false,\n  updated_at timestamptz not null default now()\n);\nalter table public.hr_bank enable row level security;\ndrop policy if exists hr_bank_read on public.hr_bank;\ndrop policy if exists hr_bank_write on public.hr_bank;\ncreate policy hr_bank_read on public.hr_bank for select using (true);\ncreate policy hr_bank_write on public.hr_bank for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\n-- ---------- hackathon quizzes ----------\ncreate table if not exists public.hr_quizzes (\n  id uuid primary key,\n  title text not null,\n  description text,\n  duration_min int not null default 30 check (duration_min between 1 and 600),\n  opens_at timestamptz,\n  closes_at timestamptz,\n  published boolean not null default false,\n  created_at timestamptz not null default now()\n);\ncreate table if not exists public.hr_quiz_questions (\n  id uuid primary key,\n  quiz_id uuid not null references public.hr_quizzes(id) on delete cascade,\n  pos int not null default 1,\n  text text not null,\n  options jsonb not null,\n  points int not null default 1 check (points between 1 and 100)\n);\n-- answers live in a separate admin-only table so participants can never read them\ncreate table if not exists public.hr_quiz_keys (\n  question_id uuid primary key references public.hr_quiz_questions(id) on delete cascade,\n  answer int not null check (answer between 0 and 3),\n  explanation text\n);\ncreate table if not exists public.hr_attempts (\n  id uuid primary key default gen_random_uuid(),\n  quiz_id uuid not null references public.hr_quizzes(id) on delete cascade,\n  email text not null,\n  name text not null,\n  score int not null,\n  max_score int not null,\n  answers jsonb,\n  secs int,\n  created_at timestamptz not null default now()\n);\ncreate unique index if not exists hr_attempts_once on public.hr_attempts (quiz_id, lower(email));\n\nalter table public.hr_quizzes enable row level security;\nalter table public.hr_quiz_questions enable row level security;\nalter table public.hr_quiz_keys enable row level security;\nalter table public.hr_attempts enable row level security;\n\ndrop policy if exists hr_quizzes_read on public.hr_quizzes;\ndrop policy if exists hr_quizzes_write on public.hr_quizzes;\ncreate policy hr_quizzes_read on public.hr_quizzes for select using (published or public.hr_is_admin());\ncreate policy hr_quizzes_write on public.hr_quizzes for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_qq_read on public.hr_quiz_questions;\ndrop policy if exists hr_qq_write on public.hr_quiz_questions;\ncreate policy hr_qq_read on public.hr_quiz_questions for select\n  using (public.hr_is_admin() or exists (select 1 from public.hr_quizzes z where z.id = quiz_id and z.published));\ncreate policy hr_qq_write on public.hr_quiz_questions for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_keys_admin on public.hr_quiz_keys;\ncreate policy hr_keys_admin on public.hr_quiz_keys for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_attempts_admin on public.hr_attempts;\ncreate policy hr_attempts_admin on public.hr_attempts for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ncreate or replace function public.hr_submit_attempt(p_quiz uuid, p_email text, p_name text, p_answers jsonb, p_secs int)\nreturns jsonb language plpgsql security definer set search_path = public as $$\ndeclare q public.hr_quizzes%rowtype; sc int := 0; mx int := 0; cr int := 0; tot int := 0; r record; rev jsonb := '[]'::jsonb; a text;\nbegin\n  select * into q from public.hr_quizzes where id = p_quiz and published;\n  if not found then raise exception 'QUIZ_CLOSED'; end if;\n  if (q.opens_at is not null and now() < q.opens_at)\n     or (q.closes_at is not null and now() >= q.closes_at + make_interval(mins => q.duration_min + 1)) then\n    raise exception 'QUIZ_CLOSED';\n  end if;\n  if coalesce(trim(p_email), '') = '' or coalesce(trim(p_name), '') = '' then raise exception 'MISSING_FIELDS'; end if;\n  if exists (select 1 from public.hr_attempts where quiz_id = p_quiz and lower(email) = lower(trim(p_email))) then\n    raise exception 'ALREADY_SUBMITTED';\n  end if;\n  for r in select qq.id, qq.points, k.answer, k.explanation\n           from public.hr_quiz_questions qq join public.hr_quiz_keys k on k.question_id = qq.id\n           where qq.quiz_id = p_quiz order by qq.pos loop\n    tot := tot + 1; mx := mx + r.points;\n    a := p_answers ->> r.id::text;\n    if a is not null and a ~ '^[0-3]$' and a::int = r.answer then sc := sc + r.points; cr := cr + 1; end if;\n    rev := rev || jsonb_build_array(jsonb_build_object('id', r.id, 'answer', r.answer, 'explanation', r.explanation));\n  end loop;\n  insert into public.hr_attempts (quiz_id, email, name, score, max_score, answers, secs)\n  values (p_quiz, lower(trim(p_email)), left(trim(p_name), 80), sc, mx, p_answers, least(greatest(coalesce(p_secs, 0), 0), 86400));\n  return jsonb_build_object('score', sc, 'max', mx, 'correct', cr, 'total', tot, 'review', rev);\nend $$;\ngrant execute on function public.hr_submit_attempt(uuid, text, text, jsonb, int) to anon, authenticated;\n\ncreate or replace function public.hr_leaderboard(p_quiz uuid)\nreturns table (name text, score int, secs int) language sql stable security definer set search_path = public as $$\n  select a.name, a.score, a.secs from public.hr_attempts a\n  where a.quiz_id = p_quiz order by a.score desc, a.secs asc limit 50;\n$$;\ngrant execute on function public.hr_leaderboard(uuid) to anon, authenticated;\n\n-- ---------- OPTIONAL: also close the site's own team-registration table at the deadline ----------\n-- Only installed if public.team_registrations exists. Remove this block if you do not want that.\ndo $$\nbegin\n  if to_regclass('public.team_registrations') is not null then\n    execute $f$\n      create or replace function public.hr_lock_team_registrations() returns trigger\n      language plpgsql security definer set search_path = public as $b$\n      declare ev public.hr_events%rowtype;\n      begin\n        select * into ev from public.hr_events where id = 'main';\n        if found and ev.lock_main and (not ev.reg_open or now() >= ev.reg_closes_at) then\n          raise exception 'REGISTRATION_CLOSED';\n        end if;\n        return new;\n      end $b$;\n    $f$;\n    execute 'drop trigger if exists hr_lock_team_reg on public.team_registrations';\n    execute 'create trigger hr_lock_team_reg before insert on public.team_registrations for each row execute function public.hr_lock_team_registrations()';\n  end if;\nend $$;\n";
+const HK_SQL = "-- ============================================================\n-- Hackathon Rivals \u2014 hackathon, quizzes & question-bank backend\n-- Run once in: Supabase \u2192 SQL Editor \u2192 New query \u2192 Run.\n-- Safe to run again (uses IF NOT EXISTS / DROP POLICY IF EXISTS).\n-- Assumes your existing table public.profiles(id uuid, role text)\n-- where role = 'Admin' marks administrators (same as your site).\n-- ============================================================\n\ncreate extension if not exists pgcrypto;\n\n-- Who is an admin? (checked by every write policy below)\ncreate or replace function public.hr_is_admin() returns boolean\nlanguage sql stable security definer set search_path = public as $$\n  select exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'Admin');\n$$;\ngrant execute on function public.hr_is_admin() to anon, authenticated;\n\n-- Trusted server clock (used by the page so changing a phone clock cannot re-open registration)\ncreate or replace function public.hr_now() returns timestamptz\nlanguage sql stable as $$ select now(); $$;\ngrant execute on function public.hr_now() to anon, authenticated;\n\n-- ---------- event settings (one row: id = 'main') ----------\ncreate table if not exists public.hr_events (\n  id text primary key default 'main',\n  name text not null,\n  starts_at timestamptz not null,\n  reg_closes_at timestamptz not null,\n  ends_at timestamptz,\n  reg_open boolean not null default true,\n  lock_main boolean not null default true,\n  message text,\n  updated_at timestamptz not null default now()\n);\nalter table public.hr_events enable row level security;\ndrop policy if exists hr_events_read on public.hr_events;\ndrop policy if exists hr_events_write on public.hr_events;\ncreate policy hr_events_read on public.hr_events for select using (true);\ncreate policy hr_events_write on public.hr_events for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\n-- Default event: 1 Oct 2026, 6:00 PM IST (change it later from the Admin console)\ninsert into public.hr_events (id, name, starts_at, reg_closes_at, message)\nvalues ('main', 'Hackathon Rivals \u2014 Live Hackathon', '2026-10-01 18:00:00+05:30', '2026-10-01 18:00:00+05:30',\n        'Team up, pick a problem and build something great. Register before the countdown hits zero.')\non conflict (id) do nothing;\n\n-- exam guard switch (auto-submit on tab switch / screenshot)\nalter table public.hr_events add column if not exists proctor boolean not null default true;\n\n-- ---------- registrations ----------\ncreate table if not exists public.hr_registrations (\n  id uuid primary key default gen_random_uuid(),\n  event_id text not null default 'main',\n  team_name text not null,\n  leader_name text not null,\n  email text not null,\n  phone text not null,\n  college text not null,\n  team_size int not null check (team_size between 1 and 6),\n  members text,\n  track text,\n  notes text,\n  created_at timestamptz not null default now()\n);\ncreate unique index if not exists hr_registrations_email_uq on public.hr_registrations (event_id, lower(email));\nalter table public.hr_registrations enable row level security;\ndrop policy if exists hr_reg_admin on public.hr_registrations;\ncreate policy hr_reg_admin on public.hr_registrations for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n-- (no INSERT policy on purpose: the only way in is hr_register(), which enforces the deadline)\n\ncreate or replace function public.hr_register(p jsonb) returns jsonb\nlanguage plpgsql security definer set search_path = public as $$\ndeclare ev public.hr_events%rowtype; rid uuid; sz int;\nbegin\n  select * into ev from public.hr_events where id = 'main';\n  if not found or not ev.reg_open or now() >= ev.reg_closes_at then\n    raise exception 'REGISTRATION_CLOSED';\n  end if;\n  if coalesce(trim(p->>'team_name'), '') = '' or coalesce(trim(p->>'leader_name'), '') = ''\n     or coalesce(trim(p->>'email'), '') = '' or coalesce(trim(p->>'phone'), '') = ''\n     or coalesce(trim(p->>'college'), '') = '' then\n    raise exception 'MISSING_FIELDS';\n  end if;\n  sz := least(6, greatest(1, coalesce(nullif(p->>'team_size', '')::int, 1)));\n  insert into public.hr_registrations (event_id, team_name, leader_name, email, phone, college, team_size, members, track, notes)\n  values ('main', left(trim(p->>'team_name'), 60), left(trim(p->>'leader_name'), 80), lower(left(trim(p->>'email'), 120)),\n          left(trim(p->>'phone'), 20), left(trim(p->>'college'), 120), sz,\n          left(p->>'members', 600), left(p->>'track', 120), left(p->>'notes', 400))\n  returning id into rid;\n  return jsonb_build_object('ok', true, 'id', rid);\nend $$;\ngrant execute on function public.hr_register(jsonb) to anon, authenticated;\n\n-- ---------- question bank edits (built-in question overrides, hidden questions, new questions) ----------\ncreate table if not exists public.hr_bank (\n  id text primary key,\n  subj text, subj_name text, sem int, br text, lvl int,\n  text text, opts jsonb, ans int, expl text,\n  deleted boolean not null default false,\n  updated_at timestamptz not null default now()\n);\nalter table public.hr_bank enable row level security;\ndrop policy if exists hr_bank_read on public.hr_bank;\ndrop policy if exists hr_bank_write on public.hr_bank;\ncreate policy hr_bank_read on public.hr_bank for select using (true);\ncreate policy hr_bank_write on public.hr_bank for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\n-- ---------- hackathon quizzes ----------\ncreate table if not exists public.hr_quizzes (\n  id uuid primary key,\n  title text not null,\n  description text,\n  duration_min int not null default 30 check (duration_min between 1 and 600),\n  opens_at timestamptz,\n  closes_at timestamptz,\n  published boolean not null default false,\n  created_at timestamptz not null default now()\n);\ncreate table if not exists public.hr_quiz_questions (\n  id uuid primary key,\n  quiz_id uuid not null references public.hr_quizzes(id) on delete cascade,\n  pos int not null default 1,\n  text text not null,\n  options jsonb not null,\n  points int not null default 1 check (points between 1 and 100)\n);\n-- answers live in a separate admin-only table so participants can never read them\ncreate table if not exists public.hr_quiz_keys (\n  question_id uuid primary key references public.hr_quiz_questions(id) on delete cascade,\n  answer int not null check (answer between 0 and 3),\n  explanation text\n);\ncreate table if not exists public.hr_attempts (\n  id uuid primary key default gen_random_uuid(),\n  quiz_id uuid not null references public.hr_quizzes(id) on delete cascade,\n  email text not null,\n  name text not null,\n  score int not null,\n  max_score int not null,\n  answers jsonb,\n  secs int,\n  created_at timestamptz not null default now()\n);\ncreate unique index if not exists hr_attempts_once on public.hr_attempts (quiz_id, lower(email));\n\nalter table public.hr_quizzes enable row level security;\nalter table public.hr_quiz_questions enable row level security;\nalter table public.hr_quiz_keys enable row level security;\nalter table public.hr_attempts enable row level security;\n\ndrop policy if exists hr_quizzes_read on public.hr_quizzes;\ndrop policy if exists hr_quizzes_write on public.hr_quizzes;\ncreate policy hr_quizzes_read on public.hr_quizzes for select using (published or public.hr_is_admin());\ncreate policy hr_quizzes_write on public.hr_quizzes for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_qq_read on public.hr_quiz_questions;\ndrop policy if exists hr_qq_write on public.hr_quiz_questions;\ncreate policy hr_qq_read on public.hr_quiz_questions for select\n  using (public.hr_is_admin() or exists (select 1 from public.hr_quizzes z where z.id = quiz_id and z.published));\ncreate policy hr_qq_write on public.hr_quiz_questions for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_keys_admin on public.hr_quiz_keys;\ncreate policy hr_keys_admin on public.hr_quiz_keys for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ndrop policy if exists hr_attempts_admin on public.hr_attempts;\ncreate policy hr_attempts_admin on public.hr_attempts for all using (public.hr_is_admin()) with check (public.hr_is_admin());\n\ncreate or replace function public.hr_submit_attempt(p_quiz uuid, p_email text, p_name text, p_answers jsonb, p_secs int)\nreturns jsonb language plpgsql security definer set search_path = public as $$\ndeclare q public.hr_quizzes%rowtype; sc int := 0; mx int := 0; cr int := 0; tot int := 0; r record; rev jsonb := '[]'::jsonb; a text;\nbegin\n  select * into q from public.hr_quizzes where id = p_quiz and published;\n  if not found then raise exception 'QUIZ_CLOSED'; end if;\n  if (q.opens_at is not null and now() < q.opens_at)\n     or (q.closes_at is not null and now() >= q.closes_at + make_interval(mins => q.duration_min + 1)) then\n    raise exception 'QUIZ_CLOSED';\n  end if;\n  if coalesce(trim(p_email), '') = '' or coalesce(trim(p_name), '') = '' then raise exception 'MISSING_FIELDS'; end if;\n  if exists (select 1 from public.hr_attempts where quiz_id = p_quiz and lower(email) = lower(trim(p_email))) then\n    raise exception 'ALREADY_SUBMITTED';\n  end if;\n  for r in select qq.id, qq.points, k.answer, k.explanation\n           from public.hr_quiz_questions qq join public.hr_quiz_keys k on k.question_id = qq.id\n           where qq.quiz_id = p_quiz order by qq.pos loop\n    tot := tot + 1; mx := mx + r.points;\n    a := p_answers ->> r.id::text;\n    if a is not null and a ~ '^[0-3]$' and a::int = r.answer then sc := sc + r.points; cr := cr + 1; end if;\n    rev := rev || jsonb_build_array(jsonb_build_object('id', r.id, 'answer', r.answer, 'explanation', r.explanation));\n  end loop;\n  insert into public.hr_attempts (quiz_id, email, name, score, max_score, answers, secs)\n  values (p_quiz, lower(trim(p_email)), left(trim(p_name), 80), sc, mx, p_answers, least(greatest(coalesce(p_secs, 0), 0), 86400));\n  return jsonb_build_object('score', sc, 'max', mx, 'correct', cr, 'total', tot, 'review', rev);\nend $$;\ngrant execute on function public.hr_submit_attempt(uuid, text, text, jsonb, int) to anon, authenticated;\n\ncreate or replace function public.hr_leaderboard(p_quiz uuid)\nreturns table (name text, score int, secs int) language sql stable security definer set search_path = public as $$\n  select a.name, a.score, a.secs from public.hr_attempts a\n  where a.quiz_id = p_quiz order by a.score desc, a.secs asc limit 50;\n$$;\ngrant execute on function public.hr_leaderboard(uuid) to anon, authenticated;\n\n-- ---------- OPTIONAL: also close the site's own team-registration table at the deadline ----------\n-- Only installed if public.team_registrations exists. Remove this block if you do not want that.\ndo $$\nbegin\n  if to_regclass('public.team_registrations') is not null then\n    execute $f$\n      create or replace function public.hr_lock_team_registrations() returns trigger\n      language plpgsql security definer set search_path = public as $b$\n      declare ev public.hr_events%rowtype;\n      begin\n        select * into ev from public.hr_events where id = 'main';\n        if found and ev.lock_main and (not ev.reg_open or now() >= ev.reg_closes_at) then\n          raise exception 'REGISTRATION_CLOSED';\n        end if;\n        return new;\n      end $b$;\n    $f$;\n    execute 'drop trigger if exists hr_lock_team_reg on public.team_registrations';\n    execute 'create trigger hr_lock_team_reg before insert on public.team_registrations for each row execute function public.hr_lock_team_registrations()';\n  end if;\nend $$;\n";
 function parseCSV(t){
   const rows = []; let r = [], f = '', q = false;
   for (let i = 0; i < t.length; i++) { const ch = t[i];
@@ -12966,6 +13136,7 @@ ADV.hack = box => {
   <label class="hrp-muted">Message shown on the page</label><textarea class="hrp-ta" id="adMsg" style="min-height:70px;font-family:inherit">${esc(e.message || '')}</textarea>
   <label class="hrp-check"><input type="checkbox" id="adOpen" ${e.reg_open !== false ? 'checked' : ''}><span>Registration switch is ON (untick to close registration immediately)</span></label>
   <label class="hrp-check"><input type="checkbox" id="adLock" ${e.lock_main !== false ? 'checked' : ''}><span>Also lock the site’s main team-registration form when time is up</span></label>
+  <label class="hrp-check"><input type="checkbox" id="adProctor" ${e.proctor !== false ? 'checked' : ''}><span>🛡️ Exam guard ON — during a test/quiz, switching tab/app or a screenshot/print attempt auto-submits it</span></label>
   <div class="hrp-row"><button class="hrp-btn pri" data-ad="hsave">Save changes</button><button class="hrp-btn" data-ad="hclose">Close registration now</button><button class="hrp-btn" data-ad="hopen">Reopen (switch ON)</button><button class="hrp-btn" data-ad="hannounce">📣 Announce to all users</button></div><div class="hk-msg" id="adMsgOut"></div>
   <div class="hrp-h">📣 Announcements to all signed-up users</div><div id="bcStatus" class="hrp-muted">Loading…</div>`;
   setTimeout(bcStatusLoad, 80);
@@ -12977,7 +13148,7 @@ async function adSaveEvent(patch, okMsg){
 }
 adAct.hsave = () => { const c = AD.c, out = $('#adMsgOut', c); const s = new Date($('#adStart', c).value).getTime(); let cl = new Date($('#adClose', c).value).getTime(); const en = $('#adEnd', c).value ? new Date($('#adEnd', c).value).getTime() : null;
   if (!isFinite(s)) { out.textContent = 'Pick a valid start time.'; out.className = 'hk-msg err'; return; } if (!isFinite(cl)) cl = s;
-  adSaveEvent({ name: $('#adName', c).value.trim() || HK_DEFAULT.name, starts_at: new Date(s).toISOString(), reg_closes_at: new Date(cl).toISOString(), ends_at: en ? new Date(en).toISOString() : null, message: $('#adMsg', c).value.trim(), reg_open: $('#adOpen', c).checked, lock_main: $('#adLock', c).checked }, 'Hackathon settings saved'); };
+  adSaveEvent({ name: $('#adName', c).value.trim() || HK_DEFAULT.name, starts_at: new Date(s).toISOString(), reg_closes_at: new Date(cl).toISOString(), ends_at: en ? new Date(en).toISOString() : null, message: $('#adMsg', c).value.trim(), reg_open: $('#adOpen', c).checked, proctor: $('#adProctor', c).checked, lock_main: $('#adLock', c).checked }, 'Hackathon settings saved'); };
 adAct.hclose = () => adSaveEvent({ reg_open: false }, 'Registration closed');
 adAct.hopen = () => { const st = evState(); adSaveEvent({ reg_open: true }, st.n >= st.c ? 'Switch is ON, but the closing time has already passed — move “Registration closes” to a later time' : 'Registration reopened'); };
 
@@ -13912,781 +14083,5 @@ Element.prototype.scrollIntoView=function(o){const p=this.closest&&this.closest(
   }).observe(modal, {attributes:true, attributeFilter:['class']});
 })();
 </script>
-<style id="hr-v3-style">
-#hrV3Launcher{position:fixed;right:22px;bottom:88px;z-index:99990;border:0;border-radius:999px;padding:12px 16px;background:linear-gradient(135deg,#0ea5e9,#7c3aed);color:#fff;font:700 13px system-ui;box-shadow:0 10px 28px #0003;cursor:pointer}
-#hrV3Panel{position:fixed;inset:0;z-index:99991;background:#07101bd9;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:var(--text,#e8eef8)}
-#hrV3Panel.open{display:flex}#hrV3Panel *{box-sizing:border-box}#hrV3Shell{width:min(1050px,100%);max-height:92vh;overflow:auto;background:var(--card,#101b2b);border:1px solid #64748b55;border-radius:18px;box-shadow:0 20px 70px #0008;padding:18px}
-#hrV3Shell h2{margin:0 0 5px;font-size:22px}#hrV3Shell .hrV3muted{opacity:.72;font-size:12px}#hrV3Shell .hrV3top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:15px}#hrV3Shell .hrV3tabs{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}#hrV3Shell button,#hrV3Shell select{cursor:pointer}#hrV3Shell button{border:1px solid #64748b66;border-radius:9px;padding:8px 11px;background:#334155;color:#fff}#hrV3Shell button.active{background:#2563eb}#hrV3Shell input,#hrV3Shell textarea,#hrV3Shell select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid #64748b66;background:var(--input-bg,#0b1220);color:inherit;font:inherit}#hrV3Shell textarea{min-height:78px;resize:vertical}#hrV3Shell label{display:block;font-size:12px;opacity:.85;margin:8px 0 5px}#hrV3Shell .hrV3grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}#hrV3Shell .hrV3row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}#hrV3Shell .hrV3row button{width:auto}#hrV3Shell .hrV3card{border:1px solid #64748b44;border-radius:12px;padding:13px;margin:9px 0}#hrV3Shell pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;background:#020617;border-radius:9px;padding:12px;font:12px ui-monospace,monospace}#hrV3Shell .hrV3hidden{display:none!important}#hrV3Shell .hrV3notice{margin-top:8px;font-size:12px;opacity:.8}#hrV3Shell .hrV3list{display:flex;flex-direction:column;gap:8px}#hrV3Shell .hrV3item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border:1px solid #64748b44;border-radius:9px;padding:9px}#hrV3Shell .hrV3item small{display:block;opacity:.7;margin-top:4px}
-@media(max-width:650px){#hrV3Shell .hrV3grid{grid-template-columns:1fr}#hrV3Launcher{right:12px;bottom:76px}#hrV3Shell{padding:12px}}
-</style>
-<button id="hrV3Launcher" type="button">🧰 Extra Tools 3</button>
-<div id="hrV3Panel" aria-hidden="true"><section id="hrV3Shell" role="dialog" aria-modal="true" aria-label="Extra Tools 3">
- <div class="hrV3top"><div><h2>Hackathon Rivals · Extra Tools 3</h2><div class="hrV3muted">Submission pack · Event schedule · Decision log · API tester</div></div><button id="hrV3Close" type="button">✕ Close</button></div>
- <div class="hrV3tabs"><button type="button" data-hrv3tab="pack" class="active">Submission Pack</button><button type="button" data-hrv3tab="schedule">Event Schedule</button><button type="button" data-hrv3tab="decisions">Decision Log</button><button type="button" data-hrv3tab="api">API Tester</button></div>
- <section data-hrv3pane="pack"><div class="hrV3grid">
- <div><label>Project name</label><input id="hrV3pName" placeholder="e.g. Campus Connect"><label>One-line tagline</label><input id="hrV3pTag" placeholder="What does it do?"><label>Problem statement</label><textarea id="hrV3pProblem" placeholder="Who faces what problem?"></textarea><label>Solution</label><textarea id="hrV3pSolution" placeholder="How your project solves it"></textarea></div>
- <div><label>Tech stack</label><input id="hrV3pStack" placeholder="React, Node.js, Supabase..."><label>Key features (one per line)</label><textarea id="hrV3pFeatures" placeholder="Feature 1&#10;Feature 2"></textarea><label>Impact / users</label><textarea id="hrV3pImpact" placeholder="Expected impact, target users, metrics"></textarea><label>Repository URL</label><input id="hrV3pRepo" placeholder="https://..."><label>Demo URL</label><input id="hrV3pDemo" placeholder="https://..."></div></div>
- <div class="hrV3row"><button type="button" id="hrV3PackSave">Save draft</button><button type="button" id="hrV3PackGenerate">Generate Markdown</button><button type="button" id="hrV3PackDownload">Download .md</button><button type="button" id="hrV3PackCopy">Copy</button></div><pre id="hrV3PackOut">Your submission pack will appear here.</pre><div class="hrV3notice">Draft is stored in this browser only. Review all claims and links before submitting.</div></section>
- <section data-hrv3pane="schedule" class="hrV3hidden"><div class="hrV3grid"><div><label>Time / slot</label><input id="hrV3sTime" placeholder="09:00–09:15"><label>Activity</label><input id="hrV3sActivity" placeholder="Opening ceremony"><label>Owner</label><input id="hrV3sOwner" placeholder="Name / team"><label>Notes / location</label><input id="hrV3sNotes" placeholder="Hall A / meeting link"></div><div><div class="hrV3card"><b>Run of show</b><p class="hrV3muted">Create an event-day timeline. Items can be removed or exported.</p><div class="hrV3row"><button type="button" id="hrV3sAdd">Add schedule item</button><button type="button" id="hrV3sExport">Export CSV</button></div></div><div id="hrV3sList" class="hrV3list"></div></div></div></section>
- <section data-hrv3pane="decisions" class="hrV3hidden"><div class="hrV3grid"><div><label>Decision / topic</label><input id="hrV3dTitle" placeholder="Choose database provider"><label>Options considered</label><textarea id="hrV3dOptions" placeholder="Option A, Option B..."></textarea><label>Decision and reason</label><textarea id="hrV3dReason" placeholder="What was decided and why?"></textarea><label>Owner</label><input id="hrV3dOwner" placeholder="Responsible person"><label>Review date (optional)</label><input id="hrV3dDate" type="date"><div class="hrV3row"><button type="button" id="hrV3dAdd">Record decision</button><button type="button" id="hrV3dExport">Export JSON</button></div></div><div><b>Decision history</b><div id="hrV3dList" class="hrV3list" style="margin-top:10px"></div></div></div></section>
- <section data-hrv3pane="api" class="hrV3hidden"><div class="hrV3grid"><div><label>Request URL</label><input id="hrV3aUrl" placeholder="https://api.example.com/items"><label>Method</label><select id="hrV3aMethod"><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option></select><label>Headers (JSON object)</label><textarea id="hrV3aHeaders" placeholder='{"Content-Type":"application/json"}'></textarea><label>Body (JSON or text; ignored for GET)</label><textarea id="hrV3aBody" placeholder='{"hello":"world"}'></textarea><div class="hrV3row"><button type="button" id="hrV3aSend">Send request</button><button type="button" id="hrV3aClear">Clear output</button></div></div><div><b>Response</b><div id="hrV3aStatus" class="hrV3notice">No request sent yet.</div><pre id="hrV3aOut">Response body will appear here.</pre><div class="hrV3notice">Browser CORS rules may block requests. Never enter production secrets or private tokens into a shared/public device. This tool sends requests only when you press Send.</div></div></div></section>
-</section></div>
-<script id="hr-v3-script">
-(function(){
-'use strict';
-const $=id=>document.getElementById(id), panel=$('hrV3Panel');
-const keys={pack:'hrv3_submission_pack',schedule:'hrv3_event_schedule',decisions:'hrv3_decision_log'};
-function read(key,fallback){try{const v=JSON.parse(localStorage.getItem(key)||'null');return v==null?fallback:v}catch(_){return fallback}}
-function save(key,val){try{localStorage.setItem(key,JSON.stringify(val));return true}catch(e){alert('Could not save in this browser. Storage may be disabled or full.');return false}}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function download(name,text,mime){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:mime||'text/plain;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function copy(text){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>alert('Copied.')).catch(()=>prompt('Copy this text:',text));else prompt('Copy this text:',text)}
-$('hrV3Launcher').addEventListener('click',()=>{panel.classList.add('open');panel.setAttribute('aria-hidden','false')});$('hrV3Close').addEventListener('click',()=>{panel.classList.remove('open');panel.setAttribute('aria-hidden','true')});panel.addEventListener('click',e=>{if(e.target===panel){panel.classList.remove('open');panel.setAttribute('aria-hidden','true')}});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panel.classList.contains('open')){$('hrV3Close').click()}});
-document.querySelectorAll('[data-hrv3tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-hrv3tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-hrv3pane]').forEach(x=>x.classList.toggle('hrV3hidden',x.dataset.hrv3pane!==b.dataset.hrv3tab))}));
-const packFields=['pName','pTag','pProblem','pSolution','pStack','pFeatures','pImpact','pRepo','pDemo'];
-function getPack(){const o={};packFields.forEach(k=>o[k]=$('hrV3'+k).value.trim());return o}function setPack(o){packFields.forEach(k=>{if(o&&o[k]!=null)$('hrV3'+k).value=o[k]})}
-function packMarkdown(){const p=getPack();return '# '+(p.pName||'Project Name')+'\n\n> '+(p.pTag||'Project tagline')+'\n\n## Problem Statement\n'+(p.pProblem||'Add the problem statement.')+'\n\n## Solution\n'+(p.pSolution||'Add the solution.')+'\n\n## Tech Stack\n'+(p.pStack||'Add the technology stack.')+'\n\n## Key Features\n'+(p.pFeatures?p.pFeatures.split(/\n+/).filter(Boolean).map(x=>'- '+x).join('\n'):'- Add key features')+'\n\n## Impact\n'+(p.pImpact||'Describe expected impact and target users.')+'\n\n## Links\n- Repository: '+(p.pRepo||'Not provided')+'\n- Demo: '+(p.pDemo||'Not provided')+'\n';}
-setPack(read(keys.pack,{}));$('hrV3PackSave').addEventListener('click',()=>{if(save(keys.pack,getPack()))alert('Submission draft saved in this browser.')});$('hrV3PackGenerate').addEventListener('click',()=>{$('hrV3PackOut').textContent=packMarkdown()});$('hrV3PackDownload').addEventListener('click',()=>download(((getPack().pName||'submission-pack').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'submission-pack')+'.md',packMarkdown(),'text/markdown;charset=utf-8'));$('hrV3PackCopy').addEventListener('click',()=>copy(packMarkdown()));
-let schedule=read(keys.schedule,[]);function renderSchedule(){const box=$('hrV3sList');box.innerHTML='';if(!schedule.length){box.textContent='No schedule items yet.';return}schedule.forEach((it,i)=>{const d=document.createElement('div');d.className='hrV3item';d.innerHTML='<div><b>'+esc(it.time)+' · '+esc(it.activity)+'</b><small>'+esc(it.owner)+' '+(it.notes?'— '+esc(it.notes):'')+'</small></div><button type="button" data-del-s="'+i+'">Remove</button>';box.appendChild(d)});box.querySelectorAll('[data-del-s]').forEach(b=>b.addEventListener('click',()=>{schedule.splice(Number(b.dataset.delS),1);save(keys.schedule,schedule);renderSchedule()}))}renderSchedule();$('hrV3sAdd').addEventListener('click',()=>{const time=$('hrV3sTime').value.trim(),activity=$('hrV3sActivity').value.trim();if(!time||!activity){alert('Time and activity are required.');return}schedule.push({time,activity,owner:$('hrV3sOwner').value.trim(),notes:$('hrV3sNotes').value.trim()});schedule.sort((a,b)=>a.time.localeCompare(b.time));save(keys.schedule,schedule);['hrV3sTime','hrV3sActivity','hrV3sOwner','hrV3sNotes'].forEach(id=>$(id).value='');renderSchedule()});$('hrV3sExport').addEventListener('click',()=>download('hackathon-event-schedule.csv','Time,Activity,Owner,Notes\n'+schedule.map(x=>[x.time,x.activity,x.owner,x.notes].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv;charset=utf-8'));
-let decisions=read(keys.decisions,[]);function renderDecisions(){const box=$('hrV3dList');box.innerHTML='';if(!decisions.length){box.textContent='No decisions recorded yet.';return}decisions.forEach((it,i)=>{const d=document.createElement('div');d.className='hrV3item';d.innerHTML='<div><b>'+esc(it.title)+'</b><small>Decision: '+esc(it.reason)+'<br>Options: '+esc(it.options||'—')+'<br>Owner: '+esc(it.owner||'—')+' · Review: '+esc(it.date||'Not set')+'</small></div><button type="button" data-del-d="'+i+'">Remove</button>';box.appendChild(d)});box.querySelectorAll('[data-del-d]').forEach(b=>b.addEventListener('click',()=>{decisions.splice(Number(b.dataset.delD),1);save(keys.decisions,decisions);renderDecisions()}))}renderDecisions();$('hrV3dAdd').addEventListener('click',()=>{const title=$('hrV3dTitle').value.trim(),reason=$('hrV3dReason').value.trim();if(!title||!reason){alert('Decision title and reason are required.');return}decisions.unshift({title,options:$('hrV3dOptions').value.trim(),reason,owner:$('hrV3dOwner').value.trim(),date:$('hrV3dDate').value,createdAt:new Date().toISOString()});save(keys.decisions,decisions);['hrV3dTitle','hrV3dOptions','hrV3dReason','hrV3dOwner','hrV3dDate'].forEach(id=>$(id).value='');renderDecisions()});$('hrV3dExport').addEventListener('click',()=>download('hackathon-decisions.json',JSON.stringify(decisions,null,2),'application/json'));
-$('hrV3aSend').addEventListener('click',async()=>{const url=$('hrV3aUrl').value.trim(),method=$('hrV3aMethod').value;const status=$('hrV3aStatus'),out=$('hrV3aOut');if(!url){alert('Request URL is required.');return}let headers;try{headers=JSON.parse($('hrV3aHeaders').value||'{}');if(!headers||Array.isArray(headers)||typeof headers!=='object')throw Error()}catch(_){alert('Headers must be a valid JSON object.');return}const opts={method,headers};if(!['GET','HEAD'].includes(method)&&$('hrV3aBody').value.trim())opts.body=$('hrV3aBody').value;status.textContent='Sending request…';out.textContent='';$('hrV3aSend').disabled=true;try{const start=performance.now(),res=await fetch(url,opts),body=await res.text(),elapsed=Math.round(performance.now()-start);status.textContent='HTTP '+res.status+' '+res.statusText+' · '+elapsed+' ms'+(res.ok?' · Success':' · Non-2xx response');try{out.textContent=JSON.stringify(JSON.parse(body),null,2)}catch(_){out.textContent=body||'(empty response)'}}catch(e){status.textContent='Request failed';out.textContent=String(e&&e.message||e)+'\n\nPossible cause: CORS policy, invalid URL, network failure, or mixed-content restrictions.'}finally{$('hrV3aSend').disabled=false}});$('hrV3aClear').addEventListener('click',()=>{ $('hrV3aStatus').textContent='Output cleared.';$('hrV3aOut').textContent='Response body will appear here.'});
-})();
-</script>
-
-\n<!-- Hackathon Rivals V4 additive toolkit -->
-<style>
-#hrv4-root{position:fixed;right:18px;bottom:86px;z-index:2147483000;font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;color:#eaf0ff}#hrv4-launch{border:0;border-radius:999px;padding:12px 16px;background:#7c3aed;color:white;font-weight:800;box-shadow:0 8px 30px #0005;cursor:pointer}#hrv4-panel{display:none;position:absolute;right:0;bottom:54px;width:min(420px,calc(100vw - 28px));max-height:72vh;overflow:auto;background:#101827;border:1px solid #374151;border-radius:16px;padding:15px;box-shadow:0 18px 60px #0008}#hrv4-panel.open{display:block}#hrv4-panel h3{margin:0 0 8px;font-size:17px}#hrv4-panel h4{margin:12px 0 6px;font-size:14px}#hrv4-panel input,#hrv4-panel textarea,#hrv4-panel select{box-sizing:border-box;width:100%;padding:9px;margin:4px 0;background:#0b1220;color:#f3f4f6;border:1px solid #475569;border-radius:8px}#hrv4-panel textarea{min-height:65px;resize:vertical}#hrv4-panel button{cursor:pointer;border:1px solid #4b5563;background:#273449;color:#fff;border-radius:8px;padding:8px 10px;margin:3px 2px 3px 0}#hrv4-panel .hrv4-row{display:flex;gap:6px}#hrv4-panel .hrv4-row>*{flex:1;min-width:0}#hrv4-panel .hrv4-card{background:#182235;border:1px solid #334155;padding:9px;border-radius:10px;margin:7px 0;overflow-wrap:anywhere}#hrv4-panel small{color:#b7c3d7}#hrv4-panel .hrv4-danger{background:#5b2530}#hrv4-panel .hrv4-good{color:#86efac}
-</style>
-<div id="hrv4-root"><button id="hrv4-launch" type="button" aria-expanded="false">+ Extra Tools 4</button><section id="hrv4-panel" aria-label="Hackathon Rivals tools"><div class="hrv4-row"><h3>Team Operations</h3><button id="hrv4-close" type="button">Close</button></div><small>Local browser tools · data is not shared with teammates automatically.</small>
-<h4>1. Team Directory</h4><div class="hrv4-row"><input id="hrv4-name" placeholder="Member name"><input id="hrv4-role" placeholder="Role / skill"></div><input id="hrv4-contact" placeholder="Contact (optional)"><button id="hrv4-addMember">Add member</button><div id="hrv4-members"></div>
-<h4>2. Budget Tracker</h4><div class="hrv4-row"><input id="hrv4-expense" placeholder="Expense name"><input id="hrv4-amount" type="number" min="0" step="0.01" placeholder="Amount ₹"></div><div class="hrv4-row"><select id="hrv4-category"><option>Travel</option><option>Food</option><option>Cloud / API</option><option>Hardware</option><option>Marketing</option><option>Other</option></select><input id="hrv4-paid" placeholder="Paid by"></div><button id="hrv4-addExpense">Add expense</button><div id="hrv4-budgetSummary"></div><div id="hrv4-expenses"></div><button id="hrv4-exportBudget">Export budget CSV</button>
-<h4>3. Sponsor / Partner Tracker</h4><div class="hrv4-row"><input id="hrv4-sponsor" placeholder="Company / sponsor"><select id="hrv4-stage"><option>To contact</option><option>Contacted</option><option>Meeting planned</option><option>Confirmed</option><option>Declined</option></select></div><div class="hrv4-row"><input id="hrv4-person" placeholder="Contact person"><input id="hrv4-value" placeholder="Offer / amount"></div><textarea id="hrv4-next" placeholder="Next action / notes"></textarea><button id="hrv4-addSponsor">Add partner</button><div id="hrv4-sponsors"></div>
-<h4>4. Project Handover Notes</h4><input id="hrv4-project" placeholder="Project name"><textarea id="hrv4-setup" placeholder="Setup / run instructions"></textarea><textarea id="hrv4-env" placeholder="Required environment variables (names only; never paste secrets)"></textarea><textarea id="hrv4-known" placeholder="Known issues / next steps"></textarea><button id="hrv4-saveHandover">Save handover</button><button id="hrv4-exportHandover">Download handover JSON</button><p id="hrv4-status" role="status"></p>
-</section></div>
-<script>
-(()=>{'use strict';const $=id=>document.getElementById(id);const keys={members:'hrv4_members',expenses:'hrv4_expenses',sponsors:'hrv4_sponsors',handover:'hrv4_handover'};
-const read=k=>{try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(_){return []}},save=(k,v)=>localStorage.setItem(k,JSON.stringify(v)),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),download=(name,content,type='application/json')=>{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([content],{type}));a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-let members=read(keys.members),expenses=read(keys.expenses),sponsors=read(keys.sponsors);const panel=$('hrv4-panel');$('hrv4-launch').addEventListener('click',()=>{panel.classList.toggle('open');$('hrv4-launch').setAttribute('aria-expanded',String(panel.classList.contains('open')))});$('hrv4-close').addEventListener('click',()=>{panel.classList.remove('open');$('hrv4-launch').setAttribute('aria-expanded','false')});
-function renderMembers(){$('hrv4-members').innerHTML=members.map((m,i)=>`<div class="hrv4-card"><b>${esc(m.name)}</b> · ${esc(m.role)}<br><small>${esc(m.contact||'No contact')}</small><br><button data-mdel="${i}" class="hrv4-danger">Remove</button></div>`).join('')||'<small>No members added yet.</small>';}
-function renderBudget(){const total=expenses.reduce((a,e)=>a+e.amount,0);$('hrv4-budgetSummary').innerHTML=`<div class="hrv4-card"><b>Total recorded: ₹${total.toFixed(2)}</b> · ${expenses.length} item(s)</div>`;$('hrv4-expenses').innerHTML=expenses.map((e,i)=>`<div class="hrv4-card"><b>${esc(e.name)}</b> — ₹${e.amount.toFixed(2)}<br><small>${esc(e.category)} · Paid by ${esc(e.paid||'—')}</small><br><button data-edel="${i}" class="hrv4-danger">Remove</button></div>`).join('')||'<small>No expenses recorded.</small>';}
-function renderSponsors(){$('hrv4-sponsors').innerHTML=sponsors.map((s,i)=>`<div class="hrv4-card"><b>${esc(s.name)}</b> · ${esc(s.stage)}<br><small>Contact: ${esc(s.person||'—')} · Offer: ${esc(s.value||'—')}</small><p>${esc(s.next||'No next action')}</p><button data-sstage="${i}">Next stage</button><button data-sdel="${i}" class="hrv4-danger">Remove</button></div>`).join('')||'<small>No partners tracked yet.</small>';}
-$('hrv4-addMember').addEventListener('click',()=>{const name=$('hrv4-name').value.trim(),role=$('hrv4-role').value.trim();if(!name||!role){alert('Member name aur role required hain.');return}members.push({name,role,contact:$('hrv4-contact').value.trim()});save(keys.members,members);['hrv4-name','hrv4-role','hrv4-contact'].forEach(id=>$(id).value='');renderMembers()});
-$('hrv4-addExpense').addEventListener('click',()=>{const name=$('hrv4-expense').value.trim(),amount=Number($('hrv4-amount').value);if(!name||!Number.isFinite(amount)||amount<0){alert('Expense name aur valid non-negative amount required hai.');return}expenses.push({name,amount,category:$('hrv4-category').value,paid:$('hrv4-paid').value.trim(),createdAt:new Date().toISOString()});save(keys.expenses,expenses);$('hrv4-expense').value='';$('hrv4-amount').value='';$('hrv4-paid').value='';renderBudget()});
-$('hrv4-addSponsor').addEventListener('click',()=>{const name=$('hrv4-sponsor').value.trim();if(!name){alert('Company / sponsor name required hai.');return}sponsors.push({name,stage:$('hrv4-stage').value,person:$('hrv4-person').value.trim(),value:$('hrv4-value').value.trim(),next:$('hrv4-next').value.trim()});save(keys.sponsors,sponsors);['hrv4-sponsor','hrv4-person','hrv4-value','hrv4-next'].forEach(id=>$(id).value='');renderSponsors()});
-document.addEventListener('click',e=>{const t=e.target;if(t.dataset.mdel!==undefined){members.splice(Number(t.dataset.mdel),1);save(keys.members,members);renderMembers()}if(t.dataset.edel!==undefined){expenses.splice(Number(t.dataset.edel),1);save(keys.expenses,expenses);renderBudget()}if(t.dataset.sdel!==undefined){sponsors.splice(Number(t.dataset.sdel),1);save(keys.sponsors,sponsors);renderSponsors()}if(t.dataset.sstage!==undefined){const i=Number(t.dataset.sstage),stages=['To contact','Contacted','Meeting planned','Confirmed','Declined'];sponsors[i].stage=stages[(stages.indexOf(sponsors[i].stage)+1)%stages.length];save(keys.sponsors,sponsors);renderSponsors()}});
-$('hrv4-exportBudget').addEventListener('click',()=>{const rows=[['Expense','Amount INR','Category','Paid by','Created'],...expenses.map(e=>[e.name,e.amount,e.category,e.paid,e.createdAt])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download('hackathon-budget.csv',csv,'text/csv;charset=utf-8')});
-function handover(){return {project:$('hrv4-project').value.trim(),setup:$('hrv4-setup').value,environmentVariableNames:$('hrv4-env').value,knownIssuesAndNextSteps:$('hrv4-known').value,updatedAt:new Date().toISOString()}};$('hrv4-saveHandover').addEventListener('click',()=>{save(keys.handover,handover());$('hrv4-status').textContent='Handover notes saved in this browser.'});$('hrv4-exportHandover').addEventListener('click',()=>download('project-handover.json',JSON.stringify(handover(),null,2)));try{const h=JSON.parse(localStorage.getItem(keys.handover)||'null');if(h){$('hrv4-project').value=h.project||'';$('hrv4-setup').value=h.setup||'';$('hrv4-env').value=h.environmentVariableNames||'';$('hrv4-known').value=h.knownIssuesAndNextSteps||''}}catch(_){}renderMembers();renderBudget();renderSponsors();
-})();
-</script>
-
-<!-- ===== HR+ EXTRA TOOLKIT (added without replacing existing features) ===== -->
-<style id="hr-extra-toolkit-css">
-#hrExtraFab{position:fixed;right:18px;bottom:88px;z-index:9998;border:0;border-radius:999px;padding:13px 17px;background:linear-gradient(135deg,#7c5cff,#22d3ee);color:#08090d;font:700 13px Inter,system-ui,sans-serif;box-shadow:0 10px 30px #0006;cursor:pointer}
-#hrExtraPanel{position:fixed;right:16px;bottom:142px;z-index:9999;width:min(440px,calc(100vw - 24px));max-height:min(76vh,720px);overflow:auto;background:var(--surface,#111522);color:var(--text,#eee);border:1px solid var(--border-strong, #444);border-radius:18px;box-shadow:0 24px 70px #0009;padding:16px;display:none;font:14px/1.45 Inter,system-ui,sans-serif}
-#hrExtraPanel.open{display:block}
-#hrExtraPanel *{box-sizing:border-box}
-#hrExtraPanel .hrx-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
-#hrExtraPanel .hrx-head h3{margin:0;font-size:18px}
-#hrExtraPanel .hrx-close,#hrExtraPanel .hrx-btn{border:1px solid var(--border-strong,#444);background:var(--surface-2,#1b2030);color:inherit;border-radius:9px;padding:8px 11px;cursor:pointer;font:inherit}
-#hrExtraPanel .hrx-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-#hrExtraPanel .hrx-tab{border:1px solid var(--border,#444);background:transparent;color:inherit;border-radius:8px;padding:7px 9px;cursor:pointer;font:inherit;font-size:12px}
-#hrExtraPanel .hrx-tab.active{background:#7c5cff2b;border-color:#7c5cff}
-#hrExtraPanel .hrx-page{display:none}
-#hrExtraPanel .hrx-page.active{display:block}
-#hrExtraPanel input,#hrExtraPanel textarea,#hrExtraPanel select{width:100%;margin:5px 0 10px;padding:10px;border:1px solid var(--border-strong,#444);border-radius:9px;background:var(--bg,#08090d);color:inherit;font:inherit}
-#hrExtraPanel textarea{min-height:100px;resize:vertical}
-#hrExtraPanel .hrx-row{display:flex;gap:8px;flex-wrap:wrap}
-#hrExtraPanel .hrx-row>*{flex:1}
-#hrExtraPanel .hrx-muted{color:var(--muted,#999);font-size:12px}
-#hrExtraPanel .hrx-list{display:grid;gap:7px;margin:8px 0}
-#hrExtraPanel .hrx-item{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--border,#444);border-radius:9px}
-#hrExtraPanel .hrx-item span{flex:1;overflow-wrap:anywhere}
-#hrExtraPanel .hrx-item input{width:auto;margin:0}
-#hrExtraPanel .hrx-item button{background:transparent;color:inherit;border:0;cursor:pointer}
-#hrExtraPanel .hrx-result{padding:10px;border:1px solid var(--border,#444);border-radius:9px;white-space:pre-wrap;overflow-wrap:anywhere;min-height:42px}
-@media(max-width:520px){#hrExtraFab{right:12px;bottom:76px;padding:11px 13px}#hrExtraPanel{right:8px;bottom:128px;width:calc(100vw - 16px);padding:12px}}
-</style>
-<button id="hrExtraFab" type="button" aria-controls="hrExtraPanel" aria-expanded="false">Team Productivity</button>
-<section id="hrExtraPanel" aria-label="Extra Hackathon Rivals tools" aria-hidden="true">
-  <div class="hrx-head"><h3>Team Productivity Suite</h3><button class="hrx-close" type="button" id="hrxClose" aria-label="Close toolkit">✕</button></div>
-  <div class="hrx-muted" style="margin-bottom:12px">Extra browser-based utilities. Saved items remain on this device.</div>
-  <div class="hrx-tabs" role="tablist">
-    <button class="hrx-tab active" data-hrx-tab="tasks" role="tab">Team tasks</button>
-    <button class="hrx-tab" data-hrx-tab="ideas" role="tab">Idea board</button>
-    <button class="hrx-tab" data-hrx-tab="pitch" role="tab">Pitch timer</button>
-    <button class="hrx-tab" data-hrx-tab="text" role="tab">Text tools</button>
-    <button class="hrx-tab" data-hrx-tab="json" role="tab">JSON checker</button>
-    <button class="hrx-tab" data-hrx-tab="check" role="tab">Launch checklist</button>
-  </div>
-  <div class="hrx-page active" data-hrx-page="tasks" role="tabpanel">
-    <label for="hrxTask">New task</label><input id="hrxTask" maxlength="180" placeholder="e.g. Test login on mobile">
-    <div class="hrx-row"><select id="hrxPriority" aria-label="Task priority"><option>Normal</option><option>High</option><option>Low</option></select><button class="hrx-btn" id="hrxAddTask" type="button">Add task</button></div>
-    <div id="hrxTasks" class="hrx-list"></div>
-  </div>
-  <div class="hrx-page" data-hrx-page="ideas" role="tabpanel">
-    <label for="hrxIdea">Capture a project idea or decision</label><textarea id="hrxIdea" maxlength="4000" placeholder="Problem → proposed solution → who benefits"></textarea>
-    <div class="hrx-row"><button class="hrx-btn" id="hrxSaveIdea" type="button">Save idea</button><button class="hrx-btn" id="hrxExportIdeas" type="button">Export notes</button></div>
-    <div id="hrxIdeas" class="hrx-list"></div>
-  </div>
-  <div class="hrx-page" data-hrx-page="pitch" role="tabpanel">
-    <p class="hrx-muted">Use a rehearsal timer for your demo or pitch. Keep the page open while it runs.</p>
-    <label for="hrxPitchSeconds">Duration (seconds)</label><input id="hrxPitchSeconds" type="number" min="15" max="3600" value="180">
-    <div class="hrx-result" id="hrxPitchDisplay" aria-live="polite" style="font-size:26px;text-align:center;font-weight:700">03:00</div>
-    <div class="hrx-row" style="margin-top:8px"><button class="hrx-btn" id="hrxPitchStart" type="button">Start</button><button class="hrx-btn" id="hrxPitchPause" type="button">Pause</button><button class="hrx-btn" id="hrxPitchReset" type="button">Reset</button></div>
-  </div>
-  <div class="hrx-page" data-hrx-page="text" role="tabpanel">
-    <label for="hrxText">Paste your abstract, README, or pitch</label><textarea id="hrxText" maxlength="50000" placeholder="Paste text here…"></textarea>
-    <div class="hrx-result" id="hrxTextStats" aria-live="polite">0 words · 0 characters · 0 sentences · ~0 min read</div>
-    <div class="hrx-row" style="margin-top:8px"><button class="hrx-btn" id="hrxCopyText" type="button">Copy text</button><button class="hrx-btn" id="hrxDownloadText" type="button">Download .txt</button></div>
-  </div>
-  <div class="hrx-page" data-hrx-page="json" role="tabpanel">
-    <label for="hrxJSON">Paste JSON to validate and format</label><textarea id="hrxJSON" spellcheck="false" placeholder='{"project":"My Hackathon Project"}'></textarea>
-    <div class="hrx-row"><button class="hrx-btn" id="hrxFormatJSON" type="button">Validate & format</button><button class="hrx-btn" id="hrxMinifyJSON" type="button">Minify</button></div>
-    <div id="hrxJSONStatus" class="hrx-result" role="status">JSON has not been checked yet.</div>
-  </div>
-  <div class="hrx-page" data-hrx-page="check" role="tabpanel">
-    <p class="hrx-muted">A practical pre-submission checklist. Tick items as your team completes them.</p>
-    <div id="hrxLaunchList" class="hrx-list"></div>
-    <div class="hrx-row"><button class="hrx-btn" id="hrxExportChecklist" type="button">Export checklist</button><button class="hrx-btn" id="hrxResetChecklist" type="button">Reset ticks</button></div>
-  </div>
-  <p class="hrx-muted" id="hrxStatus" aria-live="polite" style="margin-top:12px"></p>
-</section>
-<script id="hr-extra-toolkit-js">
-(function(){
-  'use strict';
-  const $ = (s, r=document) => r.querySelector(s);
-  const panel = $('#hrExtraPanel'), fab = $('#hrExtraFab');
-  if (!panel || !fab || panel.dataset.ready) return;
-  panel.dataset.ready = '1';
-  const KEY = 'hr-extra-toolkit-v1';
-  const defaults = {tasks:[], ideas:[], checklist:{}};
-  let state = defaults, pitchRemaining = 180, pitchEnd = 0, pitchInterval = null;
-  try { state = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) {}
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); status('Saved on this device.'); } catch(e) { status('Browser storage is unavailable; export your work to keep it.'); } };
-  const status = m => { const el = $('#hrxStatus'); if (el) el.textContent = m; };
-  const safe = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const download = (name, text, type='text/plain;charset=utf-8') => { const a=document.createElement('a'); const u=URL.createObjectURL(new Blob([text],{type})); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); };
-  const fmt = n => { n=Math.max(0,Math.floor(n)); return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0'); };
-  fab.addEventListener('click', () => { const open=!panel.classList.contains('open'); panel.classList.toggle('open',open); panel.setAttribute('aria-hidden',String(!open)); fab.setAttribute('aria-expanded',String(open)); if(open) $('#hrxTask').focus(); });
-  $('#hrxClose').addEventListener('click', () => { panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); fab.setAttribute('aria-expanded','false'); fab.focus(); });
-  document.addEventListener('keydown', e => { if(e.key==='Escape' && panel.classList.contains('open')) $('#hrxClose').click(); });
-  panel.addEventListener('click', e => {
-    const tab=e.target.closest('[data-hrx-tab]');
-    if(tab){ panel.querySelectorAll('[data-hrx-tab]').forEach(b=>b.classList.toggle('active',b===tab)); panel.querySelectorAll('[data-hrx-page]').forEach(p=>p.classList.toggle('active',p.dataset.hrxPage===tab.dataset.hrxTab)); }
-    const done=e.target.closest('[data-hrx-done]'); if(done){const t=state.tasks[Number(done.dataset.hrxDone)]; if(t){t.done=!t.done;save();renderTasks();}}
-    const del=e.target.closest('[data-hrx-del]'); if(del){const i=Number(del.dataset.hrxDel); if(Number.isInteger(i)){state.tasks.splice(i,1);save();renderTasks();}}
-    const ideadel=e.target.closest('[data-hrx-ideadel]'); if(ideadel){state.ideas.splice(Number(ideadel.dataset.hrxIdeadel),1);save();renderIdeas();}
-    const check=e.target.closest('[data-hrx-check]'); if(check){state.checklist[check.dataset.hrxCheck]=check.checked;save();renderChecklist();}
-  });
-  function renderTasks(){
-    const box=$('#hrxTasks'); if(!box)return;
-    box.innerHTML=state.tasks.map((t,i)=>`<div class="hrx-item"><input type="checkbox" data-hrx-done="${i}" ${t.done?'checked':''} aria-label="Mark ${safe(t.text)} complete"><span style="${t.done?'text-decoration:line-through;opacity:.65':''}"><b>${safe(t.text)}</b><small style="display:block" class="hrx-muted">${safe(t.priority)} priority</small></span><button type="button" data-hrx-del="${i}" aria-label="Delete task">✕</button></div>`).join('')||'<p class="hrx-muted">No team tasks yet.</p>';
-  }
-  function renderIdeas(){const box=$('#hrxIdeas');if(!box)return;box.innerHTML=state.ideas.map((x,i)=>`<div class="hrx-item"><span>${safe(x.text)}<small style="display:block" class="hrx-muted">${new Date(x.at).toLocaleString()}</small></span><button type="button" data-hrx-ideadel="${i}" aria-label="Delete idea">✕</button></div>`).join('')||'<p class="hrx-muted">No saved ideas yet.</p>';}
-  const launchItems=['Problem statement and judging criteria reviewed','Prototype tested on a clean browser/device','Repository and README are up to date','No API keys or passwords committed to source control','Demo link tested on mobile and desktop','Pitch and demo video rehearsed','Team roles and contact details confirmed','Submission deadline and timezone verified','Fallback demo/screenshots prepared','Final submission confirmation saved'];
-  function renderChecklist(){const box=$('#hrxLaunchList');if(!box)return;box.innerHTML=launchItems.map((x,i)=>`<label class="hrx-item"><input type="checkbox" data-hrx-check="${i}" ${state.checklist[i]?'checked':''}><span>${safe(x)}</span></label>`).join('');}
-  $('#hrxAddTask').addEventListener('click',()=>{const input=$('#hrxTask'),text=input.value.trim();if(!text)return status('Enter a task first.');if(state.tasks.length>=100)return status('Maximum 100 tasks reached.');state.tasks.unshift({text:text.slice(0,180),priority:$('#hrxPriority').value,done:false,at:Date.now()});input.value='';save();renderTasks();});
-  $('#hrxTask').addEventListener('keydown',e=>{if(e.key==='Enter')$('#hrxAddTask').click();});
-  $('#hrxSaveIdea').addEventListener('click',()=>{const input=$('#hrxIdea'),text=input.value.trim();if(!text)return status('Write an idea first.');if(state.ideas.length>=100)return status('Maximum 100 notes reached.');state.ideas.unshift({text:text.slice(0,4000),at:Date.now()});input.value='';save();renderIdeas();});
-  $('#hrxExportIdeas').addEventListener('click',()=>download('hackathon-rivals-ideas.json',JSON.stringify(state.ideas,null,2),'application/json'));
-  function updateTextStats(){const t=$('#hrxText').value;const words=(t.trim().match(/\S+/g)||[]).length;const sentences=(t.match(/[.!?]+(?=\s|$)/g)||[]).length;$('#hrxTextStats').textContent=`${words} words · ${t.length} characters · ${sentences} sentences · ~${Math.ceil(words/200)} min read`;}
-  $('#hrxText').addEventListener('input',updateTextStats);
-  $('#hrxCopyText').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#hrxText').value);status('Text copied.');}catch(e){$('#hrxText').select();status('Text selected; use Copy from your device/browser.');}});
-  $('#hrxDownloadText').addEventListener('click',()=>download('hackathon-rivals-draft.txt',$('#hrxText').value));
-  function checkJSON(minify){const out=$('#hrxJSONStatus');try{const obj=JSON.parse($('#hrxJSON').value);$('#hrxJSON').value=minify?JSON.stringify(obj):JSON.stringify(obj,null,2);out.textContent='Valid JSON ✓';out.style.borderColor='#3ddc84';status('JSON validated successfully.');}catch(e){out.textContent='Invalid JSON: '+e.message;out.style.borderColor='#ff6b6b';status('Please fix the JSON error shown above.');}}
-  $('#hrxFormatJSON').addEventListener('click',()=>checkJSON(false));$('#hrxMinifyJSON').addEventListener('click',()=>checkJSON(true));
-  function pitchDisplay(){$('#hrxPitchDisplay').textContent=fmt(pitchRemaining);}
-  function stopPitch(){if(pitchInterval){clearInterval(pitchInterval);pitchInterval=null;}}
-  $('#hrxPitchSeconds').addEventListener('change',()=>{stopPitch();pitchRemaining=Math.min(3600,Math.max(15,Number($('#hrxPitchSeconds').value)||180));$('#hrxPitchSeconds').value=pitchRemaining;pitchDisplay();});
-  $('#hrxPitchStart').addEventListener('click',()=>{if(pitchInterval)return;pitchEnd=Date.now()+pitchRemaining*1000;pitchInterval=setInterval(()=>{pitchRemaining=Math.max(0,Math.ceil((pitchEnd-Date.now())/1000));pitchDisplay();if(!pitchRemaining){stopPitch();status('Pitch time is up!');try{if('vibrate'in navigator)navigator.vibrate([150,80,150]);}catch(e){}}},250);status('Pitch timer running.');});
-  $('#hrxPitchPause').addEventListener('click',()=>{if(pitchInterval){pitchRemaining=Math.max(0,Math.ceil((pitchEnd-Date.now())/1000));stopPitch();pitchDisplay();status('Pitch timer paused.');}});
-  $('#hrxPitchReset').addEventListener('click',()=>{stopPitch();pitchRemaining=Math.min(3600,Math.max(15,Number($('#hrxPitchSeconds').value)||180));pitchDisplay();status('Pitch timer reset.');});
-  $('#hrxExportChecklist').addEventListener('click',()=>download('hackathon-rivals-launch-checklist.txt',launchItems.map((x,i)=>(state.checklist[i]?'[x] ':'[ ] ')+x).join('\n')));
-  $('#hrxResetChecklist').addEventListener('click',()=>{if(confirm('Reset all launch checklist ticks?')){state.checklist={};save();renderChecklist();}});
-  renderTasks();renderIdeas();renderChecklist();updateTextStats();pitchDisplay();
-})();
-</script>
-<!-- ===== END HR+ EXTRA TOOLKIT ===== -->
-
-
-<!-- ===== HR+ PROJECT WORKSPACE (batch 2; additive only) ===== -->
-<style id="hr-project-workspace-css">
-#hrWorkspaceFab{position:fixed;right:18px;bottom:24px;z-index:9997;border:1px solid #22d3ee66;border-radius:999px;padding:12px 15px;background:var(--surface-2,#151824);color:var(--text,#e9ebf2);font:700 12px Inter,system-ui,sans-serif;box-shadow:0 8px 26px #0007;cursor:pointer}
-#hrWorkspace{position:fixed;right:16px;bottom:76px;z-index:9996;width:min(500px,calc(100vw - 24px));max-height:min(78vh,760px);overflow:auto;display:none;background:var(--surface,#0f1119);color:var(--text,#e9ebf2);border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:18px;padding:15px;box-shadow:0 24px 70px #000a;font:14px/1.45 Inter,system-ui,sans-serif}
-#hrWorkspace.open{display:block}#hrWorkspace *{box-sizing:border-box}
-#hrWorkspace .hw-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-#hrWorkspace .hw-head h3{font-size:17px;margin:0}#hrWorkspace button{cursor:pointer;font:inherit}
-#hrWorkspace .hw-close,#hrWorkspace .hw-btn{border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:9px;padding:8px 10px;background:var(--surface-2,#151824);color:inherit}
-#hrWorkspace .hw-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
-#hrWorkspace .hw-tab{border:1px solid var(--border,rgba(255,255,255,.08));border-radius:8px;padding:7px 9px;background:transparent;color:inherit;font-size:12px}
-#hrWorkspace .hw-tab.active{border-color:#22d3ee;background:#22d3ee18}
-#hrWorkspace .hw-page{display:none}#hrWorkspace .hw-page.active{display:block}
-#hrWorkspace input,#hrWorkspace textarea,#hrWorkspace select{width:100%;margin:5px 0 9px;padding:9px 10px;border:1px solid var(--border-strong,rgba(255,255,255,.16));border-radius:9px;background:var(--bg,#08090d);color:inherit;font:inherit}
-#hrWorkspace textarea{min-height:72px;resize:vertical}
-#hrWorkspace .hw-row{display:flex;gap:7px;flex-wrap:wrap}#hrWorkspace .hw-row>*{flex:1}
-#hrWorkspace .hw-muted{font-size:12px;color:var(--muted,#8b90a4)}
-#hrWorkspace .hw-list{display:grid;gap:7px;margin:9px 0}
-#hrWorkspace .hw-item{border:1px solid var(--border,rgba(255,255,255,.08));border-radius:10px;padding:9px;display:flex;gap:8px;align-items:flex-start}
-#hrWorkspace .hw-item>span{flex:1;min-width:0;overflow-wrap:anywhere}
-#hrWorkspace .hw-item button{border:0;background:transparent;color:inherit;padding:2px 4px}
-#hrWorkspace .hw-item small{display:block;color:var(--muted,#8b90a4);margin-top:3px}
-@media(max-width:520px){#hrWorkspaceFab{right:10px;bottom:16px;padding:10px 12px}#hrWorkspace{right:8px;bottom:66px;width:calc(100vw - 16px);padding:11px}}
-</style>
-<button id="hrWorkspaceFab" type="button" aria-controls="hrWorkspace" aria-expanded="false">Project Delivery</button>
-<section id="hrWorkspace" aria-label="Project workspace" aria-hidden="true">
- <div class="hw-head"><h3>Project Delivery</h3><button class="hw-close" id="hwClose" type="button" aria-label="Close workspace">✕</button></div>
- <p class="hw-muted">Sprint board, bug log, meeting notes and risk register. Data stays in this browser; export it for sharing.</p>
- <div class="hw-tabs" role="tablist">
-  <button class="hw-tab active" data-hw-tab="sprint" role="tab">Sprint board</button>
-  <button class="hw-tab" data-hw-tab="bugs" role="tab">Bug tracker</button>
-  <button class="hw-tab" data-hw-tab="meet" role="tab">Meeting notes</button>
-  <button class="hw-tab" data-hw-tab="risk" role="tab">Risk register</button>
-  <button class="hw-tab" data-hw-tab="export" role="tab">Export data</button>
- </div>
- <div class="hw-page active" data-hw-page="sprint" role="tabpanel">
-  <label for="hwSprintTask">Sprint task</label><input id="hwSprintTask" maxlength="180" placeholder="Task / deliverable">
-  <div class="hw-row"><input id="hwSprintOwner" maxlength="80" placeholder="Owner (optional)"><select id="hwSprintState" aria-label="Task status"><option>To do</option><option>In progress</option><option>Blocked</option><option>Done</option></select></div>
-  <button class="hw-btn" id="hwAddSprint" type="button">Add sprint task</button><div id="hwSprintList" class="hw-list"></div>
- </div>
- <div class="hw-page" data-hw-page="bugs" role="tabpanel">
-  <label for="hwBugTitle">Bug / issue</label><input id="hwBugTitle" maxlength="180" placeholder="Short issue title">
-  <label for="hwBugDetails">Steps or expected behaviour</label><textarea id="hwBugDetails" maxlength="2000" placeholder="Steps to reproduce, expected vs actual result"></textarea>
-  <div class="hw-row"><select id="hwBugSeverity" aria-label="Bug severity"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select><select id="hwBugStatus" aria-label="Bug status"><option>Open</option><option>Investigating</option><option>Fixed</option><option>Won't fix</option></select></div>
-  <button class="hw-btn" id="hwAddBug" type="button">Log issue</button><div id="hwBugList" class="hw-list"></div>
- </div>
- <div class="hw-page" data-hw-page="meet" role="tabpanel">
-  <label for="hwMeetTitle">Meeting title</label><input id="hwMeetTitle" maxlength="160" placeholder="e.g. Demo rehearsal">
-  <label for="hwMeetNotes">Notes / decisions / action items</label><textarea id="hwMeetNotes" maxlength="6000" placeholder="Decisions made, action owner, deadline…"></textarea>
-  <button class="hw-btn" id="hwSaveMeet" type="button">Save meeting note</button><div id="hwMeetList" class="hw-list"></div>
- </div>
- <div class="hw-page" data-hw-page="risk" role="tabpanel">
-  <label for="hwRisk">Risk or blocker</label><input id="hwRisk" maxlength="180" placeholder="e.g. API provider unavailable">
-  <div class="hw-row"><select id="hwRiskLevel" aria-label="Risk level"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select><input id="hwRiskOwner" maxlength="80" placeholder="Owner (optional)"></div>
-  <label for="hwMitigation">Mitigation plan</label><textarea id="hwMitigation" maxlength="2000" placeholder="Fallback, prevention or next action"></textarea>
-  <button class="hw-btn" id="hwAddRisk" type="button">Add risk</button><div id="hwRiskList" class="hw-list"></div>
- </div>
- <div class="hw-page" data-hw-page="export" role="tabpanel">
-  <p class="hw-muted">Export a JSON backup of this workspace, or import a previous workspace backup. Import replaces this workspace's local data after confirmation.</p>
-  <div class="hw-row"><button class="hw-btn" id="hwExport" type="button">Download JSON</button><button class="hw-btn" id="hwCopy" type="button">Copy JSON</button></div>
-  <label for="hwImportFile">Import workspace JSON</label><input id="hwImportFile" type="file" accept=".json,application/json">
-  <button class="hw-btn" id="hwImport" type="button">Import backup</button>
-  <p id="hwStatus" class="hw-muted" role="status" aria-live="polite"></p>
- </div>
-</section>
-<script id="hr-project-workspace-js">
-(function(){
- 'use strict';
- const $=(s,r=document)=>r.querySelector(s),panel=$('#hrWorkspace'),fab=$('#hrWorkspaceFab');
- if(!panel||!fab||panel.dataset.ready)return;panel.dataset.ready='1';
- const KEY='hr-project-workspace-v1',blank={sprint:[],bugs:[],meetings:[],risks:[]};
- let data=blank;
- try{data=Object.assign({},blank,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){}
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const say=m=>{const e=$('#hwStatus');if(e)e.textContent=m;};
- const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));say('Saved locally.');}catch(e){say('Storage unavailable; export your workspace to keep changes.');}};
- const download=(name,text)=>{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([text],{type:'application/json'}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
- const stamp=t=>new Date(t).toLocaleString();
- fab.addEventListener('click',()=>{const open=!panel.classList.contains('open');panel.classList.toggle('open',open);panel.setAttribute('aria-hidden',String(!open));fab.setAttribute('aria-expanded',String(open));});
- $('#hwClose').addEventListener('click',()=>{panel.classList.remove('open');panel.setAttribute('aria-hidden','true');fab.setAttribute('aria-expanded','false');fab.focus();});
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panel.classList.contains('open'))$('#hwClose').click();});
- panel.addEventListener('click',e=>{
-  const tab=e.target.closest('[data-hw-tab]');if(tab){panel.querySelectorAll('[data-hw-tab]').forEach(b=>b.classList.toggle('active',b===tab));panel.querySelectorAll('[data-hw-page]').forEach(p=>p.classList.toggle('active',p.dataset.hwPage===tab.dataset.hwTab));}
-  const del=e.target.closest('[data-hw-del]');if(del){const [kind,idx]=del.dataset.hwDel.split(':');if(data[kind]&&Number.isInteger(+idx)){data[kind].splice(+idx,1);save();renderAll();}}
-  const state=e.target.closest('[data-hw-state]');if(state){const [idx]=state.dataset.hwState.split(':');const item=data.sprint[+idx];if(item){item.status=state.value;save();renderSprint();}}
-  const bugstate=e.target.closest('[data-hw-bugstate]');if(bugstate){const item=data.bugs[+bugstate.dataset.hwBugstate];if(item){item.status=bugstate.value;save();renderBugs();}}
- });
- function renderSprint(){const box=$('#hwSprintList');box.innerHTML=data.sprint.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>Owner: ${esc(x.owner||'Unassigned')} · Added ${stamp(x.at)}</small><select data-hw-state="${i}" aria-label="Status for ${esc(x.title)}">${['To do','In progress','Blocked','Done'].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></span><button type="button" data-hw-del="sprint:${i}" aria-label="Delete task">✕</button></div>`).join('')||'<p class="hw-muted">No sprint tasks yet.</p>';}
- function renderBugs(){const box=$('#hwBugList');box.innerHTML=data.bugs.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${esc(x.severity)} · ${stamp(x.at)}<br>${esc(x.details||'No reproduction notes')}</small><select data-hw-bugstate="${i}" aria-label="Status for ${esc(x.title)}">${['Open','Investigating','Fixed',"Won't fix"].map(s=>`<option ${s===x.status?'selected':''}>${s}</option>`).join('')}</select></span><button type="button" data-hw-del="bugs:${i}" aria-label="Delete issue">✕</button></div>`).join('')||'<p class="hw-muted">No issues logged.</p>';}
- function renderMeetings(){const box=$('#hwMeetList');box.innerHTML=data.meetings.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${stamp(x.at)}</small><div style="white-space:pre-wrap;margin-top:5px">${esc(x.notes)}</div></span><button type="button" data-hw-del="meetings:${i}" aria-label="Delete meeting note">✕</button></div>`).join('')||'<p class="hw-muted">No meeting notes yet.</p>';}
- function renderRisks(){const box=$('#hwRiskList');box.innerHTML=data.risks.map((x,i)=>`<div class="hw-item"><span><b>${esc(x.title)}</b><small>${esc(x.level)} · Owner: ${esc(x.owner||'Unassigned')}</small><div style="white-space:pre-wrap;margin-top:5px">${esc(x.mitigation||'No mitigation plan yet')}</div></span><button type="button" data-hw-del="risks:${i}" aria-label="Delete risk">✕</button></div>`).join('')||'<p class="hw-muted">No risks recorded.</p>';}
- function renderAll(){renderSprint();renderBugs();renderMeetings();renderRisks();}
- $('#hwAddSprint').addEventListener('click',()=>{const title=$('#hwSprintTask').value.trim();if(!title)return say('Enter a task title first.');if(data.sprint.length>=150)return say('Sprint task limit reached.');data.sprint.unshift({title:title.slice(0,180),owner:$('#hwSprintOwner').value.trim().slice(0,80),status:$('#hwSprintState').value,at:Date.now()});$('#hwSprintTask').value='';$('#hwSprintOwner').value='';save();renderSprint();});
- $('#hwAddBug').addEventListener('click',()=>{const title=$('#hwBugTitle').value.trim();if(!title)return say('Enter a bug title first.');if(data.bugs.length>=150)return say('Issue limit reached.');data.bugs.unshift({title:title.slice(0,180),details:$('#hwBugDetails').value.trim().slice(0,2000),severity:$('#hwBugSeverity').value,status:$('#hwBugStatus').value,at:Date.now()});$('#hwBugTitle').value='';$('#hwBugDetails').value='';save();renderBugs();});
- $('#hwSaveMeet').addEventListener('click',()=>{const title=$('#hwMeetTitle').value.trim(),notes=$('#hwMeetNotes').value.trim();if(!title||!notes)return say('Enter a meeting title and notes.');if(data.meetings.length>=100)return say('Meeting note limit reached.');data.meetings.unshift({title:title.slice(0,160),notes:notes.slice(0,6000),at:Date.now()});$('#hwMeetTitle').value='';$('#hwMeetNotes').value='';save();renderMeetings();});
- $('#hwAddRisk').addEventListener('click',()=>{const title=$('#hwRisk').value.trim();if(!title)return say('Enter a risk or blocker first.');if(data.risks.length>=100)return say('Risk limit reached.');data.risks.unshift({title:title.slice(0,180),level:$('#hwRiskLevel').value,owner:$('#hwRiskOwner').value.trim().slice(0,80),mitigation:$('#hwMitigation').value.trim().slice(0,2000),at:Date.now()});$('#hwRisk').value='';$('#hwRiskOwner').value='';$('#hwMitigation').value='';save();renderRisks();});
- $('#hwExport').addEventListener('click',()=>download('hackathon-rivals-workspace.json',JSON.stringify(data,null,2)));
- $('#hwCopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(JSON.stringify(data,null,2));say('Workspace JSON copied.');}catch(e){say('Clipboard permission unavailable; use Download JSON.');}});
- $('#hwImport').addEventListener('click',async()=>{const f=$('#hwImportFile').files[0];if(!f)return say('Choose a JSON backup file first.');try{const parsed=JSON.parse(await f.text());if(!parsed||typeof parsed!=='object'||!Array.isArray(parsed.sprint)||!Array.isArray(parsed.bugs)||!Array.isArray(parsed.meetings)||!Array.isArray(parsed.risks))throw new Error('This file is not a compatible workspace backup.');if(!confirm('Replace the current local workspace with this backup?'))return;data={sprint:parsed.sprint.slice(0,150),bugs:parsed.bugs.slice(0,150),meetings:parsed.meetings.slice(0,100),risks:parsed.risks.slice(0,100)};save();renderAll();say('Workspace imported.');}catch(e){say('Import failed: '+e.message);}});
- renderAll();
-})();
-</script>
-<!-- ===== END HR+ PROJECT WORKSPACE ===== -->
-
-
-<!-- HACKATHON_RIVALS_V5_TOOLKIT: additive, browser-local utilities -->
-<style>
-#hrv5-launcher{position:fixed;right:18px;bottom:158px;z-index:2147483000;background:#6d28d9;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
-#hrv5-panel{position:fixed;inset:0;z-index:2147483001;background:#080b16ee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#eef2ff}
-#hrv5-panel *{box-sizing:border-box}#hrv5-panel .wrap{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#111827;border:1px solid #374151;border-radius:18px;padding:18px}
-#hrv5-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#hrv5-panel h2{margin:0;font-size:22px}#hrv5-panel h3{font-size:16px;margin:0 0 10px}
-#hrv5-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
-#hrv5-panel button,#hrv5-panel select{cursor:pointer}
-#hrv5-panel button{border:1px solid #4b5563;background:#253047;color:#f9fafb;border-radius:9px;padding:8px 11px}
-#hrv5-panel button.primary{background:#6d28d9;border-color:#7c3aed}
-#hrv5-panel .tab.active{background:#6d28d9}
-#hrv5-panel input,#hrv5-panel textarea,#hrv5-panel select{width:100%;background:#0b1220;color:#f9fafb;border:1px solid #4b5563;border-radius:8px;padding:9px;margin:4px 0 9px}
-#hrv5-panel textarea{min-height:76px;resize:vertical}#hrv5-panel label{display:block;color:#cbd5e1;font-size:12px}
-#hrv5-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#hrv5-panel .card{border:1px solid #374151;border-radius:12px;padding:13px;margin:8px 0;background:#151f31}
-#hrv5-panel .muted{color:#9ca3af;font-size:12px}#hrv5-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #374151;padding:10px 0}
-#hrv5-panel .item:last-child{border-bottom:0}#hrv5-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-#hrv5-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#312e81;font-size:11px}
-@media(max-width:650px){#hrv5-panel .grid{grid-template-columns:1fr}#hrv5-panel .wrap{padding:12px}}
-</style>
-<button id="hrv5-launcher" type="button">Event Operations</button>
-<div id="hrv5-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Event Operations">
- <div class="wrap">
-  <div class="top"><div><h2>Hackathon Rivals · Event Operations Suite</h2><div class="muted">New productivity utilities · data stays in this browser</div></div><button id="hrv5-close" type="button">Close ✕</button></div>
-  <div class="tabs">
-   <button class="tab active" data-tab="checkin">Check-in</button>
-   <button class="tab" data-tab="assets">Asset Inventory</button>
-   <button class="tab" data-tab="feedback">Feedback</button>
-   <button class="tab" data-tab="timeline">Milestones</button>
-  </div>
-  <section data-page="checkin">
-   <div class="grid"><div class="card"><h3>Participant check-in</h3>
-    <label>Participant name<input id="hrv5-cname" placeholder="Name"></label>
-    <label>Team / college<input id="hrv5-cteam" placeholder="Team or college"></label>
-    <label>Ticket / registration ID<input id="hrv5-cid" placeholder="Optional ID"></label>
-    <label>Check-in status<select id="hrv5-cstatus"><option>Checked in</option><option>Pending</option><option>Needs help</option></select></label>
-    <button class="primary" id="hrv5-cadd">Add participant</button>
-    <button id="hrv5-cexport">Export CSV</button><div class="muted" id="hrv5-cmsg" aria-live="polite"></div>
-   </div><div class="card"><h3>Attendance summary</h3><div id="hrv5-csummary"></div><p class="muted">This is a local organizer log, not a verified registration-system check.</p></div></div>
-   <div class="card"><h3>Check-in records</h3><div id="hrv5-clist"></div></div>
-  </section>
-  <section data-page="assets" hidden>
-   <div class="grid"><div class="card"><h3>Asset inventory</h3>
-    <label>Asset / equipment<input id="hrv5-aname" placeholder="Projector, laptop, badge..."></label>
-    <label>Quantity<input id="hrv5-aqty" type="number" min="1" step="1" value="1"></label>
-    <label>Assigned to / location<input id="hrv5-aowner" placeholder="Person, room, team"></label>
-    <label>Status<select id="hrv5-astatus"><option>Available</option><option>Assigned</option><option>Needs repair</option><option>Returned</option></select></label>
-    <button class="primary" id="hrv5-aadd">Add asset</button><button id="hrv5-aexport">Export CSV</button>
-   </div><div class="card"><h3>Inventory summary</h3><div id="hrv5-asummary"></div></div></div>
-   <div class="card"><h3>Assets</h3><div id="hrv5-alist"></div></div>
-  </section>
-  <section data-page="feedback" hidden>
-   <div class="grid"><div class="card"><h3>Feedback collector</h3>
-    <label>Session / project<input id="hrv5-fsession" placeholder="Workshop or project name"></label>
-    <label>Rating (1–5)<select id="hrv5-frating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></label>
-    <label>Feedback<textarea id="hrv5-ftext" placeholder="What worked? What can improve?"></textarea></label>
-    <label>Follow-up needed<select id="hrv5-ffollow"><option>No</option><option>Yes</option></select></label>
-    <button class="primary" id="hrv5-fadd">Save feedback</button><button id="hrv5-fexport">Export CSV</button>
-   </div><div class="card"><h3>Feedback summary</h3><div id="hrv5-fsummary"></div></div></div>
-   <div class="card"><h3>Feedback records</h3><div id="hrv5-flist"></div></div>
-  </section>
-  <section data-page="timeline" hidden>
-   <div class="grid"><div class="card"><h3>Milestone planner</h3>
-    <label>Milestone<input id="hrv5-mname" placeholder="Prototype freeze"></label>
-    <label>Due date<input id="hrv5-mdate" type="date"></label>
-    <label>Owner<input id="hrv5-mowner" placeholder="Responsible person"></label>
-    <label>Status<select id="hrv5-mstatus"><option>Planned</option><option>In progress</option><option>Blocked</option><option>Done</option></select></label>
-    <label>Notes<textarea id="hrv5-mnotes" placeholder="Dependencies / details"></textarea></label>
-    <button class="primary" id="hrv5-madd">Add milestone</button><button id="hrv5-mexport">Export CSV</button>
-   </div><div class="card"><h3>Milestone summary</h3><div id="hrv5-msummary"></div></div></div>
-   <div class="card"><h3>Milestones</h3><div id="hrv5-mlist"></div></div>
-  </section>
-  <div class="top"><span class="muted" id="hrv5-status" aria-live="polite"></span><button id="hrv5-backup">Export all V5 data (JSON)</button></div>
- </div>
-</div>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const keys={check:'hrv5_checkin_v1',assets:'hrv5_assets_v1',feedback:'hrv5_feedback_v1',milestones:'hrv5_milestones_v1'};
-const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
-const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv5-status').textContent='Saved locally in this browser.'}catch(_){$('hrv5-status').textContent='Could not save: browser storage may be full or disabled.'}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-let checkins=load(keys.check),assets=load(keys.assets),feedback=load(keys.feedback),milestones=load(keys.milestones);
-const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
-function renderCheck(){ $('hrv5-csummary').textContent=`Total: ${checkins.length} · Checked in: ${checkins.filter(x=>x.status==='Checked in').length} · Pending: ${checkins.filter(x=>x.status==='Pending').length} · Needs help: ${checkins.filter(x=>x.status==='Needs help').length}`;list('hrv5-clist',checkins,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.team||'No team')} · ID: ${esc(x.reg||'—')}</p><span class="muted">${esc(x.created)}</span>`,i=>{checkins.splice(i,1);save(keys.check,checkins);renderCheck()})}
-function renderAssets(){ $('hrv5-asummary').textContent=`Entries: ${assets.length} · Units: ${assets.reduce((a,x)=>a+x.qty,0)} · Needs repair: ${assets.filter(x=>x.status==='Needs repair').length}`;list('hrv5-alist',assets,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>Qty: ${x.qty} · Assigned/location: ${esc(x.owner||'—')}</p>`,i=>{assets.splice(i,1);save(keys.assets,assets);renderAssets()})}
-function renderFeedback(){const avg=feedback.length?(feedback.reduce((a,x)=>a+x.rating,0)/feedback.length).toFixed(1):'—';$('hrv5-fsummary').textContent=`Responses: ${feedback.length} · Average rating: ${avg}/5 · Follow-up: ${feedback.filter(x=>x.follow==='Yes').length}`;list('hrv5-flist',feedback,x=>`<strong>${esc(x.session||'General')} · ${x.rating}/5</strong> <span class="pill">${x.follow==='Yes'?'Follow-up':'No follow-up'}</span><p>${esc(x.text||'(No written comment)')}</p><span class="muted">${esc(x.created)}</span>`,i=>{feedback.splice(i,1);save(keys.feedback,feedback);renderFeedback()})}
-function renderMilestones(){const done=milestones.filter(x=>x.status==='Done').length;$('hrv5-msummary').textContent=`Total: ${milestones.length} · Done: ${done} · Blocked: ${milestones.filter(x=>x.status==='Blocked').length}`;list('hrv5-mlist',milestones,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>Due: ${esc(x.date||'Unscheduled')} · Owner: ${esc(x.owner||'—')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{milestones.splice(i,1);save(keys.milestones,milestones);renderMilestones()})}
-$('hrv5-launcher').addEventListener('click',()=>{$('hrv5-panel').style.display='flex'});
-$('hrv5-close').addEventListener('click',()=>{$('hrv5-panel').style.display='none'});
-$('hrv5-panel').addEventListener('click',e=>{if(e.target===$('hrv5-panel'))$('hrv5-panel').style.display='none'});
-$('hrv5-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv5-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv5-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
-$('hrv5-cadd').addEventListener('click',()=>{const name=$('hrv5-cname').value.trim();if(!name){$('hrv5-cmsg').textContent='Participant name is required.';return}checkins.unshift({id:id(),name,team:$('hrv5-cteam').value.trim(),reg:$('hrv5-cid').value.trim(),status:$('hrv5-cstatus').value,created:new Date().toLocaleString()});save(keys.check,checkins);$('hrv5-cname').value='';$('hrv5-cteam').value='';$('hrv5-cid').value='';$('hrv5-cmsg').textContent='Participant added.';renderCheck()});
-$('hrv5-cexport').addEventListener('click',()=>csv([['Name','Team/College','Registration ID','Status','Created'],...checkins.map(x=>[x.name,x.team,x.reg,x.status,x.created])],'participant-checkin.csv'));
-$('hrv5-aadd').addEventListener('click',()=>{const name=$('hrv5-aname').value.trim(),qty=Number($('hrv5-aqty').value);if(!name||!Number.isInteger(qty)||qty<1){alert('Enter an asset name and a whole quantity of at least 1.');return}assets.unshift({id:id(),name,qty,owner:$('hrv5-aowner').value.trim(),status:$('hrv5-astatus').value});save(keys.assets,assets);$('hrv5-aname').value='';$('hrv5-aowner').value='';renderAssets()});
-$('hrv5-aexport').addEventListener('click',()=>csv([['Asset','Quantity','Assigned/Location','Status'],...assets.map(x=>[x.name,x.qty,x.owner,x.status])],'asset-inventory.csv'));
-$('hrv5-fadd').addEventListener('click',()=>{const text=$('hrv5-ftext').value.trim();if(!text){alert('Please enter feedback first.');return}feedback.unshift({id:id(),session:$('hrv5-fsession').value.trim(),rating:Number($('hrv5-frating').value),text,follow:$('hrv5-ffollow').value,created:new Date().toLocaleString()});save(keys.feedback,feedback);$('hrv5-ftext').value='';renderFeedback()});
-$('hrv5-fexport').addEventListener('click',()=>csv([['Session','Rating','Feedback','Follow-up','Created'],...feedback.map(x=>[x.session,x.rating,x.text,x.follow,x.created])],'event-feedback.csv'));
-$('hrv5-madd').addEventListener('click',()=>{const name=$('hrv5-mname').value.trim();if(!name){alert('Milestone name is required.');return}milestones.unshift({id:id(),name,date:$('hrv5-mdate').value,owner:$('hrv5-mowner').value.trim(),status:$('hrv5-mstatus').value,notes:$('hrv5-mnotes').value.trim()});save(keys.milestones,milestones);$('hrv5-mname').value='';$('hrv5-mnotes').value='';renderMilestones()});
-$('hrv5-mexport').addEventListener('click',()=>csv([['Milestone','Due date','Owner','Status','Notes'],...milestones.map(x=>[x.name,x.date,x.owner,x.status,x.notes])],'project-milestones.csv'));
-$('hrv5-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v5-data.json',{exportedAt:new Date().toISOString(),checkins,assets,feedback,milestones}));
-renderCheck();renderAssets();renderFeedback();renderMilestones();
-})();
-</script>
-<!-- /HACKATHON_RIVALS_V5_TOOLKIT -->
-
-
-<!-- HACKATHON_RIVALS_V6_TOOLKIT: additive, browser-local utilities -->
-<style>
-#hrv6-launcher{position:fixed;right:18px;bottom:210px;z-index:2147483000;background:#0f766e;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
-#hrv6-panel{position:fixed;inset:0;z-index:2147483001;background:#07131aee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#e6fffb}
-#hrv6-panel *{box-sizing:border-box}#hrv6-panel .wrap{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#10212a;border:1px solid #28515a;border-radius:18px;padding:18px}
-#hrv6-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#hrv6-panel h2{margin:0;font-size:22px}#hrv6-panel h3{font-size:16px;margin:0 0 10px}
-#hrv6-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
-#hrv6-panel button{cursor:pointer;border:1px solid #32606a;background:#183640;color:#f0fdfa;border-radius:9px;padding:8px 11px}
-#hrv6-panel button.primary{background:#0f766e;border-color:#14b8a6}
-#hrv6-panel .tab.active{background:#0f766e}
-#hrv6-panel input,#hrv6-panel textarea,#hrv6-panel select{width:100%;background:#09171d;color:#f0fdfa;border:1px solid #32606a;border-radius:8px;padding:9px;margin:4px 0 9px}
-#hrv6-panel textarea{min-height:76px;resize:vertical}#hrv6-panel label{display:block;color:#b8d8d8;font-size:12px}
-#hrv6-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#hrv6-panel .card{border:1px solid #28515a;border-radius:12px;padding:13px;margin:8px 0;background:#132b35}
-#hrv6-panel .muted{color:#9bb8bc;font-size:12px}#hrv6-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #28515a;padding:10px 0}
-#hrv6-panel .item:last-child{border-bottom:0}#hrv6-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-#hrv6-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#134e4a;font-size:11px}
-@media(max-width:650px){#hrv6-panel .grid{grid-template-columns:1fr}#hrv6-panel .wrap{padding:12px}}
-</style>
-<button id="hrv6-launcher" type="button">Volunteer & Judging</button>
-<div id="hrv6-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Volunteer & Judging">
- <div class="wrap">
-  <div class="top"><div><h2>Hackathon Rivals · Volunteer & Judge Center</h2><div class="muted">Volunteer operations and judging utilities · local browser storage</div></div><button id="hrv6-close" type="button">Close ✕</button></div>
-  <div class="tabs">
-   <button class="tab active" data-tab="volunteers">Volunteers</button>
-   <button class="tab" data-tab="shifts">Shift Planner</button>
-   <button class="tab" data-tab="judges">Judging Rubric</button>
-   <button class="tab" data-tab="certs">Certificate Log</button>
-  </div>
-  <section data-page="volunteers">
-   <div class="grid"><div class="card"><h3>Volunteer directory</h3>
-    <label>Name<input id="hrv6-vname" placeholder="Volunteer name"></label>
-    <label>Role / skill<input id="hrv6-vrole" placeholder="Registration, tech support, stage"></label>
-    <label>Contact (optional)<input id="hrv6-vcontact" placeholder="Email or phone"></label>
-    <label>Availability<select id="hrv6-vavail"><option>Available</option><option>Limited</option><option>Unavailable</option></select></label>
-    <button class="primary" id="hrv6-vadd">Add volunteer</button><button id="hrv6-vexport">Export CSV</button>
-   </div><div class="card"><h3>Volunteer summary</h3><div id="hrv6-vsummary"></div></div></div>
-   <div class="card"><h3>Volunteers</h3><div id="hrv6-vlist"></div></div>
-  </section>
-  <section data-page="shifts" hidden>
-   <div class="grid"><div class="card"><h3>Shift planner</h3>
-    <label>Shift / duty<input id="hrv6-sname" placeholder="Registration desk"></label>
-    <label>Date<input id="hrv6-sdate" type="date"></label>
-    <label>Start time<input id="hrv6-sstart" type="time"></label>
-    <label>End time<input id="hrv6-send" type="time"></label>
-    <label>Assigned volunteer<input id="hrv6-sowner" placeholder="Volunteer name"></label>
-    <label>Status<select id="hrv6-sstatus"><option>Planned</option><option>Confirmed</option><option>Completed</option><option>Needs cover</option></select></label>
-    <button class="primary" id="hrv6-sadd">Add shift</button><button id="hrv6-sexport">Export CSV</button>
-   </div><div class="card"><h3>Shift summary</h3><div id="hrv6-ssummary"></div></div></div>
-   <div class="card"><h3>Shifts</h3><div id="hrv6-slist"></div></div>
-  </section>
-  <section data-page="judges" hidden>
-   <div class="grid"><div class="card"><h3>Judging scorecard</h3>
-    <label>Project / team<input id="hrv6-jteam" placeholder="Project name"></label>
-    <label>Judge name<input id="hrv6-jjudge" placeholder="Judge name"></label>
-    <label>Innovation (0–10)<input id="hrv6-jinnovation" type="number" min="0" max="10" step="0.5" value="7"></label>
-    <label>Technical execution (0–10)<input id="hrv6-jtech" type="number" min="0" max="10" step="0.5" value="7"></label>
-    <label>Impact (0–10)<input id="hrv6-jimpact" type="number" min="0" max="10" step="0.5" value="7"></label>
-    <label>Presentation (0–10)<input id="hrv6-jpresentation" type="number" min="0" max="10" step="0.5" value="7"></label>
-    <label>Comments<textarea id="hrv6-jcomments" placeholder="Strengths, concerns, suggestions"></textarea></label>
-    <button class="primary" id="hrv6-jadd">Save scorecard</button><button id="hrv6-jexport">Export CSV</button>
-   </div><div class="card"><h3>Scoring guidance</h3><p class="muted">Each criterion is 0–10. Total is shown out of 40. Use the same rubric for every team and have organizers verify final results.</p><div id="hrv6-jsummary"></div></div></div>
-   <div class="card"><h3>Scorecards</h3><div id="hrv6-jlist"></div></div>
-  </section>
-  <section data-page="certs" hidden>
-   <div class="grid"><div class="card"><h3>Certificate issue log</h3>
-    <label>Recipient name<input id="hrv6-rname" placeholder="Name exactly as printed"></label>
-    <label>Certificate type<select id="hrv6-rtype"><option>Participation</option><option>Winner</option><option>Runner-up</option><option>Volunteer</option><option>Judge</option><option>Organizer</option></select></label>
-    <label>Certificate reference ID<input id="hrv6-rid" placeholder="Unique reference"></label>
-    <label>Issue status<select id="hrv6-rstatus"><option>Draft</option><option>Approved</option><option>Issued</option><option>Revoked</option></select></label>
-    <label>Notes<input id="hrv6-rnotes" placeholder="Optional"></label>
-    <button class="primary" id="hrv6-radd">Add certificate record</button><button id="hrv6-rexport">Export CSV</button>
-   </div><div class="card"><h3>Certificate summary</h3><div id="hrv6-rsummary"></div></div></div>
-   <div class="card"><h3>Certificate records</h3><div id="hrv6-rlist"></div></div>
-  </section>
-  <div class="top"><span class="muted" id="hrv6-status" aria-live="polite"></span><button id="hrv6-backup">Export all V6 data (JSON)</button></div>
- </div>
-</div>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const keys={vol:'hrv6_volunteers_v1',shifts:'hrv6_shifts_v1',judges:'hrv6_scorecards_v1',certs:'hrv6_certlog_v1'};
-const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
-const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv6-status').textContent='Saved locally in this browser.'}catch(_){$('hrv6-status').textContent='Could not save: browser storage may be full or disabled.'}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-let volunteers=load(keys.vol),shifts=load(keys.shifts),scorecards=load(keys.judges),certs=load(keys.certs);
-const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
-function renderVol(){ $('hrv6-vsummary').textContent=`Total: ${volunteers.length} · Available: ${volunteers.filter(x=>x.availability==='Available').length} · Limited: ${volunteers.filter(x=>x.availability==='Limited').length}`;list('hrv6-vlist',volunteers,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.availability)}</span><p>${esc(x.role||'Role not set')} · ${esc(x.contact||'No contact')}</p>`,i=>{volunteers.splice(i,1);save(keys.vol,volunteers);renderVol()})}
-function renderShifts(){ $('hrv6-ssummary').textContent=`Total: ${shifts.length} · Needs cover: ${shifts.filter(x=>x.status==='Needs cover').length} · Completed: ${shifts.filter(x=>x.status==='Completed').length}`;list('hrv6-slist',shifts,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.date||'No date')} · ${esc(x.start||'—')}–${esc(x.end||'—')} · ${esc(x.owner||'Unassigned')}</p>`,i=>{shifts.splice(i,1);save(keys.shifts,shifts);renderShifts()})}
-function renderJudges(){const avg=scorecards.length?(scorecards.reduce((a,x)=>a+x.total,0)/scorecards.length).toFixed(1):'—';$('hrv6-jsummary').textContent=`Scorecards: ${scorecards.length} · Average total: ${avg}/40`;list('hrv6-jlist',scorecards,x=>`<strong>${esc(x.team)}</strong> <span class="pill">${x.total}/40</span><p>Judge: ${esc(x.judge||'—')} · Innovation ${x.innovation}, Tech ${x.tech}, Impact ${x.impact}, Presentation ${x.presentation}</p>${x.comments?`<p>${esc(x.comments)}</p>`:''}`,i=>{scorecards.splice(i,1);save(keys.judges,scorecards);renderJudges()})}
-function renderCerts(){ $('hrv6-rsummary').textContent=`Total: ${certs.length} · Issued: ${certs.filter(x=>x.status==='Issued').length} · Draft: ${certs.filter(x=>x.status==='Draft').length}`;list('hrv6-rlist',certs,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.status)}</span><p>${esc(x.type)} · Ref: ${esc(x.ref||'—')} · ${esc(x.notes||'')}</p>`,i=>{certs.splice(i,1);save(keys.certs,certs);renderCerts()})}
-$('hrv6-launcher').addEventListener('click',()=>{$('hrv6-panel').style.display='flex'});
-$('hrv6-close').addEventListener('click',()=>{$('hrv6-panel').style.display='none'});
-$('hrv6-panel').addEventListener('click',e=>{if(e.target===$('hrv6-panel'))$('hrv6-panel').style.display='none'});
-$('hrv6-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv6-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv6-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
-$('hrv6-vadd').addEventListener('click',()=>{const name=$('hrv6-vname').value.trim();if(!name){alert('Volunteer name is required.');return}volunteers.unshift({id:id(),name,role:$('hrv6-vrole').value.trim(),contact:$('hrv6-vcontact').value.trim(),availability:$('hrv6-vavail').value});save(keys.vol,volunteers);$('hrv6-vname').value='';renderVol()});
-$('hrv6-vexport').addEventListener('click',()=>csv([['Name','Role/Skill','Contact','Availability'],...volunteers.map(x=>[x.name,x.role,x.contact,x.availability])],'volunteers.csv'));
-$('hrv6-sadd').addEventListener('click',()=>{const name=$('hrv6-sname').value.trim(),start=$('hrv6-sstart').value,end=$('hrv6-send').value;if(!name){alert('Shift name is required.');return}if(start&&end&&end<=start){alert('End time must be later than start time. Overnight shifts are not supported in this version.');return}shifts.unshift({id:id(),name,date:$('hrv6-sdate').value,start,end,owner:$('hrv6-sowner').value.trim(),status:$('hrv6-sstatus').value});save(keys.shifts,shifts);$('hrv6-sname').value='';renderShifts()});
-$('hrv6-sexport').addEventListener('click',()=>csv([['Shift','Date','Start','End','Assigned volunteer','Status'],...shifts.map(x=>[x.name,x.date,x.start,x.end,x.owner,x.status])],'volunteer-shifts.csv'));
-$('hrv6-jadd').addEventListener('click',()=>{const team=$('hrv6-jteam').value.trim();if(!team){alert('Project/team name is required.');return}const vals=['innovation','tech','impact','presentation'].map(k=>Number($('hrv6-j'+k).value));if(vals.some(v=>!Number.isFinite(v)||v<0||v>10)){alert('Each score must be between 0 and 10.');return}const [innovation,tech,impact,presentation]=vals;scorecards.unshift({id:id(),team,judge:$('hrv6-jjudge').value.trim(),innovation,tech,impact,presentation,total:innovation+tech+impact+presentation,comments:$('hrv6-jcomments').value.trim()});save(keys.judges,scorecards);$('hrv6-jteam').value='';$('hrv6-jcomments').value='';renderJudges()});
-$('hrv6-jexport').addEventListener('click',()=>csv([['Project/Team','Judge','Innovation','Technical execution','Impact','Presentation','Total / 40','Comments'],...scorecards.map(x=>[x.team,x.judge,x.innovation,x.tech,x.impact,x.presentation,x.total,x.comments])],'judging-scorecards.csv'));
-$('hrv6-radd').addEventListener('click',()=>{const name=$('hrv6-rname').value.trim(),ref=$('hrv6-rid').value.trim();if(!name){alert('Recipient name is required.');return}if(ref&&certs.some(x=>x.ref.toLowerCase()===ref.toLowerCase())){alert('That certificate reference already exists.');return}certs.unshift({id:id(),name,type:$('hrv6-rtype').value,ref,status:$('hrv6-rstatus').value,notes:$('hrv6-rnotes').value.trim()});save(keys.certs,certs);$('hrv6-rname').value='';$('hrv6-rid').value='';renderCerts()});
-$('hrv6-rexport').addEventListener('click',()=>csv([['Recipient','Certificate type','Reference ID','Status','Notes'],...certs.map(x=>[x.name,x.type,x.ref,x.status,x.notes])],'certificate-issue-log.csv'));
-$('hrv6-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v6-data.json',{exportedAt:new Date().toISOString(),volunteers,shifts,scorecards,certs}));
-renderVol();renderShifts();renderJudges();renderCerts();
-})();
-</script>
-<!-- /HACKATHON_RIVALS_V6_TOOLKIT -->
-
-
-<!-- HACKATHON_RIVALS_V7_TOOLKIT: additive browser-local utilities -->
-<style>
-#hrv7-launcher{position:fixed;right:18px;bottom:262px;z-index:2147483000;background:#b45309;color:#fff;border:0;border-radius:999px;padding:12px 16px;font:600 13px system-ui;box-shadow:0 8px 28px #0003;cursor:pointer}
-#hrv7-panel{position:fixed;inset:0;z-index:2147483001;background:#120d08ee;display:none;align-items:center;justify-content:center;padding:14px;font:14px system-ui;color:#fff7ed}
-#hrv7-panel *{box-sizing:border-box}#hrv7-panel .wrap{width:min(1080px,100%);max-height:92vh;overflow:auto;background:#21170e;border:1px solid #674522;border-radius:18px;padding:18px}
-#hrv7-panel .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#hrv7-panel h2{margin:0;font-size:22px}#hrv7-panel h3{font-size:16px;margin:0 0 10px}
-#hrv7-panel .tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
-#hrv7-panel button{cursor:pointer;border:1px solid #805b35;background:#3b2817;color:#fff7ed;border-radius:9px;padding:8px 11px}
-#hrv7-panel button.primary{background:#b45309;border-color:#d97706}
-#hrv7-panel .tab.active{background:#b45309}
-#hrv7-panel input,#hrv7-panel textarea,#hrv7-panel select{width:100%;background:#160f09;color:#fff7ed;border:1px solid #805b35;border-radius:8px;padding:9px;margin:4px 0 9px}
-#hrv7-panel textarea{min-height:76px;resize:vertical}#hrv7-panel label{display:block;color:#fed7aa;font-size:12px}
-#hrv7-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#hrv7-panel .card{border:1px solid #674522;border-radius:12px;padding:13px;margin:8px 0;background:#2a1c10}
-#hrv7-panel .muted{color:#d6b99a;font-size:12px}#hrv7-panel .item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #674522;padding:10px 0}
-#hrv7-panel .item:last-child{border-bottom:0}#hrv7-panel .item p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
-#hrv7-panel .pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#78350f;font-size:11px}
-@media(max-width:650px){#hrv7-panel .grid{grid-template-columns:1fr}#hrv7-panel .wrap{padding:12px}}
-</style>
-<button id="hrv7-launcher" type="button">Event Control</button>
-<div id="hrv7-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals Event Control">
- <div class="wrap">
-  <div class="top"><div><h2>Hackathon Rivals · Event Control Center</h2><div class="muted">Incident, communications and run-of-show tools · browser-local data</div></div><button id="hrv7-close" type="button">Close ✕</button></div>
-  <div class="tabs">
-   <button class="tab active" data-tab="incidents">Incident Log</button>
-   <button class="tab" data-tab="announcements">Announcements</button>
-   <button class="tab" data-tab="runshow">Run of Show</button>
-   <button class="tab" data-tab="contacts">Emergency Contacts</button>
-  </div>
-  <section data-page="incidents">
-   <div class="grid"><div class="card"><h3>Incident / issue report</h3>
-    <label>Short title<input id="hrv7-ititle" placeholder="Wi-Fi down at room B"></label>
-    <label>Category<select id="hrv7-icat"><option>Technical</option><option>Safety</option><option>Venue</option><option>Registration</option><option>Schedule</option><option>Other</option></select></label>
-    <label>Severity<select id="hrv7-isev"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></label>
-    <label>Reported by<input id="hrv7-ireporter" placeholder="Name or role"></label>
-    <label>Details<textarea id="hrv7-idetails" placeholder="What happened? Avoid entering sensitive personal information."></textarea></label>
-    <label>Status<select id="hrv7-istatus"><option>Open</option><option>Investigating</option><option>Resolved</option><option>Closed</option></select></label>
-    <button class="primary" id="hrv7-iadd">Save incident</button><button id="hrv7-iexport">Export CSV</button>
-   </div><div class="card"><h3>Incident overview</h3><div id="hrv7-isummary"></div><p class="muted">For emergencies, contact local emergency services; this log does not dispatch help or send alerts.</p></div></div>
-   <div class="card"><h3>Incident records</h3><div id="hrv7-ilist"></div></div>
-  </section>
-  <section data-page="announcements" hidden>
-   <div class="grid"><div class="card"><h3>Announcement composer</h3>
-    <label>Title<input id="hrv7-atitle" placeholder="Workshop starts in 10 minutes"></label>
-    <label>Audience<select id="hrv7-aaudience"><option>All participants</option><option>Mentors</option><option>Judges</option><option>Volunteers</option><option>Organizers</option></select></label>
-    <label>Channel<select id="hrv7-achannel"><option>Website</option><option>Email</option><option>WhatsApp</option><option>Stage announcement</option><option>Social media</option></select></label>
-    <label>Message<textarea id="hrv7-amessage" placeholder="Write the announcement"></textarea></label>
-    <label>Status<select id="hrv7-astatus"><option>Draft</option><option>Approved</option><option>Sent manually</option></select></label>
-    <button class="primary" id="hrv7-aadd">Save announcement</button><button id="hrv7-aexport">Export CSV</button>
-   </div><div class="card"><h3>Announcement summary</h3><div id="hrv7-asummary"></div><p class="muted">This tool stores drafts only; it does not send messages or publish posts.</p></div></div>
-   <div class="card"><h3>Announcements</h3><div id="hrv7-alist"></div></div>
-  </section>
-  <section data-page="runshow" hidden>
-   <div class="grid"><div class="card"><h3>Event run of show</h3>
-    <label>Agenda item<input id="hrv7-rname" placeholder="Opening remarks"></label>
-    <label>Date<input id="hrv7-rdate" type="date"></label>
-    <label>Start time<input id="hrv7-rstart" type="time"></label>
-    <label>End time<input id="hrv7-rend" type="time"></label>
-    <label>Stage owner<input id="hrv7-rowner" placeholder="Host / AV / volunteer"></label>
-    <label>Location<input id="hrv7-rlocation" placeholder="Main hall / online"></label>
-    <label>Notes<textarea id="hrv7-rnotes" placeholder="Cue, equipment, transition"></textarea></label>
-    <button class="primary" id="hrv7-radd">Add agenda item</button><button id="hrv7-rexport">Export CSV</button>
-   </div><div class="card"><h3>Agenda overview</h3><div id="hrv7-rsummary"></div></div></div>
-   <div class="card"><h3>Agenda items</h3><div id="hrv7-rlist"></div></div>
-  </section>
-  <section data-page="contacts" hidden>
-   <div class="grid"><div class="card"><h3>Emergency / venue contacts</h3>
-    <label>Contact / service<input id="hrv7-ename" placeholder="Venue manager / campus security"></label>
-    <label>Role / organization<input id="hrv7-erole" placeholder="Role or department"></label>
-    <label>Phone or email<input id="hrv7-econtact" placeholder="Contact details"></label>
-    <label>Availability / notes<input id="hrv7-enotes" placeholder="Hours, location, escalation notes"></label>
-    <button class="primary" id="hrv7-eadd">Add contact</button><button id="hrv7-eexport">Export CSV</button>
-   </div><div class="card"><h3>Contact list guidance</h3><p class="muted">Verify every number with the venue or official source before the event. Access to this browser profile may expose saved contacts.</p><div id="hrv7-esummary"></div></div></div>
-   <div class="card"><h3>Contacts</h3><div id="hrv7-elist"></div></div>
-  </section>
-  <div class="top"><span class="muted" id="hrv7-status" aria-live="polite"></span><button id="hrv7-backup">Export all V7 data (JSON)</button></div>
- </div>
-</div>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const keys={incidents:'hrv7_incidents_v1',announcements:'hrv7_announcements_v1',runshow:'hrv7_runshow_v1',contacts:'hrv7_contacts_v1'};
-const load=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
-const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));$('hrv7-status').textContent='Saved locally in this browser.'}catch(_){$('hrv7-status').textContent='Could not save: browser storage may be full or disabled.'}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const csv=(rows,name)=>{const body=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob(['\ufeff'+body],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-const jsonDownload=(name,obj)=>{const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
-let incidents=load(keys.incidents),announcements=load(keys.announcements),runshow=load(keys.runshow),contacts=load(keys.contacts);
-const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-function list(el,items,render,remove){const root=$(el);root.replaceChildren();if(!items.length){root.innerHTML='<div class="muted">No records yet.</div>';return}items.forEach((it,i)=>{const row=document.createElement('div');row.className='item';const body=document.createElement('div');body.style.flex='1';body.innerHTML=render(it);const btn=document.createElement('button');btn.type='button';btn.textContent='Delete';btn.addEventListener('click',()=>{if(!confirm('Delete this record?'))return;remove(i)});row.append(body,btn);root.append(row)})}
-function renderInc(){ $('hrv7-isummary').textContent=`Total: ${incidents.length} · Open: ${incidents.filter(x=>!['Resolved','Closed'].includes(x.status)).length} · High/Critical: ${incidents.filter(x=>['High','Critical'].includes(x.severity)).length}`;list('hrv7-ilist',incidents,x=>`<strong>${esc(x.title)}</strong> <span class="pill">${esc(x.severity)} · ${esc(x.status)}</span><p>${esc(x.category)} · Reported by: ${esc(x.reporter||'—')}</p><p>${esc(x.details||'')}</p><span class="muted">${esc(x.created)}</span>`,i=>{incidents.splice(i,1);save(keys.incidents,incidents);renderInc()})}
-function renderAnn(){ $('hrv7-asummary').textContent=`Total: ${announcements.length} · Drafts: ${announcements.filter(x=>x.status==='Draft').length} · Sent manually: ${announcements.filter(x=>x.status==='Sent manually').length}`;list('hrv7-alist',announcements,x=>`<strong>${esc(x.title)}</strong> <span class="pill">${esc(x.status)}</span><p>Audience: ${esc(x.audience)} · Channel: ${esc(x.channel)}</p><p>${esc(x.message)}</p>`,i=>{announcements.splice(i,1);save(keys.announcements,announcements);renderAnn()})}
-function renderRun(){ $('hrv7-rsummary').textContent=`Agenda items: ${runshow.length} · With owner: ${runshow.filter(x=>x.owner).length}`;list('hrv7-rlist',runshow,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.start||'No start')}–${esc(x.end||'No end')}</span><p>${esc(x.date||'No date')} · ${esc(x.location||'No location')} · Owner: ${esc(x.owner||'—')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{runshow.splice(i,1);save(keys.runshow,runshow);renderRun()})}
-function renderContacts(){ $('hrv7-esummary').textContent=`Saved contacts: ${contacts.length}`;list('hrv7-elist',contacts,x=>`<strong>${esc(x.name)}</strong> <span class="pill">${esc(x.role||'Contact')}</span><p>${esc(x.contact||'No contact details')}</p>${x.notes?`<p>${esc(x.notes)}</p>`:''}`,i=>{contacts.splice(i,1);save(keys.contacts,contacts);renderContacts()})}
-$('hrv7-launcher').addEventListener('click',()=>{$('hrv7-panel').style.display='flex'});
-$('hrv7-close').addEventListener('click',()=>{$('hrv7-panel').style.display='none'});
-$('hrv7-panel').addEventListener('click',e=>{if(e.target===$('hrv7-panel'))$('hrv7-panel').style.display='none'});
-$('hrv7-panel').querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$('hrv7-panel').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));$('hrv7-panel').querySelectorAll('[data-page]').forEach(x=>x.hidden=x.dataset.page!==b.dataset.tab)}));
-$('hrv7-iadd').addEventListener('click',()=>{const title=$('hrv7-ititle').value.trim();if(!title){alert('Incident title is required.');return}incidents.unshift({id:id(),title,category:$('hrv7-icat').value,severity:$('hrv7-isev').value,reporter:$('hrv7-ireporter').value.trim(),details:$('hrv7-idetails').value.trim(),status:$('hrv7-istatus').value,created:new Date().toLocaleString()});save(keys.incidents,incidents);$('hrv7-ititle').value='';$('hrv7-idetails').value='';renderInc()});
-$('hrv7-iexport').addEventListener('click',()=>csv([['Title','Category','Severity','Reporter','Details','Status','Created'],...incidents.map(x=>[x.title,x.category,x.severity,x.reporter,x.details,x.status,x.created])],'incident-log.csv'));
-$('hrv7-aadd').addEventListener('click',()=>{const title=$('hrv7-atitle').value.trim(),message=$('hrv7-amessage').value.trim();if(!title||!message){alert('Announcement title and message are required.');return}announcements.unshift({id:id(),title,audience:$('hrv7-aaudience').value,channel:$('hrv7-achannel').value,message,status:$('hrv7-astatus').value});save(keys.announcements,announcements);$('hrv7-atitle').value='';$('hrv7-amessage').value='';renderAnn()});
-$('hrv7-aexport').addEventListener('click',()=>csv([['Title','Audience','Channel','Message','Status'],...announcements.map(x=>[x.title,x.audience,x.channel,x.message,x.status])],'announcements.csv'));
-$('hrv7-radd').addEventListener('click',()=>{const name=$('hrv7-rname').value.trim(),start=$('hrv7-rstart').value,end=$('hrv7-rend').value;if(!name){alert('Agenda item is required.');return}if(start&&end&&end<=start){alert('End time must be later than start time. Overnight entries are not supported.');return}runshow.unshift({id:id(),name,date:$('hrv7-rdate').value,start,end,owner:$('hrv7-rowner').value.trim(),location:$('hrv7-rlocation').value.trim(),notes:$('hrv7-rnotes').value.trim()});save(keys.runshow,runshow);$('hrv7-rname').value='';$('hrv7-rnotes').value='';renderRun()});
-$('hrv7-rexport').addEventListener('click',()=>csv([['Agenda item','Date','Start','End','Owner','Location','Notes'],...runshow.map(x=>[x.name,x.date,x.start,x.end,x.owner,x.location,x.notes])],'event-run-of-show.csv'));
-$('hrv7-eadd').addEventListener('click',()=>{const name=$('hrv7-ename').value.trim();if(!name){alert('Contact or service name is required.');return}contacts.unshift({id:id(),name,role:$('hrv7-erole').value.trim(),contact:$('hrv7-econtact').value.trim(),notes:$('hrv7-enotes').value.trim()});save(keys.contacts,contacts);$('hrv7-ename').value='';renderContacts()});
-$('hrv7-eexport').addEventListener('click',()=>csv([['Contact/service','Role/organization','Phone/email','Notes'],...contacts.map(x=>[x.name,x.role,x.contact,x.notes])],'emergency-venue-contacts.csv'));
-$('hrv7-backup').addEventListener('click',()=>jsonDownload('hackathon-rivals-v7-data.json',{exportedAt:new Date().toISOString(),incidents,announcements,runshow,contacts}));
-renderInc();renderAnn();renderRun();renderContacts();
-})();
-</script>
-<!-- /HACKATHON_RIVALS_V7_TOOLKIT -->
-
-
-<!-- HR_ALL_IN_ONE_HUB: unified launcher + searchable index for all additive toolkits -->
-<style>
-#hraio-launcher{position:fixed;right:18px;bottom:18px;z-index:2147483645;background:linear-gradient(135deg,#4f46e5,#0f766e);color:white;border:0;border-radius:999px;padding:13px 17px;font:700 13px system-ui;box-shadow:0 8px 30px #0005;cursor:pointer}
-#hraio-panel{position:fixed;inset:0;z-index:2147483646;background:#080d18ee;display:none;align-items:center;justify-content:center;padding:12px;color:#eef2ff;font:14px system-ui}
-#hraio-panel *{box-sizing:border-box}#hraio-panel .wrap{width:min(1000px,100%);max-height:94vh;overflow:auto;background:#111827;border:1px solid #374151;border-radius:18px;padding:18px}
-#hraio-panel .head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#hraio-panel h2{margin:0;font-size:23px}#hraio-panel h3{margin:0 0 7px;font-size:15px}
-#hraio-panel .sub{color:#9ca3af;font-size:12px;margin-top:5px}
-#hraio-panel input{width:100%;padding:11px;border:1px solid #4b5563;border-radius:10px;background:#0b1220;color:#fff;margin:14px 0}
-#hraio-panel .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-#hraio-panel .tool{padding:13px;border:1px solid #374151;border-radius:12px;background:#172033}
-#hraio-panel .tool p{margin:5px 0 0;color:#cbd5e1;font-size:12px;line-height:1.5}
-#hraio-panel .badge{display:inline-block;border-radius:99px;padding:3px 7px;background:#312e81;font-size:10px;margin-bottom:7px}
-#hraio-panel button{border:1px solid #4b5563;background:#263247;color:#fff;border-radius:9px;padding:8px 11px;cursor:pointer}
-#hraio-panel .close{background:#7f1d1d}
-#hraio-panel .notice{background:#172033;border-radius:10px;padding:12px;margin:12px 0;color:#cbd5e1;font-size:12px;line-height:1.6}
-@media(max-width:650px){#hraio-panel .grid{grid-template-columns:1fr}#hraio-panel .wrap{padding:12px}}
-</style>
-<button id="hraio-launcher" type="button">Rivals Hub ☰</button>
-<div id="hraio-panel" role="dialog" aria-modal="true" aria-label="Hackathon Rivals All-in-One Hub">
- <div class="wrap">
-  <div class="head"><div><h2>Hackathon Rivals · Rivals Command Center</h2><div class="sub">Sab toolkits ek jagah · search karke apna tool kholne ki jagah tak pahunch sakte ho</div></div><button class="close" id="hraio-close" type="button">Close ✕</button></div>
-  <input id="hraio-search" type="search" placeholder="Search tools: tasks, judging, budget, API, certificates…">
-  <div class="notice">Saare tools yahin se open karo. Kisi workspace ko select karne par uske related tools khulenge.</div>
-  <div class="grid" id="hraio-grid"></div>
-  <div class="notice"><strong>Important:</strong> Browser-local tools ka data isi browser/device mein hota hai. Automatic team sync, email/WhatsApp sending, real certificate verification aur secure judge/admin permissions ke liye backend integration alag se zaroori hai.</div>
- </div>
-</div>
-<script>
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const tools=[
-{v:'WORKSPACE 01',name:'Team Productivity',desc:'Tasks, idea board, pitch timer, text utilities, JSON tools and launch checklist.',launcherId:'hrExtraFab'},
-{v:'WORKSPACE 02',name:'Project Delivery',desc:'Sprint board, bug tracker, meeting notes, risk register and workspace backup.',launcherId:'hrWorkspaceFab'},
-{v:'WORKSPACE 03',name:'Submission & API Studio',desc:'Submission pack builder, event schedule, decision log and API request tester.',launcherId:'hrV3Launcher'},
-{v:'WORKSPACE 04',name:'Team & Resource Operations',desc:'Team directory, budget, sponsors/partners and project handover notes.',launcherId:'hrv4-launch'},
-{v:'WORKSPACE 05',name:'Event Operations',desc:'Participant check-in, equipment inventory, feedback and milestone planner.',launcherId:'hrv5-launcher'},
-{v:'WORKSPACE 06',name:'Volunteer & Judge Center',desc:'Volunteer roster, shift planner, evaluation scorecards and certificate log.',launcherId:'hrv6-launcher'},
-{v:'WORKSPACE 07',name:'Event Control Center',desc:'Incident reports, announcement drafts, run of show and venue contacts.',launcherId:'hrv7-launcher'}
-];
-function render(q=''){const grid=$('hraio-grid');grid.replaceChildren();const filtered=tools.filter(t=>(t.name+' '+t.desc+' '+t.v).toLowerCase().includes(q.toLowerCase()));if(!filtered.length){grid.innerHTML='<div class="tool">No matching tool found.</div>';return}filtered.forEach(t=>{const card=document.createElement('div');card.className='tool';const badge=document.createElement('span');badge.className='badge';badge.textContent=t.v;const title=document.createElement('h3');title.textContent=t.name;const p=document.createElement('p');p.textContent=t.desc;const btn=document.createElement('button');btn.type='button';btn.textContent='Open toolkit';btn.style.marginTop='10px';btn.addEventListener('click',()=>{const target=document.getElementById(t.launcherId);if(target){$('hraio-panel').style.display='none';target.click()}else{alert('Toolkit launcher "'+t.launcher+'" nahi mila. Page refresh karke dobara try karo.')}});card.append(badge,title,p,btn);grid.append(card)})}
-$('hraio-launcher').addEventListener('click',()=>{$('hraio-panel').style.display='flex';render($('hraio-search').value);$('hraio-search').focus()});
-$('hraio-close').addEventListener('click',()=>{$('hraio-panel').style.display='none'});
-$('hraio-panel').addEventListener('click',e=>{if(e.target===$('hraio-panel'))$('hraio-panel').style.display='none'});
-$('hraio-search').addEventListener('input',e=>render(e.target.value));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')$('hraio-panel').style.display='none'});
-})();
-</script>
-<!-- /HR_ALL_IN_ONE_HUB -->
-
-<!-- HACKATHON_RIVALS_REFINED_UI -->
-<style id="hr-refined-ui">
-/* Keep one clean command-center launcher instead of seven stacked floating buttons. */
-#hrExtraFab,#hrWorkspaceFab,#hrV3Launcher,#hrv4-launch,#hrv5-launcher,#hrv6-launcher,#hrv7-launcher{display:none!important}
-#hraio-launcher{
-  right:16px!important;bottom:20px!important;z-index:2147483645!important;
-  padding:13px 17px!important;border-radius:999px!important;
-  background:linear-gradient(120deg,#635bff,#08b8cb)!important;color:#fff!important;
-  font-weight:800!important;letter-spacing:.01em!important;
-  box-shadow:0 10px 32px rgba(73,77,255,.34)!important;
-}
-#hraio-panel{z-index:2147483646!important}
-#hraio-panel .wrap{box-shadow:0 24px 90px #0008}
-#hraio-panel .tool{transition:transform .18s ease,border-color .18s ease,background .18s ease}
-#hraio-panel .tool:hover{transform:translateY(-2px);border-color:#655df4;background:#1b2940}
-#hraio-panel .badge{letter-spacing:.05em;color:#ddd9ff}
-
-/* Hero overview: the dashboard preview must not stay invisible on first load. */
-.hero{padding:clamp(28px,4.2vw,52px) 0 28px!important}
-.hero-grid{gap:clamp(22px,3.6vw,40px)!important;align-items:center!important}
-.hero .mockup.reveal{opacity:1!important;transform:none!important;visibility:visible!important;display:block!important}
-.hero .mockup{border-radius:18px!important;box-shadow:0 24px 60px -24px rgba(0,0,0,.82),0 0 44px -24px rgba(124,92,255,.42)!important}
-.hero .mockup-body{padding:15px!important}
-.hero .mock-row{margin-bottom:10px!important}
-.hero #heroMockupRows>div[style*="text-align:center"]{padding:26px 12px!important;line-height:1.6}
-.hero .stats.reveal{opacity:1!important;transform:none!important;visibility:visible!important}
-.hero .stats{margin-top:28px!important;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,.018)}
-.hero .stat{padding:22px 14px!important;min-width:0}
-.hero .stat b{font-size:clamp(22px,3vw,30px)!important}
-.hero .stat span{font-size:11px!important;line-height:1.5}
-.hero-title{line-height:1.1!important;letter-spacing:-.035em}
-.hero-sub{line-height:1.65!important}
-@media(max-width:980px){
-  .hero-grid{grid-template-columns:1fr!important;gap:24px!important}
-  .hero .mockup{max-width:640px;width:100%;margin:0 auto}
-}
-@media(max-width:720px){
-  .hero{padding:26px 0 22px!important}
-  .hero .pill{margin-bottom:17px!important;font-size:11.5px!important;flex-wrap:wrap}
-  h1.hero-title{font-size:clamp(33px,8.2vw,44px)!important;margin-bottom:14px!important}
-  .hero-sub{font-size:14px!important;margin-bottom:20px!important}
-  .hero-actions{gap:9px!important;margin-bottom:17px!important}
-  .hero-actions .btn{font-size:12px!important;padding:12px 14px!important}
-  .hero-note{font-size:12px!important}
-  .hero .stats{margin-top:20px!important}
-  .hero .stat{padding:16px 9px!important}
-  .hero .stat span{font-size:10px!important;letter-spacing:.04em!important}
-  .sponsors{padding:28px 0!important}
-  .sponsors .label{letter-spacing:.12em!important;font-size:10px!important;margin-bottom:18px!important}
-}
-@media(prefers-reduced-motion:reduce){
-  #hraio-panel .tool{transition:none}
-}
-</style>
-<script id="hr-refined-labels">
-(()=>{'use strict';
-const setText=(id,text)=>{const el=document.getElementById(id);if(el)el.textContent=text};
-setText('hrExtraFab','Team Productivity');
-setText('hrWorkspaceFab','Project Delivery');
-setText('hrV3Launcher','Submission & API Studio');
-setText('hrv4-launch','Team & Resource Operations');
-setText('hrv5-launcher','Event Operations');
-setText('hrv6-launcher','Volunteer & Judge Center');
-setText('hrv7-launcher','Event Control Center');
-setText('hraio-launcher','Rivals Hub ☰');
-const titleMap=[
-['hrExtraPanel','Team Productivity Suite'],
-['hrWorkspace','Project Delivery Workspace'],
-['hrV3Panel','Submission & API Studio'],
-['hrv4-panel','Team & Resource Operations'],
-['hrv5-panel','Event Operations Suite'],
-['hrv6-panel','Volunteer & Judge Center'],
-['hrv7-panel','Event Control Center']
-];
-titleMap.forEach(([id,title])=>{
-  const root=document.getElementById(id);if(!root)return;
-  const heading=root.querySelector('h2,h3');
-  if(heading)heading.textContent='Hackathon Rivals · '+title;
-  root.setAttribute('aria-label',title);
-});
-const row=document.querySelector('.mock-row .mock-title');
-if(row)row.textContent='Season 2026 · Live Overview';
-})();
-</script>
-<!-- /HACKATHON_RIVALS_REFINED_UI -->
-
 </body>
 </html>
