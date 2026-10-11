@@ -12333,7 +12333,9 @@ async function quizQuestions(q){
   if (HB.remote) return await pgrest(`hr_quiz_questions?quiz_id=eq.${encodeURIComponent(q.id)}&select=id,pos,text,options,points&order=pos`);
   return (store.get('hk:lqq:' + q.id, [])).map(x => ({ id: x.id, pos: x.pos, text: x.text, options: x.options, points: x.points }));
 }
+function qOrder(qs, key){ if (!qs || qs.length < 2) return qs; let h = 2166136261; for (const ch of key) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } const r = seeded(h), a = qs.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function runQuiz(q, qs, name, email){
+  if (guardOn()) qs = qOrder(qs, 'uphr_rnd_' + email + '_' + q.id);
   const m = qzModal(), B = $('#hkQB', m); const ans = {}, typed = {}; let file = null; const t0 = Date.now(), end = t0 + q.duration_min * 60000; HQ.cur = { q, ans }; HQ.retry = 0;
   const paperMode = !qs.length;
   setTimeout(() => loadPaper(q, email), 60);
