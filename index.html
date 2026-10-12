@@ -11990,7 +11990,7 @@ const retryOn = () => !!(HB.ev && HB.ev.proctor_retry === true);
 window.__hrRetry = async (q, email) => { if (!rem()) throw new Error('Re-attempt needs the database.'); try { HQ.retrySecs = await call('hr_x_retry_start', { p_ref: String(q.id), p_email: email }, email); store.set('x:rtUsed:' + q.id, 1); } catch(e){ throw new Error(errTxt(e)); } };
 window.__hrViol = (S, why) => {
   const Q = S.kind === 'quiz' && HQ.cur ? HQ.cur.q : null, left = HQ.cur && HQ.cur.left ? HQ.cur.left() : 0;
-  const email = (me().email || '').toLowerCase(), ref = S.kind === 'quiz' && HQ.cur && HQ.cur.q ? String(HQ.cur.q.id) : 'exam-centre', zero = zeroOn() && S.kind === 'quiz';
+  const email = (me().email || '').toLowerCase(), ref = S.kind === 'quiz' && HQ.cur && HQ.cur.q ? String(HQ.cur.q.id) : 'exam-centre', zero = zeroOn() && S.kind === 'quiz' && !window.__hrNoZero;
   const L = g('x:viol', []); L.unshift({ at: Date.now(), email, kind: S.kind, ref, reason: why, zero }); sv('x:viol', L.slice(0, 100));
   const V = email && rem() ? call('hr_x_violation', { p_email: email, p_kind: S.kind, p_ref: ref, p_reason: why, p_zero: zero, ...(retryOn() ? { p_left: left } : {}) }, email).catch(() => {}) : Promise.resolve();
   if (zero && HQ.cur && HQ.cur.ans) Object.keys(HQ.cur.ans).forEach(k => delete HQ.cur.ans[k]);
@@ -12031,6 +12031,7 @@ window.__hrWeakPw = (pw, email) => { const p = String(pw || ''); return p.length
 const LG = {
   privacy: ['Privacy Policy', [
     ['What we collect', 'Name, email, phone (if you give it), college / organisation, designation, your role, team and idea details, files you upload (PPT / PDF), code and answers you submit in the Code Arena and quizzes, scores, and proctoring events during quizzes (for example switching tabs or apps).'],
+    ['Camera and microphone (only when the organiser turns proctoring on)', 'With your consent, your camera can be used to check that your face is visible and that only one person is in view, and your microphone to measure sound activity. This analysis happens on your device. No video, audio or photos are recorded or uploaded. Only event records (type, time, exam) are stored, visible to the organisers, and kept like other exam violation records. Camera or microphone problems are logged as technical issues, not as cheating.'],
     ['Why we collect it', 'To run registrations, hackathon rounds, quizzes and judging, show leaderboards, issue certificates, contact you about the event, keep the platform fair and secure, and fix problems.'],
     ['Who processes it', 'We use Supabase (database and login), Vercel (hosting), Formspree (form and notification emails), and Judge0 / Wandbox (the code you run in the Code Lab is sent to them to execute). Passwords are handled by our login provider and stored in hashed form; we never see them.'],
     ['Sharing', 'We do not sell your data. Your name, team and score may appear on leaderboards. Organisers and judges can view your submissions and registration details.'],
@@ -12071,6 +12072,73 @@ document.addEventListener('click', e => {
   const k = /privacy/.test(t) ? 'privacy' : /^terms/.test(t) ? 'terms' : /^copyright/.test(t) ? 'copyright' : /^disclaimer/.test(t) ? 'disclaimer' : null;
   if (k) { e.preventDefault(); e.stopPropagation(); openLegal(k); }
 }, true);
+/* ---- Video & voice proctoring: admin-controlled, consent first, analysed on this device, nothing recorded or uploaded ---- */
+const PCFG = { master: false, mode: 'off', quiz: true, mock: true, face: true, multi: true, voice_alert: true, autosubmit: true, face_grace: 8, multi_secs: 4, voice_secs: 5, cooldown: 30, max_warnings: 3, policy: 'allow' };
+const pcfg = () => Object.assign({}, PCFG, (HB.ev && HB.ev.proctor_cfg) || {});
+const P = { id: 0, key: '', stream: null, ac: null, v: null, timers: [], n: 0, done: false, cool: 0, seen: {} };
+const pPlan = S => { const c = pcfg(); if (!c.master || c.mode === 'off' || !(S.kind === 'quiz' ? c.quiz : c.mock)) return null; return { c, video: (c.mode === 'video' || c.mode === 'both') && (c.face || c.multi), voice: (c.mode === 'voice' || c.mode === 'both') && c.voice_alert }; };
+function pEvt(cat, reason){
+  if (P.seen[reason]) return; P.seen[reason] = 1; const email = (me().email || '').toLowerCase(), ref = HQ.cur && HQ.cur.q ? String(HQ.cur.q.id) : 'exam-centre';
+  const L = g('x:viol', []); L.unshift({ at: Date.now(), email, kind: 'media', ref, reason: '[' + cat + '] ' + reason }); sv('x:viol', L.slice(0, 100));
+  if (email && rem()) call('hr_x_media_event', { p_email: email, p_ref: ref, p_category: cat, p_reason: reason }, email).catch(() => {});
+}
+function pBadge(t){ let b = document.getElementById('hrPcBadge'); if (!b) { b = document.createElement('div'); b.id = 'hrPcBadge'; b.style.cssText = 'position:fixed;left:8px;bottom:76px;z-index:99999;font-size:11px;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,.7);color:#fff'; document.body.appendChild(b); } b.textContent = t; }
+function pConsent(k){
+  return new Promise(res => {
+    const w = document.createElement('div'); w.id = 'hrPcConsent'; w.style.cssText = 'position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(0,0,0,.75)';
+    const what = [k.video ? 'your <b>camera</b> (to check that your face is visible and that only one person is in view)' : '', k.voice ? 'your <b>microphone</b> (to measure sound/voice activity — it cannot tell what is said)' : ''].filter(Boolean).join(' and ');
+    w.innerHTML = '<div role="dialog" aria-modal="true" style="background:var(--surface,#12121a);color:var(--text,#eee);border:1px solid var(--border,#333);border-radius:14px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:18px"><h3 style="margin:0 0 8px">🎥 Exam monitoring consent</h3><p style="font-size:13.5px;line-height:1.6;margin:6px 0">The organiser has turned on proctoring for this exam. It uses ' + what + '.</p><ul style="font-size:13px;line-height:1.6;color:var(--muted);padding-left:18px;margin:6px 0"><li><b>Why:</b> to keep the exam fair.</li><li><b>Stored:</b> only event records (type, time, exam). <b>No video, audio or photos are recorded or uploaded.</b> Analysis happens on your device.</li><li><b>Who sees it:</b> the organisers / admins.</li><li><b>How long:</b> as long as other exam violation records, until the organiser deletes them.</li><li><b>Warnings:</b> you get warnings first. Camera or microphone problems are logged as technical issues, not cheating.</li><li>Your browser will ask for permission next. You can decline and continue' + (k.c.policy === 'review' ? '; the organiser may review your exam.' : '; this will be logged.') + '</li></ul><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="hrPcNo" type="button" style="padding:8px 14px;border-radius:9px;border:1px solid var(--border,#333);background:none;color:inherit">No thanks</button><button id="hrPcYes" type="button" style="padding:8px 14px;border-radius:9px;border:0;background:var(--violet,#6c5ce7);color:#fff">I agree</button></div></div>';
+    document.body.appendChild(w); const done = v => { w.remove(); res(v); }; w.querySelector('#hrPcYes').onclick = () => done(true); w.querySelector('#hrPcNo').onclick = () => done(false);
+  });
+}
+async function pStart(S, k, key){
+  P.key = key; P.n = 0; P.done = false; P.cool = 0; P.seen = {}; const my = ++P.id;
+  if (!(await pConsent(k))) { if (my !== P.id) return; pEvt('technical', 'consent declined' + (k.c.policy === 'review' ? ' - flagged for admin review' : '')); toast('Monitoring declined — you can continue. This is logged.', 'info', '🎥'); return; }
+  if (my !== P.id) return;
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) { pEvt('technical', 'camera/microphone API unavailable'); toast('Camera/microphone is not available in this browser.', 'info', '🎥'); return; }
+  const want = {}; if (k.video) want.video = { width: 320, height: 240, facingMode: 'user' }; if (k.voice) want.audio = { echoCancellation: true, noiseSuppression: true };
+  try { P.stream = await navigator.mediaDevices.getUserMedia(want); } catch(e){ if (my === P.id) { pEvt('technical', 'permission denied or no device (' + (e && e.name) + ')'); toast('Camera/microphone could not be started. This is logged as a technical issue, not cheating.', 'info', '🎥'); } return; }
+  if (my !== P.id) { P.stream.getTracks().forEach(t => t.stop()); P.stream = null; return; }
+  P.stream.getTracks().forEach(t => t.addEventListener('ended', () => { if (my === P.id) pEvt('technical', 'device disconnected (' + t.kind + ')'); }));
+  pBadge((k.video ? '🎥 ' : '') + (k.voice ? '🎤 ' : '') + 'Proctoring active'); if (k.video) pVideo(k, my); if (k.voice) pVoice(k, my);
+}
+function pVideo(k, my){
+  const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.srcObject = P.stream; v.style.cssText = 'position:fixed;left:8px;bottom:8px;width:84px;height:63px;border-radius:8px;z-index:99999;object-fit:cover;transform:scaleX(-1);border:1px solid var(--border,#444)'; document.body.appendChild(v); P.v = v; v.play().catch(() => {});
+  if (!('FaceDetector' in window)) { pEvt('technical', 'face detection is not supported in this browser'); toast('Face check is not supported on this browser — you can continue.', 'info', '🎥'); return; }
+  let det; try { det = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 5 }); } catch(e){ pEvt('technical', 'face detector failed to start'); return; }
+  let none = 0, multi = 0, fails = 0;
+  P.timers.push(setInterval(async () => { if (my !== P.id || v.readyState < 2) return;
+    try { const n = (await det.detect(v)).length; fails = 0; none = n === 0 ? none + 1 : 0; multi = n > 1 ? multi + 1 : 0; const c = pcfg();
+      if (c.face && none >= c.face_grace) { none = 0; pViolation('your face was not visible for ' + c.face_grace + ' seconds'); }
+      if (c.multi && multi >= c.multi_secs) { multi = 0; pViolation('more than one face was visible'); }
+    } catch(e){ if (++fails === 5) pEvt('technical', 'face detection error'); } }, 1000));
+}
+function pVoice(k, my){
+  let ac; try { ac = new (window.AudioContext || window.webkitAudioContext)(); ac.resume && ac.resume(); } catch(e){ pEvt('technical', 'audio API unavailable'); return; }
+  P.ac = ac; const an = ac.createAnalyser(); an.fftSize = 1024; ac.createMediaStreamSource(P.stream).connect(an); const buf = new Float32Array(an.fftSize); const base = []; let loud = 0, gap = 0;
+  P.timers.push(setInterval(() => { if (my !== P.id) return; an.getFloatTimeDomainData(buf); let s = 0; for (const x of buf) s += x * x; const rms = Math.sqrt(s / buf.length);
+    if (base.length < 15) { base.push(rms); return; }
+    const th = Math.max(0.04, (base.reduce((a, b) => a + b, 0) / base.length) * 3);
+    if (rms > th) { loud += 200 + gap; gap = 0; } else { gap += 200; if (gap > 800) { loud = 0; gap = 0; } }
+    if (loud >= pcfg().voice_secs * 1000) { loud = 0; pViolation('sustained sound / voice activity was detected'); } }, 200));
+}
+function pViolation(reason){
+  const c = pcfg(); if (P.done || Date.now() < P.cool) return; P.cool = Date.now() + c.cooldown * 1000; P.n++;
+  pEvt('suspected', reason + ' (warning ' + P.n + '/' + c.max_warnings + ')');
+  if (P.n < c.max_warnings) { toast('Warning ' + P.n + ' of ' + c.max_warnings + ': ' + reason + '. Please stay in view and keep quiet.', 'warn', '🎥'); return; }
+  P.done = true;
+  if (c.autosubmit) { window.__hrNoZero = true; try { guardViolation('Proctoring: warning limit reached'); } finally { setTimeout(() => { window.__hrNoZero = false; }, 4000); } }
+  else toast('Warning limit reached — the organiser will review this exam.', 'warn', '🎥');
+}
+function pStop(){
+  P.id++; P.key = ''; P.timers.forEach(clearInterval); P.timers = []; if (P.stream) P.stream.getTracks().forEach(t => t.stop()); P.stream = null;
+  if (P.ac) { try { P.ac.close(); } catch(_){} P.ac = null; } if (P.v) { P.v.remove(); P.v = null; } ['hrPcBadge', 'hrPcConsent'].forEach(i => { const e = document.getElementById(i); if (e) e.remove(); });
+}
+addEventListener('pagehide', pStop);
+setInterval(() => { const S = guardSession(), k = S && pPlan(S), key = S ? S.kind + ':' + S.t0 : '';
+  if (P.key && (!S || !k || P.key !== key)) pStop();
+  if (S && k && !P.key) pStart(S, k, key); }, 1000);
+feat('Video / voice proctoring: admin master switch + 4 modes, consent first, on-device checks, warnings then optional auto-submit', () => {});
 feat('Strong-password rule on signup / change password, weak-password warning at login', () => {});
 feat('Privacy Policy, Terms of Use, Copyright and Disclaimer pages (footer + signup links)', () => {});
 feat('5-dimension jury scoring: 5 criteria x 1-10, judge/admin only, averaged leaderboard', () => {});
@@ -13215,7 +13283,7 @@ const admErr = e => (e && e.status === 401 || e && e.status === 403 || /permissi
 function adRender(){
   const c = AD.c; if (!c || !c.isConnected) return;
   if (!isAdminUI()) { c.innerHTML = '<p class="hrp-muted">Admin login required. Log in with an Admin account to manage the hackathon and question bank.</p>'; return; }
-  const subs = [['hack', '🚀 Hackathon'], ['regs', '📋 Registrations'], ['quiz', '📝 Quizzes'], ['tcert', '🏅 Team certs'], ['bank', '🗂️ Question bank'], ['setup', '🔧 Setup'], ['gov', '📊 Insights']];
+  const subs = [['hack', '🚀 Hackathon'], ['regs', '📋 Registrations'], ['quiz', '📝 Quizzes'], ['tcert', '🏅 Team certs'], ['bank', '🗂️ Question bank'], ['setup', '🔧 Setup'], ['gov', '📊 Insights'], ['proc', '🎥 Proctoring']];
   c.innerHTML = `<div class="hrp-card" style="border-color:${HB.remote ? 'var(--green)' : 'var(--orange)'};margin-bottom:10px">${HB.remote ? '🟢 <b>Connected to the database</b> — changes are shared with every visitor.' : '🟠 <b>Local mode</b> — the database tables are not set up yet, so changes are saved only in this browser. Open <b>Setup</b> and run the SQL.'}<br><span class="hrp-muted">Time source: ${esc(HB.tsrc)} · admin rights are enforced by database policies, not by this screen.</span></div>
   <div class="hrp-row">${subs.map(([k, l]) => `<button class="hrp-tab${AD.sub === k ? ' active' : ''}" data-ad="nav" data-k="${k}">${l}</button>`).join('')}</div><div id="adB"></div>`;
   const f = ADV[AD.sub]; if (f) f($('#adB', c));
@@ -13236,6 +13304,25 @@ ADV.gov = async box => {
 };
 adAct.gvcsv = () => { const V = window.__gv || []; download('violations.csv', toCSV([['When', 'Email', 'Kind', 'Quiz/ref', 'Reason', 'Zero mode', 'Score 0 applied']].concat(V.map(v => [v.at, v.email, v.kind, v.ref, v.reason, v.zero, v.dq]))), 'text/csv'); };
 adAct.gdq = async b => { if (!confirm('Set this student’s quiz score to 0?')) return; try { const n = await xr('hr_x_dq', { p_id: b.dataset.id }); toast(n ? 'Score set to 0' : 'Marked — no attempt row found yet', 'success', '✅'); } catch(e){ toast(admErr(e), 'warn', '⚠️'); } adRender(); };
+
+/* ---- Admin: Exam Proctoring Settings ---- */
+const PD = { master: false, mode: 'off', quiz: true, mock: true, face: true, multi: true, voice_alert: true, autosubmit: true, face_grace: 8, multi_secs: 4, voice_secs: 5, cooldown: 30, max_warnings: 3, policy: 'allow' };
+ADV.proc = box => {
+  const c = Object.assign({}, PD, (HB.ev && HB.ev.proctor_cfg) || {}), ck = (id, v, t) => `<label class="hrp-check"><input type="checkbox" id="${id}" ${v ? 'checked' : ''}><span>${t}</span></label>`, num = (id, v, t, a, b) => `<label class="hrp-muted" style="display:block;margin-top:8px">${t} (${a}–${b})</label><input class="hrp-in" type="number" id="${id}" min="${a}" max="${b}" value="${v}">`;
+  box.innerHTML = '<p class="hrp-muted">Camera/microphone checks run on the student\'s device only. Nothing is recorded or uploaded. Needs hr-x-fix-3.sql.</p>' + ck('pcM', c.master, '<b>Proctoring ON</b> — master switch (OFF disables every camera / microphone check)')
+    + '<div class="hrp-h">Monitoring mode</div>' + [['video', '🎥 Video only'], ['voice', '🎤 Voice only'], ['both', '🎥🎤 Video + Voice'], ['off', '🚫 Both OFF']].map(([v, t]) => `<label class="hrp-check"><input type="radio" name="pcMode" value="${v}" ${c.mode === v ? 'checked' : ''}><span>${t}</span></label>`).join('')
+    + '<div class="hrp-h">Applies to</div>' + ck('pcQ', c.quiz, 'Hackathon quizzes') + ck('pcK', c.mock, 'Mock exams / tests') + '<div class="hrp-h">Checks</div>' + ck('pcF', c.face, 'Face-missing alerts') + ck('pcMu', c.multi, 'Multiple-face alerts') + ck('pcV', c.voice_alert, 'Voice / sound-activity alerts (loudness only, cannot tell what is said)')
+    + num('pcFG', c.face_grace, 'Face-missing grace, seconds', 3, 60) + num('pcMS', c.multi_secs, 'Multiple faces for, seconds', 2, 30) + num('pcVS', c.voice_secs, 'Sustained sound for, seconds', 3, 30) + num('pcCD', c.cooldown, 'Cooldown between alerts, seconds', 10, 300) + num('pcMW', c.max_warnings, 'Warning limit', 1, 10)
+    + ck('pcAS', c.autosubmit, 'Auto-submit once when the warning limit is reached (never sets a zero score)') + '<label class="hrp-muted" style="display:block;margin-top:8px">If a student declines camera/microphone</label><select class="hrp-in" id="pcPol"><option value="allow">Continue (logged)</option><option value="review">Continue and flag for admin review</option></select>'
+    + '<div class="hrp-row" style="margin-top:10px"><button class="hrp-btn pri" data-ad="pcsave">💾 Save</button><button class="hrp-btn" data-ad="pccancel">Cancel</button><button class="hrp-btn" data-ad="pcreset">↩ Reset to default</button></div><div class="hk-msg" id="pcMsg"></div>';
+  $('#pcPol', box).value = c.policy;
+};
+const pcSay = (t, ok) => { const m = $('#pcMsg', AD.c); if (m) { m.textContent = t; m.className = 'hk-msg ' + (ok ? 'ok' : 'err'); } };
+const pcPut = async cfg => { if (!HB.remote) return pcSay('Needs the database connection.'); try { const r = await xr('hr_x_cfg_set', { p_cfg: cfg }); HB.ev = Object.assign({}, HB.ev, { proctor_cfg: r }); ADV.proc($('#adB', AD.c)); pcSay('✅ Saved. Applies to the next exam a student starts.', true); } catch(e){ pcSay(admErr(e) + ' (Run hr-x-fix-3.sql if you have not yet.)'); } };
+adAct.pcsave = () => { const b = $('#adB', AD.c), v = id => $('#' + id, b), n = id => +v(id).value;
+  pcPut({ master: v('pcM').checked, mode: (b.querySelector('input[name=pcMode]:checked') || {}).value || 'off', quiz: v('pcQ').checked, mock: v('pcK').checked, face: v('pcF').checked, multi: v('pcMu').checked, voice_alert: v('pcV').checked, autosubmit: v('pcAS').checked, face_grace: n('pcFG'), multi_secs: n('pcMS'), voice_secs: n('pcVS'), cooldown: n('pcCD'), max_warnings: n('pcMW'), policy: v('pcPol').value }); };
+adAct.pccancel = () => { ADV.proc($('#adB', AD.c)); pcSay('Changes discarded.', true); };
+adAct.pcreset = () => pcPut(PD);
 
 TABS.push(['admin', '🛡️ Admin', c => { AD.c = c; adRender(); c.onclick = e => { const b = e.target.closest('[data-ad]'); if (!b || b.disabled) return; const f = adAct[b.dataset.ad]; if (f) f(b, e); };
   c.onchange = c.oninput = e => { const f = adAct['chg:' + (e.target.dataset.ch || '')]; if (f) f(e.target, e); }; }, isAdminUI]);
