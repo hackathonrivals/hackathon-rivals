@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>try{var q=new URLSearchParams(location.search).get('look');if(q)localStorage.setItem('hr-look',q==='classic'?'classic':'rival');var L=localStorage.getItem('hr-look')||'rival';document.documentElement.setAttribute('data-look',L);}catch(e){document.documentElement.setAttribute('data-look','rival')}</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Hackathon Rivals — India's National Hackathon Arena</title>
@@ -2347,6 +2348,34 @@ html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp
 #siteNotice{background:linear-gradient(90deg,var(--violet),var(--cyan));color:#08090d;text-align:center;font:600 13.5px Inter,sans-serif;padding:8px 14px}.in-portal #siteNotice{display:none}
 .pt-nav:focus-visible,.btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 
+</style>
+<style id="rivalLook">
+html[data-look="rival"]{--radius:14px}
+html[data-look="rival"] header{backdrop-filter:none;background:var(--surface);border-bottom:1px solid var(--border)}
+html[data-look="rival"] .logo-mark{border-radius:50%}
+html[data-look="rival"] .btn{border-radius:8px}
+html[data-look="rival"] .btn-primary{box-shadow:none}
+html[data-look="rival"] .btn-primary:hover{transform:none}
+html[data-look="rival"] h1.hero-title{font-weight:800;letter-spacing:-.035em;line-height:1.05}
+html[data-look="rival"] .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+html[data-look="rival"] .rv-featwrap{padding:0 24px}
+html:not([data-look="rival"]) .rv-featwrap{display:none}
+html[data-look="rival"] .rv-feat{display:flex;align-items:center;gap:14px;max-width:var(--maxw);margin:0 auto 8px;padding:18px 22px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-weight:700;font-size:18px}
+html[data-look="rival"] .rv-feat i{font-style:normal;display:grid;place-items:center;width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--violet),var(--cyan));font-size:20px;flex:none}
+html[data-look="rival"] .rv-feat span{display:block;font-weight:500;font-size:13.5px;color:var(--muted)}
+html[data-look="rival"] .rv-feat b{margin-left:auto;color:var(--violet);font-size:22px}
+html[data-look="rival"] footer{border-top:3px solid var(--violet)}
+html[data-look="rival"] .pt-nav{border-radius:8px}
+html[data-look="rival"] .pt-nav.on{background:linear-gradient(135deg,var(--violet),#5b7cff);color:#fff;box-shadow:none}
+html[data-look="rival"] .pt-card{border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+html[data-look="rival"] .pt-h{font-weight:800}
+</style>
+<style id="perfFix">
+/* Performance: pulses used to animate box-shadow (repaint + style recalc every frame). Same pulse, now GPU-only (scale/opacity). */
+@keyframes pulse{0%,100%{scale:1;opacity:1}50%{scale:1.35;opacity:.55}}
+@keyframes fabPulse{0%,100%{scale:1}50%{scale:1.06}}
+@media (max-width:820px){html header{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)!important}}
+#hrpProgress{width:100%;transform:scaleX(0);transform-origin:left;transition:none}
 </style>
 </head>
 <body>
@@ -9789,7 +9818,7 @@ function streak(){
 function confetti(n){
   if (S.motion) return;
   const cols = ['#7c5cff','#22d3ee','#ff4d9d','#3ddc84','#ff9f43','#fbbf24'];
-  for (let i = 0; i < (n || 60); i++) {
+  const cnt = Math.min(n || 60, matchMedia('(max-width:700px)').matches ? 24 : 60); for (let i = 0; i < cnt; i++) {
     const c = el('i', { class: 'hrp-conf' });
     c.style.left = Math.random() * 100 + 'vw'; c.style.background = cols[i % cols.length];
     c.style.animationDuration = (2 + Math.random() * 2.5) + 's'; c.style.animationDelay = Math.random() * .6 + 's';
@@ -9859,11 +9888,10 @@ feat('Hindi ⇄ English switch for main labels', () => {
 /* ============ FEATURES: navigation ============ */
 feat('Scroll-progress bar', () => {
   const b = el('div', { id: 'hrpProgress', 'aria-hidden': 'true' }); document.body.appendChild(b);
-  window.addEventListener('scroll', () => {
-    const h = document.documentElement; const max = h.scrollHeight - h.clientHeight;
-    b.style.width = (max > 0 ? Math.min(100, h.scrollTop / max * 100) : 0) + '%';
-    if (max > 0 && h.scrollTop / max > .97) award('explorer');
-  }, { passive: true });
+  let queued = false, won = false;
+  const paint = () => { queued = false; const d = document.documentElement, max = d.scrollHeight - d.clientHeight, y = window.scrollY; b.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')'; if (!won && max > 0 && y / max > .97) { won = true; award('explorer'); } };
+  window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(paint); } }, { passive: true });
+  window.addEventListener('resize', paint); paint();
 });
 feat('Back-to-top button', () => {
   const b = el('button', { class: 'hrp-fab', id: 'hrpTopBtn', 'aria-label': 'Back to top', type: 'button' }, '↑');
@@ -9881,12 +9909,14 @@ feat('Heading anchor links (copy section URL)', () => {
 });
 feat('Sticky mini countdown pill', () => {
   const p = el('div', { id: 'hrpStick', role: 'button', tabindex: '0' }, ''); document.body.appendChild(p);
+  let lastHdr = -1, lastTxt = null, lastShow = null, queued = false;
   const upd = () => {
-    const t = window.__hrpHackPill ? window.__hrpHackPill() : null;
-    const hd = document.querySelector('header'); if (hd) document.documentElement.style.setProperty('--hrp-hdr', Math.round(hd.getBoundingClientRect().bottom + 8) + 'px');
-    p.textContent = t || ''; p.classList.toggle('show', !!t && window.scrollY > 800);
+    queued = false; const t = window.__hrpHackPill ? window.__hrpHackPill() : null;
+    const hd = document.querySelector('header'); if (hd) { const v = Math.round(hd.getBoundingClientRect().bottom + 8); if (v !== lastHdr) { lastHdr = v; document.documentElement.style.setProperty('--hrp-hdr', v + 'px'); } }
+    if (t !== lastTxt) { lastTxt = t; p.textContent = t || ''; }
+    const show = !!t && window.scrollY > 800; if (show !== lastShow) { lastShow = show; p.classList.toggle('show', show); }
   };
-  setInterval(upd, 1000); window.addEventListener('scroll', upd, { passive: true }); upd();
+  setInterval(upd, 1000); window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(upd); } }, { passive: true }); upd();
   p.addEventListener('click', () => { const r = $('#hackathon') || $('#register'); if (r) r.scrollIntoView({ behavior: 'smooth' }); });
 });
 feat('Page title follows current section', () => {
@@ -10549,6 +10579,7 @@ TABS.push(['settings', '⚙️ Settings', c => {
   <div class="hrp-row"><label>Text size <input type="range" min="85" max="130" step="5" value="${Math.round(S.fs * 100)}" data-k="fs"></label><span class="hrp-muted">${Math.round(S.fs * 100)}%</span></div>
   ${[['contrast', 'High-contrast mode'], ['dys', 'Dyslexia-friendly text'], ['motion', 'Reduce motion & animations'], ['links', 'Underline all links']].map(([k, l]) => `<label class="hrp-check"><input type="checkbox" data-t="${k}" ${S[k] ? 'checked' : ''}><span>${l}</span></label>`).join('')}
   <div class="hrp-h">Accent colour</div><div class="hrp-row">${sw.map(x => `<div class="hrp-swatch" role="button" tabindex="0" data-c="${x}" style="background:${x};${S.accent === x ? 'outline:2px solid var(--text)' : ''}" aria-label="Accent ${x}"></div>`).join('')}</div>
+  <div class="hrp-h">Layout</div><div class="hrp-row"><button class="hrp-btn" data-a="lookr">✨ New layout</button><button class="hrp-btn" data-a="lookc">⚪ Classic layout</button></div>
   <div class="hrp-h">Theme & language</div><div class="hrp-row"><button class="hrp-btn" data-a="sys">🖥️ Match system theme</button><button class="hrp-btn" data-a="lang">${S.hi ? 'Switch to English' : 'हिंदी में देखें'}</button></div>
   <div class="hrp-h">Your data (stored only on this device)</div><div class="hrp-muted" id="stu"></div><div class="hrp-row"><button class="hrp-btn" data-a="ex">⬇ Export</button><label class="hrp-btn" style="cursor:pointer">⬆ Import<input type="file" accept="application/json" hidden id="impF"></label><button class="hrp-btn" data-a="rst">🗑 Reset HR+ data</button></div>`;
   let bytes = 0; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); bytes += k.length + (localStorage.getItem(k) || '').length; } } catch(e){}
@@ -10561,6 +10592,7 @@ TABS.push(['settings', '⚙️ Settings', c => {
   c.addEventListener('click', e => {
     const sw2 = e.target.closest('[data-c]'); if (sw2) { S.accent = sw2.dataset.c; saveS(); applySettings(); award('theme'); renderHub(); return; }
     const a = e.target.dataset.a; if (!a) return;
+    if (a === 'lookr' || a === 'lookc') { const L = a === 'lookc' ? 'classic' : 'rival'; try { localStorage.setItem('hr-look', L); } catch(_){} document.documentElement.setAttribute('data-look', L); applySettings(); renderHub(); return; }
     if (a === 'sys') { const th = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', th); try { localStorage.setItem('hr-theme', th); } catch(_){} const tb = $('#themeToggle'); if (tb) tb.textContent = th === 'dark' ? '🌙' : '☀️'; toast('Theme set to ' + th, 'info', '🖥️'); }
     else if (a === 'lang') { const l = $$('.govt-bar .right a').find(x => /हिंदी|English/.test(x.textContent)); if (l) l.click(); renderHub(); }
     else if (a === 'ex') { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^(hrp:|hr-)/.test(k)) o[k] = localStorage.getItem(k); } download('hackathon-rivals-data.json', JSON.stringify(o, null, 2), 'application/json'); }
@@ -11873,7 +11905,7 @@ const FREE = /@(gmail|yahoo|outlook|hotmail|rediffmail|live|icloud|proton)\./i;
 const v = (c, id) => ((c.querySelector('#' + id) || {}).value || '').trim();
 const X = { miss: false };
 const rem = () => HB.remote && !X.miss;
-const ER = { HOUSEFULL: 'Housefull — registration is full.', ALREADY_REGISTERED: 'Already registered for this session.', EMAIL_NOT_VERIFIED: 'Verify your email first.', EVENT_ENDED: 'This event has ended.', INVALID_CODE: 'Invalid team code.', REG_CLOSED: 'Registration is closed — joining is locked.', ALREADY_IN_TEAM: 'You are already in a team.', INVALID_TOKEN: 'Invalid or already-used token.', LEADER_ONLY: 'Only the team leader can do that.', FREE_EMAIL: 'Please use an official college email domain.', ADMIN_ONLY: 'Admin only.', JUDGE_ONLY: 'Judge or Admin login required.', RETRY_OFF: 'Re-attempt is not enabled.', RETRY_USED: 'Your re-attempt has already been used.', NO_RETRY: 'No re-attempt is available for this quiz.', NO_TIME_LEFT: 'No time was left, so there is no re-attempt.', SCORE_RANGE: 'Each score must be 1 to 10.' };
+const ER = { HOUSEFULL: 'Housefull — registration is full.', ALREADY_REGISTERED: 'Already registered for this session.', EMAIL_NOT_VERIFIED: 'Verify your email first.', EVENT_ENDED: 'This event has ended.', INVALID_CODE: 'Invalid team code.', REG_CLOSED: 'Registration is closed — joining is locked.', ALREADY_IN_TEAM: 'You are already in a team.', INVALID_TOKEN: 'Invalid or already-used token.', LEADER_ONLY: 'Only the team leader can do that.', FREE_EMAIL: 'Please use an official college email domain.', ADMIN_ONLY: 'Admin only.', JUDGE_ONLY: 'Judge or Admin login required.', RETRY_OFF: 'Re-attempt is not enabled.', NO_ATTEMPT: 'There is no earlier attempt to re-attempt.', RETRY_USED: 'Your re-attempt has already been used.', NO_RETRY: 'No re-attempt is available for this quiz.', NO_TIME_LEFT: 'No time was left, so there is no re-attempt.', SCORE_RANGE: 'Each score must be 1 to 10.' };
 const errTxt = e => { const m = Object.keys(ER).find(k => String(e && e.message).includes(k)); return m ? ER[m] : ((e && e.message) || 'Something went wrong'); };
 const call = async (fn, body, email) => { try { return await pgrest('rpc/' + fn, { method: 'POST', body, headers: email ? vtHdr(email) : {} }); } catch(e){ if (e.status === 404 || /PGRST20|42883|42P01|schema cache|does not exist/i.test((e.code || '') + (e.message || ''))) X.miss = true; throw e; } };
 const MISS = /PGRST20|42883|42P01|schema cache|does not exist|Could not find/i;
@@ -11987,7 +12019,8 @@ tab('judge', '⚖️ Judge', drawJ, {
 const zeroOn = () => !!(HB.ev && HB.ev.proctor_zero === true);
 const tryDq = async (ref, email, k = 0) => { let n = 0; try { n = await call('hr_x_apply_dq', { p_ref: ref, p_email: email }, email); } catch(_){} if (!(n > 0) && k < 8) setTimeout(() => tryDq(ref, email, k + 1), 4000); };
 const retryOn = () => !!(HB.ev && HB.ev.proctor_retry === true);
-window.__hrRetry = async (q, email) => { if (!rem()) throw new Error('Re-attempt needs the database.'); try { HQ.retrySecs = await call('hr_x_retry_start', { p_ref: String(q.id), p_email: email }, email); store.set('x:rtUsed:' + q.id, 1); } catch(e){ throw new Error(errTxt(e)); } };
+window.__hrRtLeft = q => Math.max(0, Math.floor(+(HB.ev && HB.ev.quiz_retry) || 0) - store.get('x:rtn:' + q.id, 0));
+window.__hrRetry = async (q, email, mode) => { if (!rem()) throw new Error('Re-attempt needs the database.'); if (mode === 'gen') { try { await call('hr_x_rt_start', { p_ref: String(q.id), p_email: email }); store.set('x:rtn:' + q.id, store.get('x:rtn:' + q.id, 0) + 1); } catch(e){ throw new Error(errTxt(e)); } return; } try { HQ.retrySecs = await call('hr_x_retry_start', { p_ref: String(q.id), p_email: email }, email); store.set('x:rtUsed:' + q.id, 1); } catch(e){ throw new Error(errTxt(e)); } };
 window.__hrViol = (S, why) => {
   const Q = S.kind === 'quiz' && HQ.cur ? HQ.cur.q : null, left = HQ.cur && HQ.cur.left ? HQ.cur.left() : 0;
   const email = (me().email || '').toLowerCase(), ref = S.kind === 'quiz' && HQ.cur && HQ.cur.q ? String(HQ.cur.q.id) : 'exam-centre', zero = zeroOn() && S.kind === 'quiz' && !window.__hrNoZero;
@@ -12169,6 +12202,15 @@ feat('Video / voice proctoring: admin master switch + 4 modes, consent first, on
   tick(); setInterval(tick, 5000); window.addEventListener('hashchange', tick);
 })();
 feat('Live-now strip at the top while a quiz or the hackathon is live, with a Close button', () => {});
+/* ---- New look: featured event card under the hero (name + dates come from the live event settings) ---- */
+(() => {
+  const mo = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dates = e => { try { const a = new Date(e.starts_at), b = new Date(e.ends_at || e.starts_at); if (isNaN(a)) return ''; return a.getMonth() === b.getMonth() ? mo[a.getMonth()] + ' ' + a.getDate() + (b.getDate() !== a.getDate() ? '–' + b.getDate() : '') : mo[a.getMonth()] + ' ' + a.getDate() + ' – ' + mo[b.getMonth()] + ' ' + b.getDate(); } catch(_){ return ''; } };
+  const draw = () => { try { const hero = document.querySelector('.hero'); if (!hero) return; let w = document.getElementById('rvFeat'); if (!w) { w = document.createElement('div'); w.id = 'rvFeat'; w.className = 'rv-featwrap'; hero.insertAdjacentElement('afterend', w); }
+    const e = HB.ev || {}; if (!e.name) { w.hidden = true; return; } w.hidden = false;
+    w.innerHTML = '<a class="rv-feat" href="#register"><i>🏆</i><div>' + esc(e.name) + '<span>' + esc(dates(e) ? 'Dates: ' + dates(e) : 'Dates to be announced') + '</span></div><b>→</b></a>'; } catch(_){} };
+  setTimeout(draw, 0); setInterval(draw, 30000);
+})();
 feat('Strong-password rule on signup / change password, weak-password warning at login', () => {});
 feat('Privacy Policy, Terms of Use, Copyright and Disclaimer pages (footer + signup links)', () => {});
 feat('5-dimension jury scoring: 5 criteria x 1-10, judge/admin only, averaged leaderboard', () => {});
@@ -12260,8 +12302,8 @@ async function loadEvent(){
 }
 async function saveEvent(ev){
   const row = { id: 'main', name: ev.name, starts_at: ev.starts_at, reg_closes_at: ev.reg_closes_at, ends_at: ev.ends_at || null, reg_open: !!ev.reg_open, lock_main: !!ev.lock_main, message: ev.message || '', updated_at: new Date().toISOString() };
-  row.proctor = ev.proctor !== false; row.proctor_zero = ev.proctor_zero === true; row.proctor_retry = ev.proctor_retry === true;
-  if (HB.remote) { try { await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [row] }); } catch(e){ if (/proctor/i.test(e.message || '')) { const r2 = { ...row }; delete r2.proctor; delete r2.proctor_zero; delete r2.proctor_retry; await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [r2] }); throw new Error('Saved, but the exam-guard switch needs the updated SQL: run Admin → Setup SQL once (adds the "proctor" column).'); } throw e; } } else store.set('hk:ev', row);
+  row.proctor = ev.proctor !== false; row.proctor_zero = ev.proctor_zero === true; row.proctor_retry = ev.proctor_retry === true; row.quiz_retry = Math.max(0, Math.min(5, Math.floor(+ev.quiz_retry || 0)));
+  if (HB.remote) { try { await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [row] }); } catch(e){ if (/proctor|quiz_retry/i.test(e.message || '')) { const r2 = { ...row }; delete r2.proctor; delete r2.proctor_zero; delete r2.proctor_retry; delete r2.quiz_retry; await pgrest('hr_events?on_conflict=id', { method: 'POST', headers: UPSERT, body: [r2] }); throw new Error('Saved, but the exam-guard switch needs the updated SQL: run Admin → Setup SQL once (adds the "proctor" column).'); } throw e; } } else store.set('hk:ev', row);
   HB.ev = { ...HB.ev, ...row };
 }
 /* hooks so the Site Content "Event dates" card drives this live countdown too */
@@ -12454,8 +12496,8 @@ function paintQuizList(){
   const done = store.get('hk:done', {});
   b2.innerHTML = `<div class="hk-quizzes">${HQ.list.map(q => { const s = quizState(q), d = done[q.id];
     return `<div class="hk-card"><b>${esc(q.title)}</b><p class="hk-sub">${esc(q.description || '')}</p><p class="hrp-muted">${q.duration_min} min · ${s === 'open' ? '🟢 Open' : s === 'upcoming' ? '⏳ Opens ' + fmtIST(Date.parse(q.opens_at)) : '🔒 Closed'}${d ? ` · Your score ${d.score}/${d.max}` : ''}</p>
-    ${regLine(q)}${paperLine(q)}<div class="hrp-row">${regBtn(q)}<button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button>${d && d.rt > 0 ? `<button class="hrp-btn" data-q="${esc(q.id)}" data-a="retry">🔁 Re-attempt (${fmtClock(d.rt)} left)</button>` : ''}</div></div>`; }).join('')}</div>`;
-  b2.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const q = HQ.list.find(x => x.id === b.dataset.q); if (q) (b.dataset.a === 'start' ? (HQ.rtMode = false, openQuiz(q)) : b.dataset.a === 'retry' ? (HQ.rtMode = true, openQuiz(q)) : b.dataset.a === 'reg' ? openQuizReg(q) : openBoard(q)); };
+    ${regLine(q)}${paperLine(q)}<div class="hrp-row">${regBtn(q)}<button class="hrp-btn pri" data-q="${esc(q.id)}" data-a="start" ${s !== 'open' || d ? 'disabled' : ''}>${d ? 'Submitted ✔' : 'Start quiz'}</button><button class="hrp-btn" data-q="${esc(q.id)}" data-a="lb">🏆 Leaderboard</button>${d && d.rt > 0 ? `<button class="hrp-btn" data-q="${esc(q.id)}" data-a="retry">🔁 Re-attempt with time left (${fmtClock(d.rt)})</button>` : ''}${d && quizState(q) === 'open' && window.__hrRtLeft && window.__hrRtLeft(q) > 0 ? `<button class="hrp-btn" data-q="${esc(q.id)}" data-a="again">🔁 Fresh re-attempt from 0 (${window.__hrRtLeft(q)} left)</button>` : ''}</div></div>`; }).join('')}</div>`;
+  b2.onclick = e => { const b = e.target.closest('[data-a]'); if (!b) return; const q = HQ.list.find(x => x.id === b.dataset.q); if (q) (b.dataset.a === 'start' ? (HQ.rtMode = false, openQuiz(q)) : b.dataset.a === 'retry' ? (HQ.rtMode = true, openQuiz(q)) : b.dataset.a === 'again' ? (HQ.rtMode = 'gen', openQuiz(q)) : b.dataset.a === 'reg' ? openQuizReg(q) : openBoard(q)); };
   updateRegHub();
 }
 let qzEl = null;
@@ -12468,7 +12510,7 @@ async function openQuiz(q){
     if (a.dataset.a === 'go') { const name = $('#hqN', m).value.trim(), email = $('#hqE', m).value.trim().toLowerCase(), msg = $('#hqM', m); if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) { msg.textContent = 'Enter your name and a valid email.'; msg.className = 'hk-msg err'; return; }
       store.set('hk:me', { name, email }); if (!(await ensureVerified(msg, email))) return; await syncTime(); if (quizState(q) !== 'open') { msg.textContent = 'This quiz is not open right now.'; msg.className = 'hk-msg err'; return; }
       if (needReg(q) && HB.remote) { let ok = true; try { ok = await pgrest('rpc/hr_quiz_registered', { method: 'POST', body: { p_quiz: q.id, p_email: email } }); } catch(_){} if (ok === false) { msg.textContent = 'This email is not registered for this exam.'; msg.className = 'hk-msg err'; return; } }
-      try { if (HQ.rtMode) { HQ.rtMode = false; await window.__hrRetry(q, email); } const qs = await quizQuestions(q); if (!qs.length && !HQ.papers[q.id]) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
+      try { if (HQ.rtMode) { const rm = HQ.rtMode; HQ.rtMode = false; await window.__hrRetry(q, email, rm); } const qs = await quizQuestions(q); if (!qs.length && !HQ.papers[q.id]) throw new Error('This quiz has no questions yet.'); runQuiz(q, qs, name, email); } catch(err){ msg.textContent = err.message; msg.className = 'hk-msg err'; } } };
 }
 async function quizQuestions(q){
   if (HB.remote) return await pgrest(`hr_quiz_questions?quiz_id=eq.${encodeURIComponent(q.id)}&select=id,pos,text,options,points&order=pos`);
@@ -13388,6 +13430,7 @@ ADV.hack = box => {
   <label class="hrp-check"><input type="checkbox" id="adProctor" ${e.proctor !== false ? 'checked' : ''}><span>🛡️ Exam guard ON — during a test/quiz, switching tab/app or a screenshot/print attempt auto-submits it</span></label>
   <label class="hrp-check"><input type="checkbox" id="adProctorZero" ${e.proctor_zero === true ? 'checked' : ''}><span>🚫 Also score a hackathon quiz 0 (disqualify) when a violation happens — run hr-x-setup.sql once</span></label>
   <label class="hrp-check"><input type="checkbox" id="adProctorRetry" ${e.proctor_retry === true ? 'checked' : ''}><span>🔁 After a rule-break (score 0) let the student re-attempt ONCE, with the same time that was left — run hr-x-fix-2.sql once</span></label>
+  <label class="hrp-muted" style="display:block;margin-top:8px">🔁 Quiz re-attempts allowed per student (0 = off, max 5). A re-attempt starts from 0 marks and replaces the old attempt — run hr-x-fix-6.sql once</label><input class="hrp-in" type="number" id="adQuizRetry" min="0" max="5" value="${Math.max(0, +e.quiz_retry || 0)}">
   <div class="hrp-row"><button class="hrp-btn pri" data-ad="hsave">Save changes</button><button class="hrp-btn" data-ad="hclose">Close registration now</button><button class="hrp-btn" data-ad="hopen">Reopen (switch ON)</button><button class="hrp-btn" data-ad="hannounce">📣 Announce to all users</button></div><div class="hk-msg" id="adMsgOut"></div>
   <div class="hrp-h">📣 Announcements to all signed-up users</div><div id="bcStatus" class="hrp-muted">Loading…</div>`;
   setTimeout(bcStatusLoad, 80);
@@ -13399,7 +13442,7 @@ async function adSaveEvent(patch, okMsg){
 }
 adAct.hsave = () => { const c = AD.c, out = $('#adMsgOut', c); const s = new Date($('#adStart', c).value).getTime(); let cl = new Date($('#adClose', c).value).getTime(); const en = $('#adEnd', c).value ? new Date($('#adEnd', c).value).getTime() : null;
   if (!isFinite(s)) { out.textContent = 'Pick a valid start time.'; out.className = 'hk-msg err'; return; } if (!isFinite(cl)) cl = s;
-  adSaveEvent({ name: $('#adName', c).value.trim() || HK_DEFAULT.name, starts_at: new Date(s).toISOString(), reg_closes_at: new Date(cl).toISOString(), ends_at: en ? new Date(en).toISOString() : null, message: $('#adMsg', c).value.trim(), reg_open: $('#adOpen', c).checked, proctor: $('#adProctor', c).checked, proctor_zero: $('#adProctorZero', c).checked, proctor_retry: $('#adProctorRetry', c).checked, lock_main: $('#adLock', c).checked }, 'Hackathon settings saved'); };
+  adSaveEvent({ name: $('#adName', c).value.trim() || HK_DEFAULT.name, starts_at: new Date(s).toISOString(), reg_closes_at: new Date(cl).toISOString(), ends_at: en ? new Date(en).toISOString() : null, message: $('#adMsg', c).value.trim(), reg_open: $('#adOpen', c).checked, proctor: $('#adProctor', c).checked, proctor_zero: $('#adProctorZero', c).checked, proctor_retry: $('#adProctorRetry', c).checked, quiz_retry: Math.max(0, Math.min(5, Math.floor(+$('#adQuizRetry', c).value || 0))), lock_main: $('#adLock', c).checked }, 'Hackathon settings saved'); };
 adAct.hclose = () => adSaveEvent({ reg_open: false }, 'Registration closed');
 adAct.hopen = () => { const st = evState(); adSaveEvent({ reg_open: true }, st.n >= st.c ? 'Switch is ON, but the closing time has already passed — move “Registration closes” to a later time' : 'Registration reopened'); };
 
