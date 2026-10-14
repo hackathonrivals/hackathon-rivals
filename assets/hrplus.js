@@ -239,6 +239,7 @@ const TABS = [];   // [id, label, render]
 let hubEl, hubTab = store.get('lastTab', 'home');
 function openHub(tab){
   if (!hubEl) return;
+  try { loadBankOnce(); } catch(_){}
   if (tab) hubTab = tab;
   hubEl.classList.add('open'); const d = $('#hrpDot'); if (d && hubTab === 'home') d.classList.remove('on');
   renderHub();
@@ -2982,6 +2983,8 @@ function applyBank(rows){
     const i = QB.findIndex(x => x.id === r.id); if (i >= 0) QB[i] = q; else QB.push(q); QM[r.id] = q;
   });
 }
+let bankPromise = null, bankAt = 0;
+function loadBankOnce(force){ if (!force && bankPromise && Date.now() - bankAt < 600000) return bankPromise; bankAt = Date.now(); return bankPromise = loadBank(); }
 async function loadBank(){
   let rows = [];
   try { rows = await (async () => { let a = [], o = 0; for (;;) { const r = await pgrest('hr_bank?select=*&order=updated_at,id&limit=1000&offset=' + o); a = a.concat(r || []); if (!r || r.length < 1000) break; o += 1000; } return a; })(); BK.remote = true; } catch(e){ BK.remote = false; rows = store.get('bankLocal', []); }
@@ -2991,9 +2994,12 @@ feat('Question bank loads admin edits, additions and deletions from the database
 
 /* ---- init ---- */
 (async function initHackathon(){
-  await syncTime(); await loadEvent(); renderHackathon(); applyMainLock(); updateOldBox(); tickHack(); loadBank();
+  await Promise.all([syncTime(), loadEvent()]); renderHackathon(); applyMainLock(); updateOldBox(); tickHack();
   setInterval(tickHack, 1000);
-  setInterval(async () => { const before = JSON.stringify(HB.ev); await syncTime(); await loadEvent(); if (JSON.stringify(HB.ev) !== before) { renderHackathon(); applyMainLock(); updateOldBox(); } loadBank(); }, 60000);
+  let lastPoll = Date.now();
+  const poll = async () => { if (document.hidden) return; lastPoll = Date.now(); const before = JSON.stringify(HB.ev); await loadEvent(); if (JSON.stringify(HB.ev) !== before) { renderHackathon(); applyMainLock(); updateOldBox(); } if (bankPromise) loadBankOnce(); };
+  setInterval(poll, 60000); setInterval(() => { if (!document.hidden) syncTime(); }, 600000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastPoll > 60000) poll(); });
   setInterval(() => { const b = hkEl('hkAdminBtn'); if (b) b.style.display = isAdminUI() ? '' : 'none'; }, 1500);
 })();
 function isAdminUI(){ if (document.getElementById('ddAdmin')) return true; const a = document.getElementById('admin'); return !!(a && a.style.display !== 'none' && getComputedStyle(a).display !== 'none'); }
@@ -3685,7 +3691,7 @@ TABS.push(['admin', '🛡️ Admin', c => { AD.c = c; adRender(); c.onclick = e 
   c.onchange = c.oninput = e => { const f = adAct['chg:' + (e.target.dataset.ch || '')]; if (f) f(e.target, e); }; }, isAdminUI]);
 adAct.nav = b => { AD.sub = b.dataset.k; store.set('adminSub', AD.sub); AD.bank.edit = null; AD.qz = null; adRender(); };
 feat('Admin console tab (visible only when an Admin is logged in)', () => {});
-window.__hrMountAdmin = c => { const t = TABS.find(x => x[0] === 'admin'); if (t) t[2](c); };
+window.__hrMountAdmin = c => { try { loadBankOnce(); } catch(_){} const t = TABS.find(x => x[0] === 'admin'); if (t) t[2](c); };
 { const t = TABS.find(x => x[0] === 'admin'); if (t) t[3] = () => false; }
 
 /* ---------- Hackathon settings ---------- */
@@ -4253,10 +4259,10 @@ const lvlNum = v => { v = String(v ?? '').trim().toLowerCase(); return ({ easy: 
 function subjKeyFor(name){ name = String(name || '').trim(); const f = Object.keys(SUBJ).find(k => SUBJ[k].toLowerCase() === name.toLowerCase() || k === name.toLowerCase()); return f ? { key: f, name: SUBJ[f] } : { key: 'x_' + slug(name), name }; }
 async function bankSave(rows){
   const clean = rows.map(r => ({ id: r.id, subj: r.subj || null, subj_name: r.subj_name || null, sem: r.sem ?? null, br: r.br || null, lvl: r.lvl ?? null, text: r.text ?? null, opts: r.opts ?? null, ans: r.ans ?? null, expl: r.expl ?? null, deleted: !!r.deleted, updated_at: new Date().toISOString() }));
-  if (BK.remote) { for (let i = 0; i < clean.length; i += 200) await pgrest('hr_bank?on_conflict=id', { method: 'POST', headers: UPSERT, body: clean.slice(i, i + 200) }); }
+  await loadBankOnce(); if (BK.remote) { for (let i = 0; i < clean.length; i += 200) await pgrest('hr_bank?on_conflict=id', { method: 'POST', headers: UPSERT, body: clean.slice(i, i + 200) }); }
   const ids = new Set(clean.map(r => r.id)); BK.rows = BK.rows.filter(r => !ids.has(r.id)).concat(clean); if (!BK.remote) store.set('bankLocal', BK.rows); applyBank(BK.rows);
 }
-async function bankRemove(id){ if (BK.remote) await pgrest('hr_bank?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }); BK.rows = BK.rows.filter(r => r.id !== id); if (!BK.remote) store.set('bankLocal', BK.rows); applyBank(BK.rows); }
+async function bankRemove(id){ await loadBankOnce(); if (BK.remote) await pgrest('hr_bank?id=eq.' + encodeURIComponent(id), { method: 'DELETE' }); BK.rows = BK.rows.filter(r => r.id !== id); if (!BK.remote) store.set('bankLocal', BK.rows); applyBank(BK.rows); }
 const isBuiltin = id => BUILTIN_Q.some(q => q.id === id);
 ADV.bank = box => {
   const S = AD.bank;
