@@ -73,7 +73,8 @@ const level = () => Math.floor(Math.sqrt(G.xp / 25)) + 1;
 function award(id){
   if (G.badges[id] || !BADGES[id]) return;
   G.badges[id] = Date.now(); store.set('badges', G.badges); addXP(50);
-  toast('Badge unlocked: ' + BADGES[id][1], 'success', BADGES[id][0]); confetti(28);
+  (award.q = award.q || []).push(id); clearTimeout(award.t);
+  award.t = setTimeout(() => { const ids = award.q.splice(0), b = BADGES[ids[0]]; toast('Badge unlocked: ' + b[1] + (ids.length > 1 ? ' +' + (ids.length - 1) + ' more' : ''), 'success', b[0]); if (performance.now() > 8000 || window.scrollY > 50) confetti(28); }, 350);
 }
 function useTool(n){
   if (G.used[n]) return; G.used[n] = 1; store.set('used', G.used); addXP(5);
@@ -791,11 +792,11 @@ const QUOTES = ['Ship a small thing that works before a big thing that doesn\'t.
 const doy = () => Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
 TABS.push(['home', '🏠 Home', c => {
   const h = new Date().getHours(); const g = h < 5 ? 'Still up? Good night owl' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Good night';
-  const now = new Date(); const ist = now.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+  const now = new Date(); const ist = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
   const lv = level(), nextXP = 25 * lv * lv, prevXP = 25 * (lv - 1) * (lv - 1); const prog = Math.min(100, (G.xp - prevXP) / (nextXP - prevXP) * 100);
   const rec = store.get('recent', []); const notif = store.get('notif', []);
   c.innerHTML = `<h3 style="font-size:20px">${g} 👋</h3><p class="hrp-muted">Local time ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · India (IST) ${ist}</p>
-  <div class="hrp-grid" style="margin:12px 0"><div class="hrp-card"><b>Level ${lv}</b>${G.xp} XP<div class="hrp-bar"><i style="width:${prog}%"></i></div></div><div class="hrp-card"><b>🔥 ${streak()}-day streak</b>${G.days.length} days visited</div><div class="hrp-card"><b>🏅 ${Object.keys(G.badges).length}/${Object.keys(BADGES).length} badges</b>Earn more in Badges</div></div>
+  <div class="hrp-grid" style="margin:12px 0"><div class="hrp-card"><b>Level ${lv}</b>${G.xp} XP<div class="hrp-bar"><i style="width:${prog}%"></i></div></div><div class="hrp-card"><b>🔥 ${streak()}-day streak</b>${G.days.length} day${G.days.length === 1 ? '' : 's'} visited</div><div class="hrp-card"><b>🏅 ${Object.keys(G.badges).length}/${Object.keys(BADGES).length} badges</b>Earn more in Badges</div></div>
   <div class="hrp-h">💡 Tip of the day</div><div class="hrp-card">${esc(TIPS[doy() % TIPS.length])}</div>
   <div class="hrp-h">💬 Hacker wisdom</div><div class="hrp-card" id="hq">${esc(QUOTES[doy() % QUOTES.length])}</div><div class="hrp-row"><button class="hrp-btn" data-a="q">Another one</button></div>
   <div class="hrp-h">🕘 Recently viewed problem statements</div>${rec.length ? rec.map(r => `<div class="hrp-pi" data-ps="${esc(r.id)}"><span>${esc(r.id)} — ${esc(r.title)}</span></div>`).join('') : '<p class="hrp-muted">Nothing yet — open a problem statement to see it here.</p>'}
@@ -986,8 +987,8 @@ feat('Contact form draft autosave', () => {
   const b = $('#qSubmit'); if (b) b.addEventListener('click', () => setTimeout(() => { const m = $('#qMessage'); if (m && m.value === '') store.del('draft'); }, 3000));
 });
 feat('Password strength meter (login / sign-up)', () => {
-  const p = $('#loginPassword'); if (!p) return; const m = el('div', null, '<div class="hrp-pw"><i></i></div><div class="hrp-muted" style="font-size:11.5px;margin-top:3px"></div>'); (p.closest('.input-wrap') || p).insertAdjacentElement('afterend', m);
-  p.addEventListener('input', () => { const v = p.value; let s = 0; if (v.length >= 8) s++; if (v.length >= 12) s++; if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++; if (/\d/.test(v)) s++; if (/[^A-Za-z0-9]/.test(v)) s++;
+  const p = $('#loginPassword'); if (!p) return; const m = el('div', null, '<div class="hrp-pw"><i></i></div><div class="hrp-muted" style="font-size:11.5px;margin-top:3px"></div>'); m.style.display = 'none'; (p.closest('.input-wrap') || p).insertAdjacentElement('afterend', m);
+  p.addEventListener('input', () => { const v = p.value; m.style.display = v ? '' : 'none'; let s = 0; if (v.length >= 8) s++; if (v.length >= 12) s++; if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++; if (/\d/.test(v)) s++; if (/[^A-Za-z0-9]/.test(v)) s++;
     const L = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent']; const col = ['#ff6b6b', '#ff6b6b', '#ff9f43', '#fbbf24', '#3ddc84', '#22d3ee'];
     const i = $('i', m); i.style.width = v ? (s / 5 * 100) + '%' : '0'; i.style.background = col[s]; $('.hrp-muted', m).textContent = v ? 'Strength: ' + L[s] : ''; });
 });
@@ -2593,7 +2594,8 @@ function evState(){
   const e = HB.ev, n = nowMs(), s = Date.parse(e.starts_at), c = Date.parse(e.reg_closes_at), en = e.ends_at ? Date.parse(e.ends_at) : 0;
   const regOpen = e.reg_open !== false && n < c; const phase = en && n >= en ? 'ended' : n >= s ? 'live' : 'upcoming'; return { n, s, c, en, regOpen, phase };
 }
-const fmtIST = ms => new Date(ms).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) + ' IST';
+const __istf = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+const fmtIST = ms => __istf.format(new Date(ms)) + ' IST';
 const hkEl = id => document.getElementById(id);
 
 /* ---- retarget the site's existing countdown to this hackathon ---- */

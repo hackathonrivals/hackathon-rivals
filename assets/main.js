@@ -54,13 +54,9 @@
 
   /* ============ HEADER + MOBILE ============ */
   const header = $('#header');
-  const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 10);
-  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
-
-  const backTop = $('#backTop');
-  window.addEventListener('scroll', () => {
-    backTop.classList.toggle('show', window.scrollY > 600);
-  }, { passive: true });
+  const backTop = $('#backTop'); let __sq = false;
+  const onScroll = () => { __sq = false; const y = window.scrollY; header.classList.toggle('scrolled', y > 10); backTop.classList.toggle('show', y > 600); };
+  window.addEventListener('scroll', () => { if (!__sq) { __sq = true; requestAnimationFrame(onScroll); } }, { passive: true }); onScroll();
   backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
   $('#burger').addEventListener('click', () => $('#navLinks').classList.toggle('open'));
@@ -250,6 +246,7 @@
 const rowsEl = $('#boardRows');
 const inits = n => escapeHtml((n || '?').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || '??');
 
+const __qc = {}; const sharedQ = (key, run) => __qc[key] || (__qc[key] = Promise.resolve(run()).finally(() => setTimeout(() => { delete __qc[key]; }, 15000)));
 async function loadLeaderboard(period = 'live'){
   if (period === 'quiz' && window.__hkQuizBoard){ rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading quiz rankings…</div>'; return window.__hkQuizBoard(rowsEl); }
   rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading leaderboard…</div>';
@@ -261,7 +258,7 @@ async function loadLeaderboard(period = 'live'){
       query = query.gte('created_at', weekAgo);
     }
 
-    const { data, error } = await query;
+    const { data, error } = await (period === 'live' ? sharedQ('subs', () => query) : query);
     if (error) throw error;
 
     // Aggregate by email
@@ -432,9 +429,7 @@ document.addEventListener('click', (e) => {
 });
 async function loadHeroStats(){
   try {
-    const { data, error } = await supabase
-      .from('team_registrations')
-      .select('college_name, members');
+    const { data, error } = await sharedQ('teams', () => supabase.from('team_registrations').select('college_name, members'));
     if (error) throw error;
 
     const teams = data || [];
@@ -480,9 +475,7 @@ function animateCounter(el, target, suffix){
 loadHeroStats();
 async function loadMarquee(){
   try {
-    const { data, error } = await supabase
-      .from('team_registrations')
-      .select('college_name');
+    const { data, error } = await sharedQ('teams', () => supabase.from('team_registrations').select('college_name, members'));
     if (error) throw error;
 
     const teams = data || [];
@@ -498,7 +491,7 @@ async function loadMarquee(){
     if (elColleges) elColleges.textContent = colleges.toLocaleString();
     if (elLive)     elLive.textContent     = teams.length.toLocaleString();
   const elPill = document.getElementById('pillTeams');
-    if (elPill) elPill.textContent = teams.length.toLocaleString();
+    if (elPill) { elPill.textContent = teams.length.toLocaleString(); const pw = document.getElementById('pillTeamsWrap'); if (pw) pw.hidden = false; }
     const elLbTotal = document.getElementById('lbTotalTeams');
 if (elLbTotal) elLbTotal.textContent = teams.length.toLocaleString();
   } catch (e){
@@ -513,9 +506,7 @@ async function loadHeroMockup(){
   if (!container) return;
 
   try {
-    const { data, error } = await supabase
-      .from('arena_submissions')
-      .select('email, full_name, score, created_at');
+    const { data, error } = await sharedQ('subs', () => supabase.from('arena_submissions').select('email, full_name, score, created_at'));
     if (error) throw error;
 
     // Aggregate by email
