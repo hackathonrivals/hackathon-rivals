@@ -247,11 +247,16 @@ const rowsEl = $('#boardRows');
 const inits = n => escapeHtml((n || '?').split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || '??');
 
 const __qc = {}; const sharedQ = (key, run) => __qc[key] || (__qc[key] = Promise.resolve(run()).finally(() => setTimeout(() => { delete __qc[key]; }, 15000)));
+const rpcOrNull = async (fn, args) => { try { const { data, error } = await supabase.rpc(fn, args); return error ? null : data; } catch(_) { return null; } };
 async function loadLeaderboard(period = 'live'){
   if (period === 'quiz' && window.__hkQuizBoard){ rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading quiz rankings…</div>'; return window.__hkQuizBoard(rowsEl); }
   rowsEl.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">Loading leaderboard…</div>';
 
   try {
+    let list = null;
+    const __rows = await sharedQ('lb:' + period, () => rpcOrNull('hr_pub_leaderboard', { p_period: period, p_limit: 5 }));
+    if (Array.isArray(__rows)) list = __rows.map(r => ({ email: r.email || 'unknown', name: r.name || '', total: Number(r.total) || 0, count: Number(r.cnt) || 0 }));
+    else {
     let query = supabase.from('arena_submissions').select('email, full_name, score, created_at');
     if (period === 'week'){
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -270,11 +275,11 @@ async function loadLeaderboard(period = 'live'){
       agg[key].count++;
     });
 
-    let list;
     if (period === 'submissions'){
       list = Object.values(agg).sort((a, b) => b.count - a.count).slice(0, 5);
     } else {
       list = Object.values(agg).sort((a, b) => b.total - a.total).slice(0, 5);
+    }
     }
 
     if (!list.length){
@@ -329,6 +334,10 @@ async function loadFullLeaderboard(period = 'all'){
   content.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Loading…</div>';
 
   try {
+    let list = null;
+    const __rows = await rpcOrNull('hr_pub_leaderboard_full', { p_period: period, p_limit: 50 });
+    if (Array.isArray(__rows)) list = __rows.map(r => ({ email: r.email || 'unknown', name: r.name || '', total: Number(r.total) || 0, count: Number(r.cnt) || 0 }));
+    else {
     let query = supabase.from('arena_submissions')
       .select('email, full_name, score, created_at, lang');
 
@@ -351,7 +360,8 @@ async function loadFullLeaderboard(period = 'all'){
       agg[key].count++;
     });
 
-    const list = Object.values(agg).sort((a,b) => b.total - a.total).slice(0, 50);
+    list = Object.values(agg).sort((a,b) => b.total - a.total).slice(0, 50);
+    }
 
     if (sub){
       const labels = { all: 'All-time rankings', week: 'Last 7 days', month: 'Last 30 days' };
@@ -429,19 +439,24 @@ document.addEventListener('click', (e) => {
 });
 async function loadHeroStats(){
   try {
+    let colleges = 0, totalMembers = 0;
+    const __st = await sharedQ('stats', () => rpcOrNull('hr_pub_stats', {})); const __s = Array.isArray(__st) ? __st[0] : null;
+    if (__s) { colleges = Number(__s.colleges) || 0; totalMembers = Number(__s.members) || 0; }
+    else {
     const { data, error } = await sharedQ('teams', () => supabase.from('team_registrations').select('college_name, members'));
     if (error) throw error;
 
     const teams = data || [];
-    const colleges = new Set(
+    colleges = new Set(
       teams.map(t => (t.college_name || '').trim().toLowerCase()).filter(Boolean)
     ).size;
 
-    let totalMembers = 0;
     teams.forEach(t => {
       if (Array.isArray(t.members) && t.members.length) totalMembers += t.members.length;
       else totalMembers += 1;
     });
+
+    }
 
     const studentsEl = document.getElementById('statStudents');
     const collegesEl = document.getElementById('statColleges');
@@ -475,13 +490,19 @@ function animateCounter(el, target, suffix){
 loadHeroStats();
 async function loadMarquee(){
   try {
+    let teams, colleges;
+    const __st = await sharedQ('stats', () => rpcOrNull('hr_pub_stats', {})); const __s = Array.isArray(__st) ? __st[0] : null;
+    if (__s) { teams = { length: Number(__s.teams) || 0 }; colleges = Number(__s.colleges) || 0; }
+    else {
     const { data, error } = await sharedQ('teams', () => supabase.from('team_registrations').select('college_name, members'));
     if (error) throw error;
 
-    const teams = data || [];
-    const colleges = new Set(
+    teams = data || [];
+    colleges = new Set(
       teams.map(t => (t.college_name || '').trim().toLowerCase()).filter(Boolean)
     ).size;
+
+    }
 
     const elTeams    = document.getElementById('mqTeams');
     const elColleges = document.getElementById('mqColleges');
@@ -506,6 +527,10 @@ async function loadHeroMockup(){
   if (!container) return;
 
   try {
+    let top3;
+    const __rows = await sharedQ('lb:live', () => rpcOrNull('hr_pub_leaderboard', { p_period: 'live', p_limit: 5 }));
+    if (Array.isArray(__rows)) top3 = __rows.slice(0, 3).map(r => ({ email: r.email || 'unknown', name: r.name || '', total: Number(r.total) || 0 }));
+    else {
     const { data, error } = await sharedQ('subs', () => supabase.from('arena_submissions').select('email, full_name, score, created_at'));
     if (error) throw error;
 
@@ -517,9 +542,10 @@ async function loadHeroMockup(){
       agg[key].total = Math.max(agg[key].total, (r.score || 0));
     });
 
-    const top3 = Object.values(agg)
+    top3 = Object.values(agg)
       .sort((a, b) => b.total - a.total)
       .slice(0, 3);
+    }
 
     // If no data, show placeholder
     if (!top3.length){
