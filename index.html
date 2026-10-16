@@ -2229,7 +2229,7 @@ body{overflow-x:clip}
 .nav{gap:12px}
 .nav-cta{flex:0 0 auto}
 @media (max-width:1200px){.nav-links{gap:14px}.nav-links a{font-size:13.5px}.logo{font-size:16px}}
-@media (max-width:1000px){
+@media (max-width:1180px){
   .nav-links{position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:0;background:var(--surface);border-bottom:1px solid var(--border);padding:8px 0;display:none}
   .nav-links.open{display:flex}
   .nav-links a{padding:14px 24px;font-size:14.5px}
@@ -2246,7 +2246,7 @@ body{overflow-x:clip}
 @media (max-width:340px){.nav-cta .theme-toggle{display:none}}
 /* a second way in: "Log in / Sign up" inside the phone menu */
 .nav-links .nav-m-only{display:none}
-@media (max-width:1000px){.nav-links .nav-m-only{display:block;font-weight:700;color:var(--primary,#7c5cff)}}
+@media (max-width:1180px){.nav-links .nav-m-only{display:block;font-weight:700;color:var(--primary,#7c5cff)}}
 
 /* focus mode */
 html.hrp-focus .govt-bar,html.hrp-focus .marquee,html.hrp-focus .ai-fab,html.hrp-focus #hrpTopBtn,html.hrp-focus #hrpShareBtn,html.hrp-focus #hrpStick{display:none!important}
@@ -2377,7 +2377,17 @@ html[data-look="rival"] .pt-h{font-weight:800}
 @keyframes fabPulse{0%,100%{scale:1}50%{scale:1.06}}
 @media (max-width:820px){html header{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)!important}}
 #hrpProgress{width:100%;transform:scaleX(0);transform-origin:left;transition:none}
+.nav-links a{white-space:nowrap}
+.nav-links{gap:clamp(8px,1.1vw,22px)}
+.logo{white-space:nowrap;flex:none}.nav-cta{flex:none}
+.newsletter-form{flex-wrap:wrap}.newsletter-input{min-width:0;flex:1 1 180px}.newsletter-form .btn{flex:1 1 auto}
+.govt-bar a,.govt-bar .hrp-mini{display:inline-flex;align-items:center;justify-content:center;min-height:32px;min-width:32px;padding:0 8px}
+@media (max-width:820px){footer{padding-bottom:88px}}
+@media (max-width:480px){.newsletter{padding:22px 18px}}
+@media (max-width:720px){.toast-wrap{right:68px;bottom:20px}}
+@media (min-width:1181px) and (max-width:1440px){.nav-links a[href="#register"]{display:none}.nav-cta .btn{padding-left:14px;padding-right:14px}.nav-links a{font-size:13.5px}}
 </style>
+</head>
 </head>
 <body>
 
@@ -2428,7 +2438,7 @@ html[data-look="rival"] .pt-h{font-weight:800}
     <div class="wrap">
       <div class="hero-grid">
         <div>
-          <div class="pill"><span class="live-dot"></span> Season 2026 · Registrations Open · <span id="pillTeams">—</span> teams competing</div>        
+          <div class="pill"><span class="live-dot"></span> Season 2026 · Registrations Open<span id="pillTeamsWrap" hidden> · <span id="pillTeams">—</span> teams competing</span></div>        
           <h1 class="hero-title">India's national arena<br>for <span class="grad">student innovators.</span></h1>
           <p class="hero-sub">Hackathon Rivals brings together colleges, ministries and problem-solvers for a 36-hour grand finale. Form a team, pick a problem statement, and build solutions that matter.</p>
           <div class="hero-actions">
@@ -3982,8 +3992,8 @@ window.needPDF = function(){ return window.loadLib('https://cdnjs.cloudflare.com
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="assets/boot.js?v=72810e5a"></script>
 
-<script defer src="assets/main.js?v=1ccfc0d7"></script>
-<script defer src="assets/hrplus.js?v=7568bd63"></script>
+<script defer src="assets/main.js?v=a9036fa9"></script>
+<script defer src="assets/hrplus.js?v=e80a70ab"></script>
 <script defer src="assets/portal.js?v=aedac871"></script>
 
 <script defer src="assets/tail1.js?v=6ac94a6f"></script>
